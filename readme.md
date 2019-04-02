@@ -6,13 +6,13 @@ Southern Appalachians LANDIS-II Project
 <h4>
 The Southern Appalachians represent a hot bed of biodiversity, given their diverse geomorphic structure, lack of glacial coverage in the last ice-age and unique vegetative assemblages (Adams, 2000). Many dynamics determine the composition of this landscape, often reaching back hundreds of years. Fire plays an important role in this area both historically through native American burning, though its exclusion in the modern era, and currently thorough its reintroduction in the restoration of historic ecological ecosystems (Lafon et al., 2017). Additionally the near-extinction of the previously dominant American Chestnut (Castanea dentata), drastically altered the landscape leading to novel assemblages of species (Ellison et., al 2005 , Vandermast and Lear and Clinton 2002). Future climate will also play a role in determine the composition and health of these forests.
 <h4>
-<img src="./sApps/Sapssa.jpeg" width="60%" />
+<img src="./images/Sapssa.jpeg" width="60%" />
 
 <h4>
 Given these conditions, researchers and managers need an ability to forecast and understanding how our interactions with the landscape will alter future conditions. LANDIS-II (Scheller et al., 2007) is a spatially explicit, landscape dynamics simulation model. We will parameterize and validate a LANDIS-II model for the southern Appalachians and simulate scenarios to forecast future forest conditions. Some things we will consider are management and prescription burning scenarios, and conditions under differing climate forecasts. If you would like to hear more about what we are doing, or are interested in using or contributing to this process feel free to contact.
 <h4>
 <center>
-![](C:/Users/zjrobbin/Desktop/sApps/LAndismodel2.jpg)
+![](.images/LAndismodel2.jpg)
 </center>
 ### People
 
