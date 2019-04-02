@@ -14,6 +14,7 @@ Given these conditions, researchers and managers need an ability to forecast and
 <center>
 <img src="./images/LAndismodel2.jpg" width="60%"/>
 </center>
+  
 ### People
 
 -   Zachary Robbins *North Carolina State University*
@@ -27,6 +28,7 @@ Given these conditions, researchers and managers need an ability to forecast and
 -   Derek Wallace *U.S. Forest Service*
 
 </center>
+
 ### See how we parameterized the model
 
 [Understanding The Landscape](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/FIA%20Analysis)
