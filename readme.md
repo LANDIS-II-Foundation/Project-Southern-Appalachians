@@ -12,7 +12,8 @@ The Southern Appalachians represent a hotbed of biodiversity, given their divers
 Given these conditions, researchers and managers need an ability to forecast and understanding how our interactions with the landscape will alter future conditions. LANDIS-II (Scheller et al., 2007) is a spatially explicit, landscape dynamics simulation model. We will parameterize and validate a LANDIS-II model for the southern Appalachians and simulate scenarios to forecast future forest conditions. Some things we will consider are management and prescription burning scenarios, and conditions under differing climate forecasts. If you would like to hear more about what we are doing, or are interested in using or contributing to this process feel free to contact.
 <h4>
 <center>
-![](./images/LAndismodel2.jpg)
+<img src="./images/LAndismodel2.jpeg" width="60%" />
+
 </center>
 ### People
 
@@ -45,11 +46,11 @@ Given these conditions, researchers and managers need an ability to forecast and
 
 #### Thanks to Our Funders:
 
-<img src="C:/Users/zjrobbin/Desktop/sApps/ORISE.jpg" width="400" />
+<img src="/images/ORISE.jpg" width="400" />
 
 Oak Ridge Institue for Science and Education
 
-<img src="C:/Users/zjrobbin/Desktop/sApps/ncstate-brick-4x1-red.png" width="1080" />
+<img src="images/ncstate-brick-4x1-red.png" width="1080" />
 
 Last updated 3/27/2019
 
