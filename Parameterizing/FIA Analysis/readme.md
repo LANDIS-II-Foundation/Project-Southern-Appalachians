@@ -11,6 +11,7 @@ To understand the makeup of our landscape, we used FIA data isolated to our stud
 -   Second, using the FIA\_TREE table we calculate the basal area of each tree and the total basal area for the plot
 
 -   Third we calculated a truncated important value index equal to:
+    
     $$\\frac{No Of Trees Of Species X}{No Of Trees Of All Species}+\\frac{BA of Species X}{Total BA of The Species} $$
 
 This was done in order to account for the prevalence of low basal area species which may represent the emergent understory/ future overstory.
