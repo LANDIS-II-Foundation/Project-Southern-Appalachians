@@ -1,7 +1,7 @@
 Southern Appalachians Soils
 ================
 
-This is a methodology for creating the soil and hydrology maps necessary to Run LANDIS-II NECN. These methods were provided by Melissa Lucash and I want to thank her for sharing them.
+This is a methodology for creating the soil and hydrology maps necessary to Run LANDIS-II NECN. These methods were provided by Dr. Melissa Lucash and I want to thank her for sharing them.
 
 The Maps needed to run LANDIS-II are
 
