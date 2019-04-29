@@ -1,0 +1,1133 @@
+---
+title: "Southern Appalachians Soils"
+output: github_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+
+
+This is a methodology for creating the soil and hydrology maps necessary to Run LANDIS-II NECN. These methods were provided by Melissa Lucash and I want to thank her for sharing them. 
+
+
+The Maps needed to run LANDIS-II are 
+
+* Soil Depth ^1^
+* Soil Drain ^1^
+* Base Flow to Streams ^4^
+* Storm Flow to Streams ^4^
+* Field Capacity ^1^
+* Wilting Point ^1^
+* Percent Sand  ^1^
+* Percent Clay  ^1^
+* Soil Maps representing 4 layers of carbon pools ^2^
+* Soil Maps representing 4 layers of nitrogen pools ^2^
+* Dead Wood on the Surface ^3^
+* Dead Wood of Coarse Roots ^3^
+
+All of the Maps 1 are derived from the USGS ggsurgo database. The Maps 2 are derived from total soil carbon maps and estimations of each pool. The Maps 3 is interpolated from FIA data.
+BaseFlow and Storm Flow are treated as stationary variables in this simulation. 
+
+For more information on these parameters visit https://drive.google.com/file/d/1RrDSn0xIA7p5hHxcWx-bWnaBzNo5SwdA/view
+
+
+
+
+I began by getting the carbon and nitrogen Maps. I started with a total soil carbon map(West 2014), reprojected it, cut to the extent
+and then used estimated ratios of carbon in each pool (surface, fast, medium and slow) as well as C: N ratios and Dr. Lucash's work to
+create the soil maps. 
+
+As a fraction of total carbon each carbon pool is:
+
+* SOM1surfC=.01
+* SOM1soilC=.02
+* SOM2C=.59
+* SOM3C=.38
+
+Each nitrogen map is then created by multiplying the carbon in that pool by: 
+
+* SOM1surfN=.1
+* SOM1soilN=.1
+* SOM2N=.04
+* SOM3N=.118
+
+A minimum value of 2.0 was set for the nitrogen value to avoid complete lack of N in some stands by having low soil carbon 
+
+
+
+Source: West, T.O. 2014. Soil Carbon Estimates in 20-cm Layers to 1-m Depth for the Conterminous US, 1970-1993. Data set. Available on-line [http://daac.ornl.gov] from Oak Ridge National Laboratory Distributed Active Archive Center, Oak Ridge, Tennessee, USA. http://dx.doi.org/10.3334/ORNLDAAC/1238
+
+
+
+```{r python stuff,message=FALSE,warning=FALSE,include=FALSE}
+
+knitr::opts_chunk$set(echo=FALSE)
+
+library(reticulate)
+use_condaenv("basic")
+#import("scipy")
+#import("geopandas")
+#import("pandas")
+#import("gdal")
+#import("rasterio")
+#import("numpy")
+
+virtualenv_list()
+```
+
+
+
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+
+
+import geopandas as gp
+import rasterio as rt
+import rasterio.mask
+import gdal 
+from rasterio.mask import mask
+from rasterio.crs import CRS
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as pltb
+```
+
+
+
+
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+
+InDir="R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18"
+##########Functions
+
+def getFeatures(gdf):
+    """Function to parse features from GeoDataFrame in such a manner that rasterio wants them"""
+    import json
+    return [json.loads(gdf.to_json())['features'][0]['geometry']]
+
+
+##Imports
+CarbonLayers=["0_20","40_60","60_80","80_100"]
+CarDir=(InDir+"/Carbon/")
+
+```
+
+
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+
+for Clayer in CarbonLayers:
+    filename=CarDir+"/"+Clayer+".tif"
+    input_raster=gdal.Open(filename)
+    "create a temp map, This is a weird gdal/rasterio work around"
+    output_raster=CarDir+"/temp.tif"
+    "reformat raster to the format of AOI"
+    gdal.Warp(output_raster,input_raster,dstSRS='EPSG:26917')
+    "bring um back"
+    data=rt.open(output_raster)
+    " get the CRS cod for our projection"    
+    crs = CRS.from_epsg(26917)
+    #print(CRS.to_string(crs))
+    #Lut_tif="C:/Users/zjrobbin/Desktop/Geopandas/temp/practice"+ecoregion+".tif"
+    "load in the AOI shape"
+    AOI=gp.read_file(InDir+"/Dissolved_AOI.shp",crs={'init':'EPSG:26917'})
+   
+    "get AOI's crs code"
+    geo=AOI.to_crs(crs=data.crs.data)
+    
+    coords=getFeatures(geo)
+    ###Copy the meta data
+    out_meta = data.meta.copy()
+    
+    ####Preform a mask on the raster
+    out_img,out_transform=mask(raster=data,shapes=coords,crop=True,nodata=-9999)
+    out_meta = data.meta.copy()
+    epsg_code = int(data.crs.data['init'][5:])
+    out_meta.update({"driver": "GTiff",
+                             "height": out_img.shape[1],
+                             "width": out_img.shape[2],
+                             "transform": out_transform}
+                                )
+    ######
+    out_tif=CarDir+"/"+Clayer+"AOI.tif"
+    #######
+    with rasterio.open(out_tif, "w", **out_meta) as dest:
+        dest.write(out_img)
+```
+
+
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+
+SOM1surfC=.01
+SOM1soilC=.02
+SOM2C=.59
+SOM3C=.38
+SOM1surfN=.1
+SOM1soilN=.1
+SOM2N=.04
+SOM3N=.118
+```
+
+
+
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+
+final=pd.DataFrame()
+
+for Clayer in CarbonLayers:
+    
+    Clip=rt.openBugs=rt.open(CarDir+"/"+Clayer+"AOI.tif")
+    Clip=np.reshape(Clip.read(1),((Clip.shape[0]*Clip.shape[1]),1))
+    clip=pd.DataFrame(Clip)
+    clip.columns=[Clayer]
+    final=pd.concat([clip,final],axis=1)
+Template=rt.open(CarDir+"/"+Clayer+"AOI.tif")
+width=Template.width
+height=Template.height
+projection=Template.crs
+RasterStack=final.fillna(-9999)
+
+CarbonTotal=np.sum(RasterStack,axis=1)
+CarbonTotal[CarbonTotal==-39996]=-9999
+noninenine=CarbonTotal[CarbonTotal!=-9999]
+```
+
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+out_meta.update({"dtype":"float32"})
+print( data.meta.copy())
+##Needs to be atleast 2000 for the minimum N to be 2.0
+ 
+                                
+CarbonTotal[(CarbonTotal < 100)&(CarbonTotal > (-9999))]=100
+new_output=rt.open(InDir+'/Outputs/CarbonTotal.tif', 'w', driver='GTiff',height=height, width=width, count=1, dtype='float32', crs=projection) 
+###driver, width(n columns in dataset),height(nrows indataet),count(a count of dataset bands),type, crs,        
+Print=np.reshape(CarbonTotal.values,(height,width))
+Print=np.float32(Print)
+plt.imshow(Print,cmap='inferno',interpolation='nearest')
+new_output.write(Print,1)
+new_output.close()
+
+
+SOM1surfCmap=CarbonTotal*SOM1surfC
+SOM1surfCmap[SOM1surfCmap==-9999*SOM1surfC]=-9999
+
+SOM1soilCmap=CarbonTotal*SOM1soilC
+SOM1soilCmap[SOM1soilCmap==-9999*SOM1soilC]=-9999
+
+SOM2Cmap=CarbonTotal*SOM2C
+SOM2Cmap[SOM2Cmap==-9999*SOM2C]=-9999
+
+SOM3Cmap=CarbonTotal*SOM3C
+SOM3Cmap[SOM3Cmap==-9999*SOM3C]=-9999
+
+SOM1surfNmap=SOM1surfCmap*SOM1surfN
+SOM1surfNmap[SOM1surfNmap==-9999*SOM1surfN]=-9999
+
+SOM1surfNmap[(SOM1surfNmap < 2.0)&(SOM1surfNmap > (-9999))]=2.0
+
+SOM1soilNmap=SOM1soilCmap*SOM1soilN
+SOM1soilNmap[SOM1soilNmap==-9999*SOM1soilN]=-9999
+
+
+cN=SOM1surfCmap/SOM1surfNmap
+np.min(cN[(cN!= (1.0))])
+np.max(cN[(cN!= (1.0))])
+
+SOM2Nmap=SOM2Cmap*SOM2N
+SOM2Nmap[SOM2Nmap==-9999*SOM2N]=-9999
+
+SOM3Nmap=SOM3Cmap*SOM3N
+SOM3Nmap[SOM3Nmap==-9999*SOM3N]=-9999
+
+new_output=rt.open(InDir+'/Outputs/SOM1surfCmap.tif', 'w',**out_meta) 
+###driver, width(n columns in dataset),height(nrows indataet),count(a count of dataset bands),type, crs,        
+Print=np.reshape(SOM1surfCmap.values,(height,width))
+Print=np.float32(Print)
+plt.imshow(Print,cmap='inferno',interpolation='nearest')
+new_output.write(Print,1)
+new_output.close()
+
+new_output=rt.open(InDir+'/Outputs/SOM1soilCmap.tif', 'w',**out_meta) 
+###driver, width(n columns in dataset),height(nrows indataet),count(a count of dataset bands),type, crs,        
+Print=np.reshape(SOM1soilCmap.values,(height,width))
+Print=np.float32(Print)
+plt.imshow(Print,cmap='inferno',interpolation='nearest')
+new_output.write(Print,1)
+new_output.close()
+
+new_output=rt.open(InDir+'/Outputs/SOM2Cmap.tif', 'w',**out_meta) 
+###driver, width(n columns in dataset),height(nrows indataet),count(a count of dataset bands),type, crs,        
+Print=np.reshape(SOM2Cmap.values,(height,width))
+plt.imshow(Print,cmap='inferno',interpolation='nearest')
+Print=np.float32(Print)
+new_output.write(Print,1)
+new_output.close()
+
+new_output=rt.open(InDir+'/Outputs/SOM3Cmap.tif', 'w', **out_meta) 
+###driver, width(n columns in dataset),height(nrows indataet),count(a count of dataset bands),type, crs,        
+Print=np.reshape(SOM3Cmap.values,(height,width))
+plt.imshow(Print,cmap='inferno',interpolation='nearest')
+Print=np.float32(Print)
+new_output.write(Print,1)
+new_output.close()
+
+new_output=rt.open(InDir+'/Outputs/SOM1surfNmap.tif', 'w', **out_meta) 
+
+###driver, width(n columns in dataset),height(nrows indataet),count(a count of dataset bands),type, crs,        
+
+Print=np.reshape(SOM1surfNmap.values,(height,width))
+plt.imshow(Print,cmap='inferno',interpolation='nearest')
+Print=np.float32(Print)
+new_output.write(Print,1)
+new_output.close()
+
+
+new_output=rt.open(InDir+'/Outputs/SOM1soilNmap.tif', 'w',**out_meta) 
+
+###driver, width(n columns in dataset),height(nrows indataet),count(a count of dataset bands),type, crs, 
+
+Print=np.reshape(SOM1soilNmap.values,(height,width))
+plt.imshow(Print,cmap='inferno',interpolation='nearest')
+Print=np.float32(Print)
+new_output.write(Print,1)
+new_output.close()
+
+new_output=rt.open(InDir+'/Outputs/SOM2Nmap.tif', 'w',**out_meta) 
+
+###driver, width(n columns in dataset),height(nrows indataet),count(a count of dataset bands),type, crs,      
+
+Print=np.reshape(SOM2Nmap.values,(height,width))
+plt.imshow(Print,cmap='inferno',interpolation='nearest')
+Print=np.float32(Print)
+new_output.write(Print,1)
+new_output.close()
+
+new_output=rt.open(InDir+'/Outputs/SOM3Nmap.tif', 'w', **out_meta) 
+
+###driver, width(n columns in dataset),height(nrows indataet),count(a count of dataset bands),type, crs,        
+
+
+Print=np.reshape(SOM3Nmap.values,(height,width))
+plt.imshow(Print,cmap='inferno',interpolation='nearest')
+Print=np.float32(Print)
+new_output.write(Print,1)
+new_output.close()
+
+```
+
+
+Include here are the rasters that this resulted in: 
+
+
+```{r, fig.height=10.0,fig.width=12.0,align="center",message=FALSE,echo=FALSE,warning=FALSE}
+library(raster)
+library(RColorBrewer)
+```
+
+
+```{r, fig.height=10.0,fig.width=12.0,align="center",echo=FALSE}
+Ramp<-brewer.pal(9,"YlOrBr")
+
+RasterDir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18"
+maps=c('SOM1surfCmap','SOM1surfNmap','SOM1soilCmap','SOM1soilNmap','SOM2Cmap','SOM2Nmap','SOM3Cmap','SOM3Nmap')
+par(mfrow=c(2,2))
+for(map in maps){
+Im1<-raster(paste(RasterDir,'/Outputs/',map,'.tif',sep=""))
+mv<-max(matrix(Im1))
+plot(Im1,zlim=c(0,mv),main=map,col=Ramp)
+}
+```
+
+
+****Soils maps in grams per meter 2 
+
+#### USGS SSurgo work
+
+
+
+We need to pull together a file for Feild Capacity, Wilt Point, Soil Depth, Flood Frequency, Sand Percentage, and Clay Percentage. These are done using the gssurgo and ssurgo database. The Metadata for the ggsurgo and ssurgo fields can be found at
+
+[SSURGO/STATSGO2 Structural Metadata and Documentation](https://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/survey/geo/?cid=nrcs142p2_053631)
+
+
+ggsurgo is gridded to a 10m resolution which is much smaller than we need. So for processing, I aggregated it 50m.
+
+ggsurgo works on a component and map key system, requiring attribute joins to create a map of a single trait. The four tables I join here are the chorizon,component,conmonth, and corestriction tables. 
+
+This is a key to the fields used
+
+
+* Draiange = component:drainagecl
+* Flood Frequency=Conmonth:Flodfreqdcl
+* Wiltpoint= chorizon:wfifteenbar:r 
+* Feild capacity= wthirdbar:r
+* Sand Percentage= Chorizon:sandtotal_R:RV 
+* Clay Percentage= Chorizon:claytotal_R:RV 
+* Soil depth = corestriction:resdept_r 
+
+
+Running this requires the map key raster( later noted as *State*\_Raster\_Sub.tif) and the geodatabase file associated with that state 
+
+
+
+
+
+```{r,message=FALSE,warning=FALSE}
+
+library(rgdal)
+library(raster)
+library(sf)
+library(utils)
+library(ggplot2)
+w_dir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/"
+
+setwd(w_dir)
+```
+
+
+```{r,eval=FALSE}
+Listofstates<-c("NC","TN","SC","GA")
+for(i in Listofstates){
+
+State<-i
+NCDB <-paste(w_dir,"Inputs/gSSURGO_",State,".gdb",sep="")
+NC_chor<- sf::st_read(dsn = NCDB, layer = "chorizon")
+NC_comp<- sf::st_read(dsn = NCDB, layer = "component")
+NC_comon<-sf::st_read(dsn=NCDB, layer = "comonth")
+NC_restrictive<-sf::st_read(dsn=NCDB, layer='corestrictions')
+
+    
+
+AllComponent<-NC_comp
+
+#AllComponent<-rbind(GA_comp,SC_comp,NC_comp,KY_comp,VA_comp,WV_comp)
+AllComponentBridge<-AllComponent[,c(108,109,24)]
+#unique(AllComponentBridge$drainagecl)
+
+
+gsurLUT<-read.csv(paste(w_dir,"Inputs/gssurgoLUT.csv",sep=""))
+AllComponentBridge<-merge(AllComponentBridge,gsurLUT,by="drainagecl",all.x=TRUE)
+#print(AllcomponentBridge)
+AllChorizon<-(NC_chor)
+#AllChorizon<-rbind(GA_chor,SC_chor,NC_chor,KY_chor,VA_chor,WV_chor)
+#head(AllChorizon)
+#colnames(AllChorizon)
+UsefulChorizon<-AllChorizon[,c(34,50,61,92,95,170)]
+UsefulChorizon[is.na(UsefulChorizon)]<-0
+#print(UsefulChorizon)
+
+All_resBridge<-NC_restrictive[,c(4,12)]
+print(All_resBridge)
+colnames(NC_restrictive)
+
+
+
+keytomap<-merge(UsefulChorizon,AllComponentBridge,by="cokey",all.y=TRUE)
+
+    
+keytomap<-merge(keytomap,All_resBridge,by="cokey",all.x=TRUE)
+
+print(keytomap)
+LUT<-NULL
+MeanSand<-mean(keytomap$sandtotal_r[!is.na(keytomap$sandtotal_r)])
+keytomap$sandtotal_r[is.na(keytomap$sandtotal_r)]<-MeanSand
+row<-cbind(MeanSand,"sandtota_r")
+LUT<-rbind(LUT,row)
+
+MeanClay<-mean(keytomap$claytotal_r[!is.na(keytomap$claytotal_r)])
+keytomap$claytotal_r[is.na(keytomap$claytotal_r)]<-MeanClay
+row<-cbind(MeanClay,"claytotal_r")
+LUT<-rbind(LUT,row)
+
+WP<-mean(keytomap$wthirdbar_r[!is.na(keytomap$wthirdbar_r)])
+keytomap$wthirdbar_r[is.na(keytomap$wthirdbar_r)]<-WP
+row<-cbind(WP,"wthirdbar_r")
+LUT<-rbind(LUT,row)
+
+FC<-mean(keytomap$wfifteenbar_r[!is.na(keytomap$wfifteenbar_r)])
+keytomap$wfifteenbar_r[is.na(keytomap$wfifteenbar_r)]<-FC
+row<-cbind(FC,"wfifteenbar_r")
+LUT<-rbind(LUT,row)
+
+DC<-median(keytomap$Landis[!is.na(keytomap$Landis)])
+keytomap$Landis[is.na(keytomap$Landis)]<-DC
+row<-cbind(DC,"drainagecl")
+LUT<-rbind(LUT,row)
+
+Res<-mean(keytomap$resdept_r[!is.na(keytomap$resdept_r)])
+keytomap$resdept_r[is.na(keytomap$resdept_r)]<-Res
+row<-cbind(Res,"resdept_r")
+LUT<-rbind(LUT,row)
+LUT<-as.data.frame(LUT)
+colnames(LUT)<-c("Mean","Name")
+
+Statemap<- raster(paste(w_dir,"Inputs/",State,"_Raster_Sub.tif",sep=""))
+Statedf<-as.data.frame(Statemap)
+Statedf[,1][is.na(Statedf[,1])]<-(-9999)
+colnames(Statedf)<-"mukey"
+print(length(Statemap))
+
+Marker<-1:nrow(Statedf)
+Statedf$Marker<-Marker
+a<-capture.output(head(Statedf))
+
+keytomap<-keytomap[,-3]
+#traits<-c(seq(2,5,1),8,9)
+traits<-9
+for(i in traits){
+  #print(i)
+  FeildCap<-NULL
+  keytomap2<-NULL
+  Name<-names(keytomap)[i]
+  FeildCap<-keytomap[,c(i,7)]
+  colnames(FeildCap)<-c("FeildCap","mukey")
+  FeildCap<-FeildCap[!duplicated(FeildCap$mukey),]
+  print(length(FeildCap$mukey))
+  
+  keytomap2<-merge(x=Statedf,y=FeildCap,by="mukey",all.x=TRUE)
+  ExampleRaster<-Statemap
+  keytomap3<-keytomap2[order(keytomap2[,2]),]
+  map<-as.vector(keytomap3$FeildCap)
+  
+  
+  #Mean<-LUT[LUT$Name==Name,]
+  #mean<-Mean[1]
+  #map[map==0]<-mean
+  #as.numeric(mean)  
+  proj<-projection(ExampleRaster)
+  
+  output_matrix<-matrix(map,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+  new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+  plot(new_output_raster)
+  new_output_file_name<-paste(w_dir,"Unmerged/",State,Name,".tif",sep="")
+  plot(new_output_raster)
+  writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)
+}
+}    
+    
+```
+
+Ran into some trouble with the merge so passed to Q-gis in order to do the merging 
+
+
+Now we go back to python to cut each merged map to the study area. 
+
+
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+#Imports
+Cutlayers=["NCclaytotal_r","NCsandtotal_r","NCwthirdbar_r","NCwfifteenbar_r","NCLandis", "NCresdept_r"]
+for Clayer in Cutlayers:
+    print(Clayer)
+    filename=InDir+"/Unmerged/"+Clayer+".tif"
+    input_raster=gdal.Open(filename)
+    "create a temp map, This is a weird gdal/rasterio work around"
+    output_raster=InDir+"/temp.tif"
+    "reformat raster to the format of AOI"
+    gdal.Warp(output_raster,input_raster,dstSRS='EPSG:32617')
+    "bring um back"
+    data=rt.open(output_raster)
+    " get the CRS cod for our projection"    
+    crs = CRS.from_epsg(26917)
+    #print(CRS.to_string(crs))
+    #Lut_tif="C:/Users/zjrobbin/Desktop/Geopandas/temp/practice"+ecoregion+".tif"
+    "load in the AOI shape"
+    AOI=gp.read_file(InDir+"/Study_Extent_clean.shp",crs={'init':'EPSG:32617'})
+   
+    "get AOI's crs code"
+    geo=AOI.to_crs(crs=data.crs.data)
+    
+    coords=getFeatures(geo)
+    ###Copy the meta data
+    out_meta = data.meta.copy()
+    
+    ####Preform a mask on the raster
+    out_img,out_transform=mask(raster=data,shapes=coords,crop=True,nodata=-9999)
+    out_meta = data.meta.copy()
+    epsg_code = int(data.crs.data['init'][5:])
+    out_meta.update({"driver": "GTiff",
+                             "height": out_img.shape[1],
+                             "width": out_img.shape[2],
+                             "transform": out_transform}
+                                )
+    ######
+    out_tif=InDir+"/Outputs/"+Clayer+"AOI.tif"
+    #######
+    with rasterio.open(out_tif, "w", **out_meta) as dest:
+        dest.write(out_img)
+        
+```
+```{r}
+
+```
+
+
+
+These are the resulting maps.
+
+
+
+```{r, fig.height=10.0,fig.width=12.0,align="center"}
+Ramp<-brewer.pal(9,"YlOrBr")
+
+RasterDir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18"
+maps=c("WiltDone","Drain_Done","FeildDone","Soil_Depth_done","Clay_Done","Sand_cut")
+par(mfrow=c(2,2))
+for(map in maps){
+Im1<-raster(paste(RasterDir,'/Outputs/',map,'.tif',sep=""))
+mv<-max(matrix(Im1))
+plot(Im1,zlim=c(0,mv),main=map,col=Ramp)
+}
+```
+
+
+
+#### Dead Wood
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+
+import pandas as pd
+import geopandas as gp
+##import shapely.wkt as shap
+from shapely.geometry import Point
+
+InDir="R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/"
+##########Functions
+```
+
+To calculate dead wood I isolated each FIA plot in the study area within the last cycle. I looked at the total carbon down dead
+and interpolated it to the whole study area. I assumed that dead coarse roots make up about a third of that value. 
+
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+NC_Plt=pd.read_csv(InDir+"Inputs/NC_PLOT.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD'])                                                                               
+NC_Plt['Coordinates']=list(zip(NC_Plt.LON,NC_Plt.LAT))
+NC_Plt['Coordinates']=NC_Plt['Coordinates'].apply(Point)
+
+
+crs={'init':'epsg:4326'}#### Set as what it is then change if needed. 
+NC_map=gp.GeoDataFrame(NC_Plt,crs=crs,geometry='Coordinates')
+NC_map_26917=NC_map.to_crs({'init':'EPSG:26917'})
+
+
+#NC_map_26917.plot(color='red')
+
+AOI=gp.read_file(InDir+"/Dissolved_AOI.shp",crs={'init':'EPSG:26917'})
+NC_join= gp.sjoin(NC_map_26917, AOI, how="left", op="within")
+NC_join=NC_join.dropna()
+NC_join.plot(color='red')
+NC_join.to_csv('Deadwood/NCPlots.csv')
+
+###SC
+SC_Plt=pd.read_csv(InDir+"Inputs/SC_PLOT.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD'])                                                                                 
+SC_Plt['Coordinates']=list(zip(SC_Plt.LON,SC_Plt.LAT))
+SC_Plt['Coordinates']=SC_Plt['Coordinates'].apply(Point)
+
+
+crs={'init':'epsg:4326'}#### Set as what it is then change if needed. 
+SC_map=gp.GeoDataFrame(SC_Plt,crs=crs,geometry='Coordinates')
+SC_map_26917=SC_map.to_crs({'init':'EPSG:26917'})
+
+
+#SC_map_26917.plot(color='red')
+
+AOI=gp.read_file(InDir+"/Dissolved_AOI.shp",crs={'init':'EPSG:26917'})
+SC_join= gp.sjoin(SC_map_26917, AOI, how="left", op="within")
+SC_join=SC_join.dropna()
+SC_join.plot(color='red')
+SC_join.to_csv('Deadwood/SCPlots.csv')
+####TN
+
+TN_Plt=pd.read_csv(InDir+"Inputs/TN_PLOT.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD'])                                                                                 
+TN_Plt['Coordinates']=list(zip(TN_Plt.LON,TN_Plt.LAT))
+TN_Plt['Coordinates']=TN_Plt['Coordinates'].apply(Point)
+
+
+crs={'init':'epsg:4326'}#### Set as what it is then change if needed. 
+TN_map=gp.GeoDataFrame(TN_Plt,crs=crs,geometry='Coordinates')
+TN_map_26917=TN_map.to_crs({'init':'EPSG:26917'})
+
+
+#TN_map_26917.plot(color='red')
+
+AOI=gp.read_file(InDir+"/Dissolved_AOI.shp",crs={'init':'EPSG:26917'})
+TN_join= gp.sjoin(TN_map_26917, AOI, how="left", op="within")
+TN_join=TN_join.dropna()
+TN_join.plot(color='red')
+TN_join.to_csv('Deadwood/TNPlots.csv')
+#####GA
+
+
+GA_Plt=pd.read_csv(InDir+"Inputs/GA_PLOT.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD'])                                                                                 
+GA_Plt['Coordinates']=list(zip(GA_Plt.LON,GA_Plt.LAT))
+GA_Plt['Coordinates']=GA_Plt['Coordinates'].apply(Point)
+
+
+crs={'init':'epsg:4326'}#### Set as what it is then change if needed. 
+GA_map=gp.GeoDataFrame(GA_Plt,crs=crs,geometry='Coordinates')
+GA_map_26917=GA_map.to_crs({'init':'EPSG:26917'})
+
+
+#GA_map_26917.plot(color='red')
+
+AOI=gp.read_file(InDir+"/Dissolved_AOI.shp",crs={'init':'EPSG:26917'})
+GA_join= gp.sjoin(GA_map_26917, AOI, how="left", op="within")
+GA_join=GA_join.dropna()
+GA_join.plot(color='red')
+GA_join.to_csv('Deadwood/GAPlots.csv')
+mapsmerge=[GA_join,TN_join,SC_join,NC_join]
+Appsmaps=pd.concat(mapsmerge)
+Appsmaps.plot(color='red')
+
+Appsmaps.to_csv('Deadwood/Appsmaps.csv')
+```
+
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+import pandas as pd
+###NC_Plt=pd.read_csv("B:/FIA/NC/NC_COND.csv",usecols=['CN','PLT_CN','INVYR','STATECD','COUNTYCD','PLOT','CARBON_DOWN_DEAD','CARBON_LITTER','CARBON_SOIL_ORG','CARBON_STANDING_DEAD'])                                                                        
+###print(list(NC_Plt.columns.values))
+States=['NC','SC','TN','GA']
+AllST=pd.DataFrame()
+for State in States:
+    
+    C_Plt=pd.DataFrame()
+    C_Plt=pd.read_csv(InDir+"Inputs/"+State+"_COND.csv",usecols=['CN','PLT_CN','INVYR','STATECD','COUNTYCD','PLOT','CARBON_DOWN_DEAD','CARBON_LITTER','CARBON_SOIL_ORG','CARBON_STANDING_DEAD'])
+    Plt_lst=pd.read_csv(InDir+"Deadwood/"+State+"Plots.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD','US_L4NAME'])
+    
+#Needs indents
+##Years(2010:2017)
+    Years=(Plt_lst.INVYR.unique())
+####Yearhasendless build loop
+    #print(Years)
+    Years=[2011,2012,2013,2014,2015,2016]
+    StateNm=State
+    YearSt=pd.DataFrame()
+    for Year in Years:
+        YearSub=(C_Plt.loc[C_Plt.INVYR==Year])
+        Pltsyear=(Plt_lst.loc[Plt_lst.INVYR==Year])
+        CoInSt=(Pltsyear.COUNTYCD.unique())
+        print(CoInSt)
+    #print(CoInSt)
+        OneYrOut=pd.DataFrame()
+        for CDX in CoInSt:
+            Ecoregion=Pltsyear.US_L4NAME[Pltsyear.COUNTYCD==CDX]
+            #print(Ecoregion)
+            CountySub=(YearSub.loc[YearSub.COUNTYCD==CDX])
+            PltsCoSub=Pltsyear.loc[Pltsyear.COUNTYCD==CDX]
+            Labeled=pd.merge(CountySub,PltsCoSub,on='PLOT',how='outer')
+            Labeled=Labeled.dropna()
+    # print(Labeled)
+#print(Labeled)
+
+###Pltlvl
+            PltsinCo=(Labeled.PLOT.unique())
+            CoOut=pd.DataFrame()
+            for PLX in PltsinCo:
+                OnePlt=(Labeled.loc[Labeled.PLOT==PLX])
+                Lat=OnePlt.LAT.values[0]
+                Lon=OnePlt.LON.values[0]
+                CarbonDownDead=OnePlt.CARBON_DOWN_DEAD.values[0]
+                CarbonStandingDead=OnePlt.CARBON_STANDING_DEAD.values[0]
+                Carbon_Standing_Litter=OnePlt.CARBON_LITTER.values[0]
+             
+                outline=pd.DataFrame([[StateNm,Year,Ecoregion,Lat,Lon,CDX,PLX,CarbonDownDead,CarbonStandingDead,Carbon_Standing_Litter]],columns=['State','Year','Ecoregion','LAT','LON','COUNTYCD','PLOT','Dead C Down','Dead C Standing','Carbon_Standing_Litter'])
+                CoOut=CoOut.append(outline)
+                
+            OneYrOut=OneYrOut.append(CoOut)
+##print(OneYrOut)
+        OneYrOut.to_csv('carbon'+str(Year)+State+'.csv')
+        YearSt=YearSt.append(OneYrOut)
+    AllST=AllST.append(YearSt)
+AllST.to_csv('Deadwood/Carbon_All.csv')
+    
+
+
+```
+
+After this, I interpolated in QGIS to get a map with continuous coverage.
+Here we clean and shape to make the final map.
+
+```{r,message=FALSE,warning=FALSE}
+library(ggplot2) # start needed libraries
+library(gstat)
+library(sp)
+library(raster)
+library(rgdal)
+w_dir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/"
+```
+
+
+```{r}
+
+Altered<-raster(paste(w_dir,"Deadwood/Warp.tif",sep=""))
+#print(thefiles)
+ICTemplate<- raster(paste(w_dir,"Cleaning/Proc_InitialCommunities.img",sep=""))
+
+IC<-as.data.frame(raster(paste(w_dir,"Cleaning/Outputs/DummyEco.tif",sep="")))
+crs(Altered)<-CRS("+init=EPSG:26917")
+proj<-CRS("+init=EPSG:26917")
+plot(Altered)  
+#get projection/extent from the sample
+proj<-projection(ICTemplate)
+
+##resample
+resampled<-resample(Altered,ICTemplate,method='ngb')
+
+#reassign proj
+crs(resampled)<-proj
+
+#plot(ICTemplate)
+#write the raster
+
+input<-as.data.frame(resampled)
+input[,1][is.na(input[,1])] <-(-9999)
+##bind all files together
+df<-cbind(IC,input)
+colnames(df)<-c("e","Input")
+#Find mean value of the carbon/nitrogen file
+meanvalue<-mean(input[input>-9999])
+
+df$Input[df$Input<=(-1000) & df$e!=1]<-meanvalue
+
+
+##Set all values that are NA in carbon/nitrogen and active in ecoregion to the mean value
+root<-NULL
+wood<-NULL
+root$Input<-df$Input
+wood$Inputs<-df$Input
+root$Input[root$Input>=(-1000)]<-root$Input[root$Input>=(-1000)]*.3*2
+wood$Input[wood$Input>=(-1000)]<-wood$Input[wood$Input>=(-1000)]*.7*2
+
+#df$Input[df$Input<.00001 &df$Input != -9999]<-.0001
+##Print rasters
+ExampleRaster<-ICTemplate
+
+output_matrix<-matrix(root$Input,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+
+new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+
+new_output_file_name<-paste(w_dir,"Cleaning/Final/Deadwood_root.tif",sep="")
+rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)#Th
+
+output_matrix<-matrix(wood$Input,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+
+new_output_file_name<-paste(w_dir,"Cleaning/Final/Deadwood_wood.tif",sep="")
+rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)#Th
+```
+
+
+```{r, fig.height=10.0,fig.width=12.0,align="center"}
+Ramp<-brewer.pal(9,"YlOrBr")
+
+map<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/Final/Deadwood_wood.tif"
+
+par(mfrow=c(1,2))
+Im1<-raster(map)
+mv<-max(matrix(Im1))
+plot(Im1,zlim=c(0,mv),main="Deadwood Biomass",col=Ramp)
+map<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/Final/Deadwood_root.tif"
+
+
+Im1<-raster(map)
+mv<-max(matrix(Im1))
+plot(Im1,zlim=c(0,mv),main="Deadroot Biomass",col=Ramp)
+
+```
+
+
+#### Data clean up and Formatting.
+
+Some additional steps that were used to prepare the maps for LANDIS-II use.
+
+* The data needs to be resampled to the same size and in the same projection as the initial communities file 
+* Create a simple ecoregion for testing 
+* Find which files may not overlap with the ecoregion and assigned the missing values a mean value
+* Sand and Clay files need to be between 0 and 1.0. The USGS values are percentage as 100s (0.0-1.0).
+  So here they are divided by 100. Also to clean up values they are minimized at .1
+* Depth that is zero can never grow trees and will trigger weird errors. Here I find each of these and turn the ecoregion to off. 
+* Wilt point cannot be greater field capacity so their difference was reduced to 0.01  
+
+
+```{r}
+w_dir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/"
+ICTemplate<- raster(paste(w_dir,"Proc_InitialCommunities.img",sep=""))
+projection(ICTemplate)<-CRS("+init=EPSG:26917")
+```
+
+```{r}
+##Pull in all files from the Input drive
+thefiles<-list.files(paste(w_dir,"Inputs/",sep=""),pattern = "\\.tif$")
+
+ICTemplate<- raster(paste(w_dir,"Proc_InitialCommunities.img",sep=""))
+```
+
+##### Resample to the same resolution.
+
+```{r}
+for(file in thefiles){
+  #Readd in the raster
+  Altered<-raster(paste(w_dir,"Inputs/",file,sep=""))
+  
+  crs(Altered)<-CRS("+init=EPSG:26917")
+  
+  #get projection/extent from the sample
+  proj<-projection(ICTemplate)
+  
+  extent21<-extent(ICTemplate)
+  #match extents
+  #extent(Altered)<-extent21
+  #plot(Altered)
+  ##resample
+  resampled<-resample(Altered,ICTemplate,method='ngb')
+
+  #reassign proj
+  crs(resampled)<-proj
+
+  #plot(ICTemplate)
+  #write the raster
+  new_output_file_name<-(paste(w_dir,"Outputs/Proc",file,sep=""))
+  writeRaster(resampled, filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)  
+}
+```
+
+```{r}
+file<-"Sand_cut.tif"
+par(mfrow=c(1,2))
+map<-paste(w_dir,"Inputs/",file,sep="")
+Im1<-raster(map)
+mv<-max(matrix(Im1))
+
+plot(Im1,zlim=c(0,mv),main="Soil Before",col=Ramp)
+
+map<-paste(w_dir,"Outputs/Proc",file,sep="")
+Im1<-raster(map)
+mv<-max(matrix(Im1))
+plot(Im1,zlim=c(0,mv),main="Soil After ",col=Ramp)
+```
+
+
+
+```{r}
+proj<-CRS("+init=EPSG:26917")
+ecoregions<-raster(paste(w_dir,"Proc_InitialCommunities.Img",sep=""))
+
+#plot(ecoregions)
+DummyEco<-ecoregions
+##turn all except for the six to 1
+DummyEco[DummyEco>=1,]<-2
+DummyEco[is.na(DummyEco[,1]),]<-1
+DummyEco[DummyEco<1,]<-1
+
+#plot(DummyEco)
+##Write Raster
+new_output_file_name<-(paste(w_dir,"Outputs/DummyEco.tif",sep=""))
+writeRaster(DummyEco, filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)  
+
+ExampleRaster<-DummyEco
+###Get just the Carbon/nitrogen files
+```
+
+
+```{r}
+###This lists files in the folder 
+IC<-as.data.frame(DummyEco)
+thefiles<-list.files(paste(w_dir,"Outputs/",sep=""),pattern = "\\.tif$")
+
+```
+
+
+
+```{r}
+### 
+for(file in thefiles){
+     #print(file)
+     raster<-(raster(paste(w_dir,"Outputs/",file,sep="")))
+     input<-as.data.frame(raster)
+     input[,1][is.na(input[,1])] <-(-9999)
+     ##bind all files together
+     df<-cbind(IC,input)
+     colnames(df)<-c("e","Input")
+     #Find mean value of the carbon/nitrogen file
+     meanvalue<-mean(input[input>-9999])
+     #print("mean")
+     #print(meanvalue)
+     #print("min")
+     #print(min(input[input>-9999]))
+     #print("max")
+     #print(max(input[input>-9999]))
+
+     df$e
+     #print(length(df$Input[df$Input<=(-1000) & df$e!=1]))
+     ##Set all values that are NA in carbon/nitrogen and active in ecoregion to the mean value
+     df$Input[df$Input<=(-1000) & df$e!=1]<-meanvalue
+
+     #df$Input[df$Input<.00001 &df$Input != -9999]<-.0001
+     ##Print rasters
+     output_matrix<-matrix(df$Input,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+     new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+
+     new_output_file_name<-paste(w_dir,"Mean/MeanedandCleaned",file,sep="")
+     rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)#Th
+     }
+```
+
+```{r}
+
+  file<-"MeanedandCleanedDummyEco.tif"
+    
+  input<-(raster(paste(w_dir,"Mean/",file,sep="")))
+ 
+  new_output_file_name<-paste(w_dir,"Final/MR_",file,sep="")
+  rast_IC_map<-writeRaster(input, filename=new_output_file_name, datatype='INT4S',overwrite=TRUE)#T
+
+```
+
+```{r}
+
+#paste(w_dir,"IC_Repro.tif",sep="")
+ExampleRaster<-raster(paste(w_dir,"Proc_InitialCommunities.img",sep=""))
+input<-raster(paste(w_dir,"Proc_InitialCommunities.img",sep=""))
+input<-as.data.frame(input)
+input[,1][is.na(input[,1])] <-0
+input[,1][(input[,1])<0] <-0
+input[,1][(input[,1])>3000]<-0
+#print(max(input[,1]))
+#print(min(input[,1]))
+output_matrix<-matrix(input[,1],nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+#plot(new_output_raster)
+filename=paste(w_dir,"Final/MR_InitialCommunity_2_18.tif",sep="")
+#print(filename)
+writeRaster(new_output_raster, filename=filename, datatype='INT4S',overwrite=TRUE)
+```
+
+
+```{r}
+input<-as.data.frame(raster(paste(w_dir,"Mean/MeanedandCleanedDummyEco.tif",sep="")))
+Stormflow<-input[,1]
+Stormflow[Stormflow==2]<-0.3
+Stormflow[Stormflow==1]<-(-9999)
+#length(Stormflow[Stormflow==0.3])
+ExampleRaster<-raster(paste(w_dir,"Mean/MeanedandCleanedDummyEco.tif",sep=""))
+output_matrix<-matrix(Stormflow,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+
+new_output_file_name<-paste(w_dir,"Final/MR_Stormflow.tif",sep="")
+rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)#
+```
+
+
+```{r}
+Feild<-as.data.frame(raster(paste(w_dir,"Mean/MeanedandCleanedProcFeildDone.tif",sep="")))
+WP<-as.data.frame(raster(paste(w_dir,"Mean/MeanedandCleanedProcWiltDone.tif",sep="")))
+
+feildval<-Feild[Feild[,1]>(-1999),]
+maxfeildval<-max(feildval)
+
+scaler<-.74/maxfeildval
+Feild[Feild[,1]>(-1999),]<-Feild[Feild[,1]>(-1999),]*scaler
+Feild[,1][Feild[,1]<=0.5&Feild[,1]>(-1999)]<-0.5
+#unique(Feild[,1])
+
+WP[WP[,1]>(-1999),]<-WP[WP[,1]>(-1999),]*scaler
+WP[,1][WP[,1]<=0.1&Feild[,1]>(-1999)]<-0.1
+#unique(WP[,1])
+
+WP_Print<-as.vector(WP[,1])
+#print(WP[WP[,1]>(-1999),])
+FC_Print<-as.vector(Feild[,1])
+ExampleRaster<-raster(paste(w_dir,"Mean/MeanedandCleanedProcFeildDone.tif",sep=""))
+
+output_matrix<-matrix(WP_Print,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+new_output_file_name<-paste(w_dir,"Mean/MeanedandCleanedProcWiltDone.tif",sep="")
+rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)#Th
+
+output_matrix<-matrix(FC_Print,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+new_output_file_name<-paste(w_dir,"Mean/MeanedandCleanedProcFeildDone.tif",sep="")
+rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)#Th
+```
+
+
+
+```{r}
+
+
+#Sand and Clay files need to be between 0 and 1.0. The USGS values are percetages as 100s (0.0-1.0).
+#So here they are divided by 100. Also to clean up values they are minimized at .1
+
+###Sand and Clay
+Sand<-as.data.frame(raster(paste(w_dir,"Mean/MeanedandCleanedProcSand_cut.tif",sep="")))
+
+Clay<-as.data.frame(raster(paste(w_dir,"Mean/MeanedandCleanedProcClay_Done.tif",sep="")))
+
+scaler<-.01
+Sand[!is.na(Sand[,1]),]<-Sand[!is.na(Sand[,1]),]*scaler
+Sand[,1][Sand[,1]<=0.1]<-0.1
+
+Clay[!is.na(Clay[,1]),]<-Clay[!is.na(Clay[,1]),]*scaler
+Clay[,1][Clay[,1]<=0.1]<-0.1
+
+
+Clay_Print<-as.vector(Clay[,1])
+
+Sand_Print<-as.vector(Sand[,1])
+
+ExampleRaster<-raster(paste(w_dir,"Mean/MeanedandCleanedDummyEco.tif",sep=""))
+proj<-projection(ExampleRaster)
+
+output_matrix<-matrix(Clay_Print,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+new_output_file_name<-paste(w_dir,"Mean/MeanedandCleanedProcClay_Done.tif",sep="")
+rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)#Th
+
+output_matrix<-matrix(Sand_Print,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+new_output_file_name<-paste(w_dir,"Mean/MeanedandCleanedProcSand_cut.tif",sep="")
+rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)#Th
+```
+
+```{r}
+###Depth
+
+#Depth that are zero can never grow trees and will trigger weird errors. Here I find each of these are turn their ecoregion to off. 
+
+Depth<-as.data.frame(raster(paste(w_dir,"Mean/MeanedandCleanedProcDepth_top.tif",sep="")))
+ecoregion<-as.data.frame(raster(paste(w_dir,"Final/MR_MeanedandCleanedDummyEco.tif",sep=""))) 
+df<-cbind(Depth,ecoregion)
+
+colnames(df)<-c("Input","e")
+df$e[df$Input<=(0.0) & df$e!=1]<-1.0
+output_matrix<-matrix(df$e,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) 
+new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+
+new_output_file_name<-paste(w_dir,"Final/MR_FinalDummyEco.tif",sep="")
+rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='INT4S',overwrite=TRUE)#Th
+
+```
+
+
+```{r}
+thefiles<-list.files(paste(w_dir,"Mean/",sep=""),pattern = "\\.tif$")
+
+```
+
+
+```{r}
+
+for(i in thefiles){
+input<-(raster(paste(w_dir,"/Mean/",i,sep="")))
+
+projection(input)<-CRS("+init=EPSG:26917")
+
+str1<-i
+
+##useful
+
+cleanname<-gsub('MeanedandCleanedProc','',str1) 
+
+new_output_file_name<-paste(w_dir,"Final/MR",cleanname,sep="")
+rast_IC_map<-writeRaster(input, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)#Th
+}
+
+```
+
