@@ -3,7 +3,7 @@ Southern Appalachians Soils
 
 This is a methodology for creating the soil and hydrology maps necessary to Run LANDIS-II NECN. These methods were provided by Dr. Melissa Lucash and I want to thank her for sharing them.
 
-The Maps needed to run LANDIS-II are
+The maps needed to run LANDIS-II are
 
 -   Soil Depth <sup>1</sup>
 -   Soil Drain <sup>1</sup>
