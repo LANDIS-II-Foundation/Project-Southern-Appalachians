@@ -126,11 +126,11 @@ Here we looked at each of the major species in each functional group, as functio
 
 ##### Pinus Strobus
 
-<img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/PinuStormAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/White_Pine.png" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/PinuStormAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/White_Pine.PNG" width="40%" />
 
 ##### Tsuga Canadensis
 
-<img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Tsug CandAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Hemlock.png" width="40%" /> <img 
+<img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Tsug CandAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Hemlock.PNG" width="40%" /> <img 
 #### Southern Conifers
 
 ##### Pinus Virginiana
