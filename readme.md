@@ -39,7 +39,7 @@ Given these conditions, researchers and managers need an ability to forecast and
 
 [Parameterizing Forest Cohorts](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Forests/InitialCommunities)
 
-[Soils Model](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Forests)
+[Soils Model](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Soils)
 
 [Historic and Future Climate](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Forests)
 
