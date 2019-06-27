@@ -130,8 +130,7 @@ Here we looked at each of the major species in each functional group, as functio
 
 ##### Tsuga Canadensis
 
-<img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Tsug CandAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Hemlock.png" width="40%" />
-
+<img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Tsug CandAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Hemlock.png" width="40%" /> <img 
 #### Southern Conifers
 
 ##### Pinus Virginiana
