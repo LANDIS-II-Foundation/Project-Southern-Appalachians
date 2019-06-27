@@ -139,7 +139,7 @@ Here we looked at each of the major species in each functional group, as functio
 
 ##### Pinus Taeda
 
-<img src="/Parameterizing/Forests/SpeciesParameters/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/AGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/Loblolly_Shortleaf.PNG" width="30%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/PinueTaedAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/Loblolly_Shortleaf.PNG" width="30%" />
 
 #### Southern Hardwoods
 
