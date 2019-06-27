@@ -94,7 +94,7 @@ Here we are parameterizing the growth curves of the LANDIS-II model against the 
 
 Using the FIA data we additionally fit a Mitscherlich curve to the relationship between age and biomass of the top 25 % of stands. This was compared to the biomass in an ideal scenario LANDIS-II runs.
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/QuerPrinAGB.jpeg" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/QuerPrinAGB.jpeg" width="40%" />
 
 We also compare the leaf area index of each species as a simulated forest, against established values for forests.
 
@@ -104,8 +104,8 @@ The values we are using for this are from:
 
 On the left is a LANDIS output for chestnut oak and on the right are LAI values for a sampled oak/hickory forest.
 
-<img src="/QuerPrin/LAI.jpeg" width="40%"/> 
-<img src="/QuerPrin/Oak_Hickory.png" width="40%"/>
+<img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/LAI.jpeg" width="40%"/> 
+<img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/Oak_Hickory.png" width="40%"/>
 
 Here we looked at each of the major species in each functional group, as functional groups parameters in NECN are the major determinants of growth after the ideal growth ANPP parameter. If function group parameters seemed to work for the group but not an individual species, then ANPP was adjusted.
 
@@ -116,31 +116,31 @@ Here we looked at each of the major species in each functional group, as functio
     ## Warning: package 'gridExtra' was built under R version 3.4.4
 
 (/QuerPrin/GrowthCurves.jpeg" width="40%")
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/QuerPrinAGB.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/Oak_Hickory.png" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/QuerPrinAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/Oak_Hickory.png" width="40%" />
 
 ##### Acer Rubra
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/AcerRubr/GrowthCurves.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/AcerRubr/AcerRubrAGB.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/AcerRubr/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/AcerRubr/Maple_Beech_Birch.png" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/AcerRubr/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/AcerRubr/AcerRubrAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/AcerRubr/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/AcerRubr/Maple_Beech_Birch.png" width="40%" />
 
 #### Northern Conifers
 
 ##### Pinus Strobus
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuStorm/GrowthCurves.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuStorm/PinuStormAGB.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuStorm/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuStorm/White_Pine.png" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/PinuStormAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuStorm/White_Pine.png" width="40%" />
 
 ##### Tsuga Canadensis
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/Tsug Cand/GrowthCurves.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/Tsug Cand/Tsug CandAGB.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/Tsug Cand/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/Tsug Cand/Hemlock.png" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Tsug CandAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Hemlock.png" width="40%" />
 
 #### Southern Conifers
 
 ##### Pinus Virginiana
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuVirg/GrowthCurves.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuVirg/PinuVirgAGB.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuVirg/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuVirg/Longleaf_Slash.png" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/PinuVirg/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuVirg/PinuVirgAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuVirg/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuVirg/Longleaf_Slash.png" width="40%" />
 
 ##### Pinus Taeda
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuTaed/GrowthCurves.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuTaed/PinuTaedAGB.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuTaed/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/PinuTaed/Loblolly_Shortleaf.png" width="30%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaedAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Loblolly_Shortleaf.png" width="30%" />
 
 #### Southern Hardwoods
 
@@ -148,18 +148,18 @@ Here we looked at each of the major species in each functional group, as functio
 
 ##### Carya Glabra
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/CaryGlab/GrowthCurves.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/CaryGlab/CaryGlabAGB.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/CaryGlab/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/CaryGlab/Oak_Hickory.png" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/CaryGlab/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/CaryGlab/CaryGlabAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/CaryGlab/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/CaryGlab/Oak_Hickory.png" width="40%" />
 
 #### Riparian
 
 ##### Betula Alleghaniensis
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/BetuAlle/GrowthCurves.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/BetuAlle/BetuAlleAGB.jpeg" width="30%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/BetuAlle/LAI.jpeg" width="30%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/BetuAlle/Maple_Beech_Birch.png" width="30%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/BetuAlle/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/BetuAlle/BetuAlleAGB.jpeg" width="30%" /> <img src="/Parameterizing/Forests/SpeciesParameters/BetuAlle/LAI.jpeg" width="30%" /> <img src="/Parameterizing/Forests/SpeciesParameters/BetuAlle/Maple_Beech_Birch.png" width="30%" />
 
 #### Abies
 
 ##### Frasier Fir
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/Frasfir/GrowthCurves.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/Frasfir/FrasFirAGB.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/Frasfir/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/Frasfir/Fir_Spruce.png" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/Frasfir/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Frasfir/FrasFirAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Frasfir/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Frasfir/Fir_Spruce.png" width="40%" />
 
 If you are interested in the code to create this see the R-Markdown file on this page. To return to the main page click [here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018)
