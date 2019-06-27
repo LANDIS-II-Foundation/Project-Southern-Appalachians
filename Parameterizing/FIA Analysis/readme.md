@@ -1,4 +1,4 @@
-LANDSCAPE ANALYSIS
+Landscape anaylsis
 ================
 Zachary Robbins
 
