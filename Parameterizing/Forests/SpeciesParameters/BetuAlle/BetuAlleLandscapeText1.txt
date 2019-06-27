@@ -1,0 +1,119 @@
+LandisData	"NECN Succession"
+
+Timestep  5
+
+SeedingAlgorithm  WardSeedDispersal
+
+InitialCommunities      "./IC_1.txt"
+InitialCommunitiesMap   "./SingleCellProcInitialCommunities.tif"
+ClimateConfigFile 	climate-generator-baseline.txt	
+
+SoilDepthMapName				SingleCellProcSappsDepthNormal11_2.tif << 72
+SoilDrainMapName				SingleCellProcFullDrain11_2.tif << 1.0
+SoilBaseFlowMapName				SingleCellpoint3SC.tif<<0.3
+SoilStormFlowMapName			SingleCellpoint3SC.tif<<0.3
+SoilFieldCapacityMapName		SingleCellProcFC_Norm11_2.tif<<.578938
+SoilWiltingPointMapName			SingleCellpoint3SC.tif<<0.3
+SoilPercentSandMapName			SingleCellohpoint7.tif<<0.7
+SoilPercentClayMapName			SingleCellohpoint1.tif<<0.2
+InitialSOM1CsurfMapName			SingleCell15_Proc.tif <<15
+InitialSOM1NsurfMapName			SingleCell1point5_Proc.tif<< 1.5
+InitialSOM1CsoilMapName			SingleCellProcSOM1SurfC11_2.tif<< 30
+InitialSOM1NsoilMapName			SingleCellProcSOM1SurfN11_2.tif <<3.0
+InitialSOM2CMapName				SingleCellProcSOM2C11_2.tif << 1750
+InitialSOM2NMapName				SingleCellFourty_Proc.tif << 50 
+InitialSOM3CMapName				SingleCellProcSOM3C11_2.tif << 1128
+InitialSOM3NMapName				SingleCellProcSOM3N11_2.tif << 113
+InitialDeadWoodSurfaceMapName	SingleCellProcSappsDeadWoodSurf11_2.tif
+InitialDeadCoarseRootsMapName	SingleCellProcSappsDepthNormal11_2.tif
+
+>>Deadwood is not correct but there for testing. 
+>>>Same with Base and Stormflow
+
+
+CalibrateMode 	yes
+SmokeModelOutputs no
+WaterDecayFunction Ratio <<Linear or Ratio
+
+
+ProbabilityEstablishAdjust 	0.0
+InitialMineralN				2.0
+InitialFineFuels 			0.1  << a fraction 0-1.0 of dead wood.
+AtmosphericNSlope			0.0016<< Values from ashville
+AtmosphericNIntercept		0.2626 << .1626 from ashville +1.0 lichen correction ratio
+Latitude					36.0
+DenitrificationRate			0.0610
+DecayRateSurf				5.50 <<Tune this. 
+DecayRateSOM1				4.5
+DecayRateSOM2				0.012
+DecayRateSOM3				0.0000001
+
+
+MaximumLAI
+
+>> Shade	Max LAI
+>> Class	
+>> ----------	--------------------	
+	1	1 
+	2	2.5 
+	3	3.5 
+	4	6
+	5	8
+
+LightEstablishmentTable
+>> Spp Shade	Probability
+>> Class	by Actual Shade
+>> ----------	--------------------	
+>>		0	1	2	3	4	5
+	1	1.0	0.1	0.0	0.0	0.0	0.0
+	2	1.0	1.0	0.1	0.05 0.0	0.0
+	3	1.0	1.0	1.0	0.1	0.05	0.0
+	4	1.0	1.0	1.0	1.0	0.1	0.05
+	5	0.1	0.5	1.0	1.0	1.0	1.0
+
+SpeciesParameters
+
+>> Species   Funct	N-fix?	GDD	GDD	Min	Max	    Leaf	    Epi-	Leaf	FRoot	Wood	CRoot	Leaf  FRoot Wood  CRoot Littr 	     max	max
+>>	     	ional	Y/N	    Min	Max	Jan	Drought	Long	cormic	Lign%	Lign%	Lign%	Lign%	CN    CN    CN    CN    CN			A       NPP	AGB
+>> 	     	Type				          Temp			re-
+>>           								    		sprout
+
+
+PinuStro	3	N	1100	3165	-20	0.372	3	N	0.263	0.225	0.3104	0.204	40.7	43	398	84	55  300  27000
+AcerRubr	4		N		1260 6600 -18 .23 1 N .183 .334 0.125 .312 28.2 26 565 50 55 250 31000
+LiriTuli	2 	N   3000 	6000	-7 	.30	1.0	N	0.331	0.255	0.255	0.255	25    45    90    90    45	300 25000 
+QuerPrin	4	N	1910	4110	-7	0.285	1.0	N	0.251	0.23	0.23	0.23	24    48    500   333   55	400 35000
+TsugCana	3	N	1324	3800	-12	.18	3	N	.173	.225	.27	.204	50.5	43	458	84	98.3	250 27000
+PinuVirg	1	N	2660	3671	-3	.226	2	N .263 .225 .3104 .204 20.8 43 398 84 55 300	 15000
+PinuTaed    1	N	3165	5993	4	.36		3   N  .2   .2  .35 .35 26.1 53.44 716 170 100 400 15000
+FrasFirr    5   N   2663	2763	-7	.025	3	N	.252	.252	.312	.204	32.4	43	545	108	74	200 10000
+CaryGlab    2   N   1910 6960        -7 .2 1	N          .187 .24 .2 .251 26.741 25 294.118 49 43 350 10000
+BetuAlle    6	N	1100 2500 -18 .2 1 N 0.219 .27 .2018 .251 21 26 365 50 65 220 10000
+MagnMacr    6   N    2300 5993 -2 .16 1 N	.293 .23 .23 .23 24 48 500 333 55 100 10000
+
+FunctionalGroupParameters 
+
+>> Name		Index	PPDF1	PPDF2	PPDF3	PPDF4	FCFRAC	BTOLAI	KLAI	MAXLAI	PPRPTS2	PPRPTS3	Wood	Monthly	Mort	Drop
+>> 			 											T-Mean	T-Max	T-shape	T-shape	leaf	DecayR	WoodMort Shape	Month	CRFrac										FRFrac
+SConifer	1	23.0	35.0	2.005	6.0	0.48	-0.9	3000	14	1.0	.9	.1	0.006	15	7	0.2	0.2
+SHW	2	23.0	30.0	5.0	10.0	0.3	-0.9	            1500	10	1.0	.8	.1	0.002	10	9	0.1	0.1
+NConifer	3	17.0	25.0	2.005	6.0	0.48	-0.9	3000	14	1.0	.9	.1	0.006	15	7	0.2	0.2
+NHW	4	25.0	35.0	3.05	5.6	0.48	-0.9	750	7	1.0	.9	.1	0.002	10	9	0.1	0.1
+Abies	5	17.0	25.0	5.0	10.0	0.3	-0.8	1500	12	1.0	.8	.1	0.002	10	9	0.2	0.2
+Swampy	6	20.0	32.0	3.6	5.0	0.3	-0.9	1500	12	1.0	.8	.1	0.002	10	9	0.1	0.1
+
+FireReductionParameters
+>>	Severity	WoodLitter	Litter	SOM
+>>	Fire		Reduct		Reduct	Reduction
+	1		0.0		0.5	0.5
+	2		0.0		0.75	0.5
+	3		0.0		1.0	0.5
+
+HarvestReductionParameters
+>>	Name		WoodLitter	Litter	SOM		CohortWood	CohortLeaf
+>>			Reduct		Reduct	Reduction	Removal		Removal
+	MaxAgeClearcut	0.5		0.15	0.2		0.8		0.15
+	PatchCutting	1.0		1.0	1.0		1.0		1.0
+
+
+   
