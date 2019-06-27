@@ -147,7 +147,7 @@ Here we looked at each of the major species in each functional group, as functio
 
 ##### Carya Glabra
 
-<img src="/Parameterizing/Forests/SpeciesParameters/caryglab/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/CaryGlabAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/Oak_Hickory.PNG" width="30%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/caryglab/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/caryglabAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/Oak_Hickory.PNG" width="30%" />
 
 #### Riparian
 
