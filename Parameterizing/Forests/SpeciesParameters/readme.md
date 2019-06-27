@@ -130,7 +130,7 @@ Here we looked at each of the major species in each functional group, as functio
 
 ##### Tsuga Canadensis
 
-<img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Tsug CandAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Hemlock.PNG" width="40%" /> <img 
+<img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Tsug CandAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Tsug Cand/Hemlock.PNG" width="40%" /> 
 #### Southern Conifers
 
 ##### Pinus Virginiana
@@ -139,7 +139,7 @@ Here we looked at each of the major species in each functional group, as functio
 
 ##### Pinus Taeda
 
-<img src="/Parameterizing/Forests/SpeciesParameters/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaedAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Loblolly_Shortleaf.PNG" width="30%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/AGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/PinuTaed/Loblolly_Shortleaf.PNG" width="30%" />
 
 #### Southern Hardwoods
 
