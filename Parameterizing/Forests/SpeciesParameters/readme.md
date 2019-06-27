@@ -32,7 +32,7 @@ These values were used to update values for N:C and lignin, These records can be
 
 > Davis, S. C., Dragan, K. E., Buyarski, C. R., & Thomas, R. B. (2009). High foliar and soil nitrogen concentrations in Central Appalachian forests. Ecosystems, 12(1), 46-56.
 
-<img src="C:/Users/zjrobbin/Desktop/FS_meeting/FiguresMisc/Davis2009.PNG" width="60%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/Visuals/Davis2009.PNG" width="60%" />
 
 Values that were still missing were assessed as similar through genus then family and in one case by order. These decisions can be found in the document:
 
@@ -48,11 +48,11 @@ I then experimented with cluster groups by these features using a mean shift alg
 
 For variables, I decided on mean temperature, minimum precipitation, minimum vapor pressure deficit, and maximum elevation. Using mean shifting here is what the clusters looked like.
 
-<img src="C:/Users/zjrobbin/Desktop/FS_meeting/Functional_Groups/Conifer1.jpg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/FS_meeting/Functional_Groups/Conifer2.jpg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/FS_meeting/Functional_Groups/Conifer3.jpg" width="40%" />
+</Parameterizing/Forests/SpeciesParameters/Visuals/Conifer1.jpg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Visuals/Conifer2.jpg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Visuals/Conifer3.jpg" width="40%" />
 
 Additionally, I plotted each group on a PCA scale so that they could be visualized in one plot. Here the red lines represent the directions of the ordination and each conifer group is the colors on the right.
 
-<img src="C:/Users/zjrobbin/Desktop/FS_meeting/Functional_Groups/ConiferPCA.jpg" width="40%" /> These three groups are labeled in future work.
+<img src="/Parameterizing/Forests/SpeciesParameters/Visuals/ConiferPCA.jpg" width="40%" /> These three groups are labeled in future work.
 
 Southern Pines: The Green group that has higher mean temp and higher min VPD. Northern Pines: The Red Group Colder temps, mid-elevation. Abies(Firs): The Blue group (one) High elevation and colder temps.
 
@@ -60,7 +60,7 @@ Here is the same thing for the hardwoods:
 
 The hardwoods would not easily make 3 functional groups so I expanded it, this is because many of the species are niche specialists that either would have to be grouped as 2 big groups (which seemed coarse for so many species) or have many small individual groups.
 
-<img src="C:/Users/zjrobbin/Desktop/FS_meeting/Functional_Groups/Hardwoods1 at1.2.jpg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/FS_meeting/Functional_Groups/Hardwoods2 at1.2.jpg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/FS_meeting/Functional_Groups/Hardwoods3 at1.2.jpg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/FS_meeting/Functional_Groups/HardwoodsPCA at1.2.jpg" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/Visuals/Hardwoods1 at1.2.jpg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Visuals/Hardwoods2 at1.2.jpg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Visuals//Hardwoods3 at1.2.jpg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Visuals/HardwoodsPCA at1.2.jpg" width="40%" />
 
 Here we see there are two major groups and then a lot of groups of outside groups. Looking to avoid parameterizing 8 functional groups, I took the visual grouping of group 5 with group 2 and clustering the right upper corner of the PCA together to create 4 groups:
 
