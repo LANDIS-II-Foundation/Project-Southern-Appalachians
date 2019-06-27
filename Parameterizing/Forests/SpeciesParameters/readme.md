@@ -104,7 +104,8 @@ The values we are using for this are from:
 
 On the left is a LANDIS output for chestnut oak and on the right are LAI values for a sampled oak/hickory forest.
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/Oak_Hickory.png" width="40%" />
+<img src="/QuerPrin/LAI.jpeg" width="40%"/> 
+<img src="/QuerPrin/Oak_Hickory.png" width="40%"/>
 
 Here we looked at each of the major species in each functional group, as functional groups parameters in NECN are the major determinants of growth after the ideal growth ANPP parameter. If function group parameters seemed to work for the group but not an individual species, then ANPP was adjusted.
 
