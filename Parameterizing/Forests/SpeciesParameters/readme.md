@@ -115,7 +115,8 @@ Here we looked at each of the major species in each functional group, as functio
 
     ## Warning: package 'gridExtra' was built under R version 3.4.4
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/GrowthCurves.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/QuerPrinAGB.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/Oak_Hickory.png" width="40%" />
+(/QuerPrin/GrowthCurves.jpeg" width="40%")
+<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/QuerPrinAGB.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/LAI.jpeg" width="40%" /> <img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/Oak_Hickory.png" width="40%" />
 
 ##### Acer Rubra
 
