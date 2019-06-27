@@ -90,7 +90,7 @@ Bringing in the values from the FIA analysis. I isolated out the top 25% of plot
 
 Here we are parameterizing the growth curves of the LANDIS-II model against the box plots. Each line is a model run at a different point in the soil continuum from most sandy on the landscape to most clayey.
 
-<img src="C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21/QuerPrin/GrowthCurves.jpeg" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/GrowthCurves.jpeg" width="40%" />
 
 Using the FIA data we additionally fit a Mitscherlich curve to the relationship between age and biomass of the top 25 % of stands. This was compared to the biomass in an ideal scenario LANDIS-II runs.
 
