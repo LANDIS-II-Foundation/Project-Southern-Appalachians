@@ -37,7 +37,7 @@ Given these conditions, researchers and managers need an ability to forecast and
 
 [Understanding The Landscape](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/FIA%20Analysis)
 
-[Parameterizing Forest Cohorts](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Forests)
+[Parameterizing Forest Cohorts](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Forests/InitialCommunities)
 
 [Soils Model](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Forests)
 
