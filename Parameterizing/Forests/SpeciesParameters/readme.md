@@ -5,7 +5,7 @@ Species Parameterization
 
 Most of the nitrogen, carbon and lignin parameters were started from existing LANDIS papers and the TRY database. The file NECN\_Folder contains the data taken from each paper and the database. Each Try data point is linked to an individual paper in the TRY files.
 
-Some species were adapted from existing papers where the formula was assumed to have a carbon ratio of 1/2. This formula is, therefore, $C: N =.5 \\frac{g. nitrogen}{g. total}$. For species that were not included in either papers nor the plan database were researched individually, or given a value based on a genus/family/order similarity to a species in this or another Landis papers.
+Some species were adapted from existing papers where the formula was assumed to have a carbon ratio of 1/2. This formula is, therefore, $ C: N =.5 \\frac{g. nitrogen}{g. total} $. For species that were not included in either papers nor the plan database were researched individually, or given a value based on a genus/family/order similarity to a species in this or another Landis papers.
 
 I started with values from previous LANDIS-II models and supplemented them with data from the TRY. This folder of accumulated values can be see [here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/blob/master/Parameterizing/Forests/SpeciesParameters/NECN_folder_12_20.xlsx).
 
