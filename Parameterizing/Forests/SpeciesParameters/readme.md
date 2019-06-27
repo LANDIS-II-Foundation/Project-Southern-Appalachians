@@ -115,7 +115,7 @@ Here we looked at each of the major species in each functional group, as functio
 
     ## Warning: package 'gridExtra' was built under R version 3.4.4
 
-(/QuerPrin/GrowthCurves.jpeg" width="40%")
+<img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/GrowthCurves.jpeg" width="40%" /> <img
 <img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/QuerPrinAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/QuerPrin/Oak_Hickory.PNG" width="40%" />
 
 ##### Acer Rubra
@@ -147,7 +147,7 @@ Here we looked at each of the major species in each functional group, as functio
 
 ##### Carya Glabra
 
-<img src="/Parameterizing/Forests/SpeciesParameters/caryglab/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/CaryGlabAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/Oak_Hickory.PNG" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/caryglab/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/CaryGlabAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/caryglab/Oak_Hickory.PNG" width="30%" />
 
 #### Riparian
 
@@ -159,6 +159,6 @@ Here we looked at each of the major species in each functional group, as functio
 
 ##### Frasier Fir
 
-<img src="/Parameterizing/Forests/SpeciesParameters/Frasfir/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Frasfir/FrasFirAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Frasfir/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/Frasfir/Fir_Spruce.PNG" width="40%" />
+<img src="/Parameterizing/Forests/SpeciesParameters/FrasFir/GrowthCurves.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/FrasFir/FrasFirAGB.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/FrasFir/LAI.jpeg" width="40%" /> <img src="/Parameterizing/Forests/SpeciesParameters/FrasFir/Fir_Spruce.PNG" width="40%" />
 
 If you are interested in the code to create this see the R-Markdown file on this page. To return to the main page click [here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018)
