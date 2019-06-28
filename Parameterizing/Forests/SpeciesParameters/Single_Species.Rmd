@@ -1,0 +1,821 @@
+---
+title: "Species Parameterization"
+output: github_document
+---
+
+```{r python stuff, message=FALSE,warning=FALSE,include=FALSE}
+#####
+##### I provide no support or warranty for any of this code, though you are welcome to learn for it and use it. 
+##### Z. Robbins 2019
+
+
+knitr::opts_chunk$set(echo = FALSE)
+library(reticulate)
+use_condaenv("randpython")
+#import("geopandas")
+#import("pandas")
+#import("gdal")
+#import("rasterio")
+#virtualenv_list()
+```
+
+
+```{r,warning=FALSE,message=FALSE}
+library(MASS)
+library(meanShiftR)
+library(rgdal)
+library(raster)
+library(sf)
+library(magrittr)
+```
+
+#### C:N ratios and Lignin
+Most of the nitrogen, carbon and lignin parameters were started from existing LANDIS papers and the TRY database. 
+The file NECN_Folder contains the data taken from each paper and the database. Each Try data point is linked to an individual paper in
+the TRY files. 
+
+Some species were adapted from existing papers where the formula was assumed to have a carbon ratio of 1/2. 
+This formula is, therefore, $C: N =.5 \frac{g. nitrogen}{g. total}$. For species that were not included in either papers nor the plan database were researched individually, or given a value based on a genus/family/order similarity to a species in this or another 
+Landis papers.
+
+I started with values from previous LANDIS-II models and supplemented them with data from the TRY. This folder of accumulated values
+can be see 
+[here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/blob/master/Parameterizing/Forests/SpeciesParameters/NECN_folder_12_20.xlsx). 
+
+Try data was queried by Species and by trait. In the even of multiple returns values were averaged.
+
+```{r , echo=FALSE}
+w_dir<-"C:/Users/zjrobbin/Desktop/FS_meeting/NECN_Biochem/"
+setwd(w_dir)
+```
+
+Here is a example of some of the results obtained for Acer rubrum
+
+```{r,warning=FALSE}
+library(knitr)
+w_dir<-"C:/Users/zjrobbin/Desktop/FS_meeting/NECN_Biochem/"
+Try<-read.csv(paste(w_dir,"Try_Proc.csv",sep=""))
+
+
+
+knitr::kable(Try[Try$sp=="Acer rubrum",][c(1:10),c(2:5)],align=c('c'))
+```
+
+> TRY Data: Kattge, J., Bönisch, G., Günther, A., Wright, I., Zanne, A., Wirth, C., Reich, P.B. and the TRY Consortium (2012) TRY - Categorical Traits Dataset. Data from: TRY - a global database of plant traits. TRY File Archive https://www.try-db.org/TryWeb/Data.php#3
+
+
+
+
+These values were used to update values for N:C and lignin, These records can be found at in the attached work.
+Values were also updated using records from:
+
+> Davis, S. C., Dragan, K. E., Buyarski, C. R., & Thomas, R. B. (2009). High foliar and soil nitrogen concentrations in Central Appalachian forests. Ecosystems, 12(1), 46-56.
+
+
+```{r,echo=FALSE,out.width="60%"}
+
+knitr::include_graphics("C:/Users/zjrobbin/Desktop/FS_meeting/FiguresMisc/Davis2009.PNG")
+
+
+```
+
+Values that were still missing were assessed as similar through genus then family and in one case by order. These decisions can be found in the document:
+
+
+#### GGDmin,GDDmax,Frost,D3,FRT
+
+These values were taken from the original linkages manual which can be found at
+https://daac.ornl.gov/daacdata/model_archive/LINKAGES/comp/ORNL_TM-9519.pdf. Other values were taken from existing 
+LANDIS papers, these can be found in the NECN folder[here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/blob/master/Parameterizing/Forests/SpeciesParameters/NECN_folder_12_20.xlsx). 
+Species that could not be found in either way were adapted 
+from a qualitative assessment of range in comparison to known values for other species.
+
+
+
+
+
+#### Functional Groups
+
+In order to set up functional groups for the many species on the landscape, I wanted to compare their range of percipitation, termpature, elevation, and minimum vapor pressure. I did this using PRISM
+raster data on the 30 year normal. Using the imputation rasters from the Forest Service used in the [Initial Communities work](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Forests). I resampled the climate and elevation rasters to the same resolution and then, defined the minimum and maximum values for each species range (where it is >.5 m2/ha) where the 20th and 80th quantile of each the total sample.
+
+```{r, include=FALSE,eval=FALSE}
+library(rgdal)
+library(sf)
+library(raster)
+library(maptools)
+w_dir<-"F:/Functional_Groups/"
+setwd(w_dir)
+clip_655 <- raster(paste(w_dir,"Inputs/s655.img",sep=""))
+proj<-projection(clip_655)
+projUS<-CRS("+init=epsg:4326")
+EasternUS<-rgdal::readOGR(paste(w_dir,"EasternUS.shp",sep=""))
+(EasternUS)
+shp_utm <- spTransform(EasternUS, proj)
+plot(shp_utm)
+plot(clip_655)
+clipped_655<-crop(clip_655,extent(shp_utm))
+r3<-mask(clipped_655,shp_utm)
+proj<-projection(r3)
+
+##4326 WGS 84
+
+
+files<-c("PRISM_ppt_30yr_normal_4kmM2_annual_bil","PRISM_tmean_30yr_normal_4kmM2_annual_bil",
+        "PRISM_tmin_30yr_normal_4kmM2_annual_bil","PRISM_us_dem_4km_bil",
+        "PRISM_vpdmin_30yr_normal_4kmM2_annual_bil","PRISM_tmax_30yr_normal_4kmM2_annual_bil")
+for(file in files){
+  print(file)
+  weather<-raster(readGDAL(paste(w_dir,file,".bil",sep="")))
+  print("~reprojecting~")
+  reproj=projectRaster(weather,crs=proj)
+  plot(reproj)
+  plot(r3)
+  cropalt<-crop(reproj,r3)
+  dim(r3)
+  dim(cropalt)
+  print("~resampling~")
+  resampled<-resample(cropalt,r3,method='bilinear')
+  
+  print("~writing~")
+  new_output_file_name<-(paste(w_dir,"Shaped_climate/Shaped",file,".tiff",sep=""))
+  new_output_file_name
+  writeRaster(resampled, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)
+}
+print(Climates)
+LUT<-read.csv(paste(w_dir,"SpeciesLUT.csv",sep=""))
+Sp<-unique(LUT$Species)
+Conifers<-c("16", "97", "110", "123" , "126","129","131","132", "261")
+
+
+Climates<-list.files(paste(w_dir,"Shaped_climate/",sep=""),pattern = "\\.tif$")
+PPT<-as.data.frame(raster(paste(w_dir,"Shaped_climate/",Climates[1],sep="")))
+tmax<-as.data.frame(raster(paste(w_dir,"Shaped_climate/",Climates[2],sep="")))
+tmean<-as.data.frame(raster(paste(w_dir,"Shaped_climate/",Climates[3],sep="")))
+tmin<-as.data.frame(raster(paste(w_dir,"Shaped_climate/",Climates[4],sep="")))
+elevation<-as.data.frame(raster(paste(w_dir,"Shaped_climate/",Climates[5],sep="")))
+vpdmin<-as.data.frame(raster(paste(w_dir,"Shaped_climate/",Climates[6],sep="")))
+
+
+#rm(Climates,PPT,tmax,tmean,tmin,elevation,vpdmin,Tree)
+dfout<-NULL
+print(Sp)
+Sp<-Sp[-43]
+for(i in Sp){
+Treestack<-NULL
+print(i)
+sp<-i
+Tree<-as.data.frame(raster(paste(w_dir,"Inputs/s",i,".img",sep="")))
+Treestack<-cbind(PPT,tmax,tmean,tmin,elevation,vpdmin,Tree)
+colnames(Treestack)<-c("PPT","tmax","tmean","tmin","elevation","vpdmin","Tree")
+
+if(sp %in% Conifers){
+  Type<-"Conifer"}else{Type<-"Hardwoods"}
+Thresehold<-0.5
+JustTreeStack<-Treestack[Treestack$Tree>Thresehold ,]
+#rm(Treestack)
+Maxtemp<-quantile(JustTreeStack$tmax,.80)
+Mintemp<-quantile(JustTreeStack$tmin,.20)
+Meantemp<-mean(JustTreeStack$tmean)
+MinPPT<-quantile(as.single(JustTreeStack$PPT),.20)
+MeanPPT<-mean(as.single(JustTreeStack$PPT))
+Minelevation<-quantile(JustTreeStack$elevation,.20)
+Maxelevation<-quantile(JustTreeStack$elevation,.80)
+MinVPD<-quantile(JustTreeStack$vpdmin,.20)
+row<-cbind(sp,Type,Maxtemp,Mintemp,Meantemp,MinPPT,Minelevation,Maxelevation,MinVPD)
+dfout<-rbind(row,dfout)
+}
+write.csv(dfout,paste(w_dir,"output.csv",sep=""))
+read<-read.csv(paste(w_dir,"output.csv",sep=""))
+
+```
+
+I then experimented with cluster groups by these features using a mean shift algorithm. Given a user-defined bandwidth, 
+the algorithm finds the nth dimensional clustering of each group given a set of variables. I used different combinations
+of bandwidths and variables to find the clustering that seemed closest to a group of 3 functional groups. This is not always possible,
+if groups are too close or too far on nth dimensions, the natural cluster may be a different number. 
+I then visually compared plots to see that these clusters made sense. 
+
+For variables, I decided on mean temperature, minimum precipitation, minimum vapor pressure deficit, and maximum elevation. Using mean
+shifting here is what the clusters looked like. 
+```{r,message=FALSE,warning=FALSE}
+library(MeanShift)
+#Set up the work drive
+w_dir<-"C:/Users/zjrobbin/Desktop/FS_meeting/Functional_Groups/"
+setwd(w_dir)
+```
+
+```{r,include=FALSE,eval=FALSE}
+
+###This is from the big climate association, might want to add that hear at some point. 
+read<-read.csv(paste(w_dir,"output.csv",sep=""),stringsAsFactors=FALSE)
+
+Sampledf<-read[,-1]
+Variableset<-c("sp","Type","Maxtemp","Mintemp","Meantemp","MinPPT","Minelevation","Maxelevation","MinVPD")
+Variableset2<-c("sp","Type","Meantemp","MinPPT","MinVPD","Maxelevation")#Noelevation
+
+Sampledf<-Sampledf[,Variableset2]
+```
+
+
+
+
+```{r,include=FALSE,eval=FALSE}
+##Setting up the data for the bms.clustering
+Clade="Conifer"
+OneClade<-Sampledf[Sampledf[,2]==Clade,]
+tree.labels<-OneClade[,c("sp")]
+OneCladeproc<-((OneClade[c(-1,-2)]))
+Height<-dim(OneCladeproc)[1]
+Width<-dim(OneCladeproc)[2]
+
+t<-as.numeric(data.matrix(OneCladeproc))
+
+#The worlds simpliest covariance matrix
+#seeds.data<-matrix(t,Width,Height)
+row1<-t[c(1:Height)]
+row1<- (row1-mean(row1))/sd(row1)
+row2<-t[c((1+1*Height):(2*Height))]
+row2<- (row2-mean(row2))/sd(row2)
+row3<-t[c((1+2*Height):(3*Height))]
+row3<- (row3-mean(row3))/sd(row3)
+row4<-t[c((1+3*Height):(4*Height))]
+row4<- (row4-mean(row4))/sd(row4)
+
+seeds.data<-rbind(row1,row2,row3,row4)
+names<-colnames(Sampledf)[c(-1,-2)]
+```
+
+
+
+```{r,include=FALSE,eval=FALSE}
+
+b=1.4
+system.time( bms.clustering <- lapply( b,
+                                       function( h ){ bmsClustering( seeds.data, h=h ) } ) )
+names( bms.clustering[[1]] )
+ms.labels1 <- bms.clustering[[1]]$labels
+print( ms.labels1 )
+ms.modes1 <- bms.clustering[[1]]$components
+print( ms.modes1 )
+
+print( ms.modes1 )
+MSOUTPUT<-cbind(Variableset2[c(-1,-2)],ms.modes1)
+## plot
+par( mfrow=c( 1,2) )
+for(i in 1:(length(names)-1)){
+  jpeg(paste(Clade,i,".jpg",sep=""))
+  plot( seeds.data[(i),], seeds.data[(i+1),], col=bms.clustering[[1]]$labels,
+      xlab=names[(i)], ylab=names[(i+1)], main=paste(Clade,nrow(seeds.data),"Groups",sep=""),
+      cex=0.65, pch=16 )
+  dev.off()  
+}
+
+
+ms.labels6 <- bms.clustering[[1]]$labels
+print( ms.labels6 )
+ms.modes6 <- bms.clustering[[1]]$components
+print(ms.modes6)
+B<-cbind(OneClade,ms.labels6)
+
+seeds.plot<-data.frame(t(seeds.data))
+colnames(seeds.plot)<-names
+seeds.plot<-as.data.frame(cbind(seeds.plot,B$sp,as.character(B$ms.labels6)))
+colnames(seeds.plot)[6]<-"MS"
+colnames(seeds.plot)[5]<-"sp"
+seeds.plot$MS<-as.factor(seeds.plot$MS)
+seeds.plot$sp<-as.factor(seeds.plot$sp)
+
+###Preform and plot PCA
+PCA1<-prcomp(seeds.plot[,1:4])
+jpeg(paste(Clade,"PCA.jpg",sep=""))
+autoplot(PCA1,data=seeds.plot,colour='MS',
+         label=TRUE,loadings=TRUE,
+         loading.label=TRUE,loadings.label.size=3,
+         frame=TRUE
+         )
+dev.off()
+print(PCA1)
+PCAprint<-PCA1$rotation
+EigenValues<-PCA1$sdev
+PCAprint1<-rbind(EigenValues,PCAprint)
+PCAprint1
+write.csv(PCAprint1,paste(Clade,"PCA1.csv",sep=""))
+
+write.csv(seeds.plot,paste(Clade,"FunctionalGroups.csv",sep=""))
+write.csv(MSOUTPUT,paste(Clade,"MS_Output.csv",sep=""))
+```
+
+```{r,out.width="40%"}
+File<-"Conifer1"
+knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Conifer2"
+knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Conifer3"
+knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+```
+
+Additionally, I plotted each group on a PCA scale so that they could be visualized in one plot. 
+Here the red lines represent the directions of the ordination and each conifer group is the colors
+on the right. 
+
+
+```{r,out.width="40%"}
+File<-"ConiferPCA"
+knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+```
+These three groups are labeled in future work.
+
+Southern Pines: The Green group that has higher mean temp and higher min VPD. 
+Northern Pines: The Red Group Colder temps, mid-elevation.
+Abies(Firs): The Blue group (one) High elevation and colder temps.
+
+Here is the same thing for the hardwoods:
+```{r,include=FALSE,eval=FALSE}
+###Hardwoods
+
+read<-read.csv(paste(w_dir,"output.csv",sep=""),stringsAsFactors=FALSE)
+Sampledf<-read[,-1]
+Variableset<-c("sp","Type","Maxtemp","Mintemp","Meantemp","MinPPT","Minelevation","Maxelevation","MinVPD")
+Variableset2<-c("sp","Type","Meantemp","MinPPT","MinVPD","Maxelevation")#Noelevation
+
+Sampledf<-Sampledf[,Variableset2]
+
+
+Clade="Hardwoods"
+OneClade<-Sampledf[Sampledf[,2]==Clade,]
+tree.labels<-OneClade[,c("sp")]
+OneCladeproc<-((OneClade[c(-1,-2)]))
+Height<-dim(OneCladeproc)[1]
+Width<-dim(OneCladeproc)[2]
+
+t<-as.numeric(data.matrix(OneCladeproc))
+print(t)
+
+#seeds.data<-matrix(t,Width,Height)
+row1<-t[c(1:Height)]
+row1<- (row1-mean(row1))/sd(row1)
+row2<-t[c((1+1*Height):(2*Height))]
+row2<- (row2-mean(row2))/sd(row2)
+row3<-t[c((1+2*Height):(3*Height))]
+row3<- (row3-mean(row3))/sd(row3)
+row4<-t[c((1+3*Height):(4*Height))]
+row4<- (row4-mean(row4))/sd(row4)
+
+seeds.data<-rbind(row1,row2,row3,row4)
+names<-colnames(Sampledf)[c(-1,-2)]
+
+##Set to 5 groups
+
+bandwidth=1.2
+#seeds.data<-cbind(names,seeds.data)
+system.time( bms.clustering <- lapply( bandwidth,
+                                       function( h ){ bmsClustering( seeds.data, h=h ) } ) )
+names( bms.clustering[[1]] )
+
+
+ms.labels1 <- bms.clustering[[1]]$labels
+print( ms.labels1 )
+ms.modes1 <- bms.clustering[[1]]$components
+print( ms.modes1 )
+MSOUTPUT<-cbind(Variableset2[c(-1,-2)],ms.modes1)
+
+
+## plot
+par( mfrow=c( 1,2) )
+for(i in 1:(length(names)-1)){
+  jpeg(paste(Clade,i," at",bandwidth,".jpg",sep=""))
+  plot( seeds.data[(i),], seeds.data[(i+1),], col=bms.clustering[[1]]$labels,
+        xlab=names[(i)], ylab=names[(i+1)], main=paste(Clade,nrow(seeds.data),"Groups",sep=""),
+        cex=0.65, pch=16 )
+  dev.off()  
+}
+
+ms.labels6 <- bms.clustering[[1]]$labels
+print( ms.labels6 )
+ms.modes6 <- bms.clustering[[1]]$components
+print(ms.modes6)
+B<-cbind(OneClade,ms.labels6)
+
+seeds.plot<-data.frame(t(seeds.data))
+colnames(seeds.plot)<-names
+seeds.plot<-as.data.frame(cbind(seeds.plot,B$sp,as.character(B$ms.labels6)))
+colnames(seeds.plot)[6]<-"MS"
+colnames(seeds.plot)[5]<-"sp"
+seeds.plot$MS<-as.factor(seeds.plot$MS)
+seeds.plot$sp<-as.factor(seeds.plot$sp)
+###Preform and plot PCA
+PCA1<-prcomp(seeds.plot[,1:4])
+jpeg(paste(Clade,"PCA at", bandwidth,".jpg",sep=""))
+autoplot(PCA1,data=seeds.plot,colour='MS',
+         label=TRUE,loadings=TRUE,
+         loading.label=TRUE,loadings.label.size=3,
+         frame=TRUE
+)
+dev.off()
+
+PCAprint<-PCA1$rotation
+EigenValues<-PCA1$sdev
+PCAprint1<-rbind(EigenValues,PCAprint)
+
+
+write.csv(PCAprint1,paste(Clade,"PCA1.csv",sep=""))
+write.csv(seeds.plot,paste(Clade,"FunctionalGroupsat",bandwidth,".csv",sep=""))
+write.csv(MSOUTPUT,paste(Clade,"MS_Output.csv",sep=""))
+```
+
+The hardwoods would not easily make 3 functional groups so I expanded it, this is because many of the species are niche 
+specialists that either would have to be grouped as 2 big groups (which seemed coarse for so many species) or have many small 
+individual groups. 
+
+```{r,out.width="40%"}
+File<-"Hardwoods1 at1.2"
+knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Hardwoods2 at1.2"
+knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Hardwoods3 at1.2"
+knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"HardwoodsPCA at1.2"
+knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+```
+
+Here we see there are two major groups and then a lot of groups of outside groups. Looking to avoid parameterizing 8 functional groups, 
+I took the visual grouping of group 5 with group 2 and clustering the right upper corner of the PCA together to create 4 groups:
+
+This gave us the functional groups.:
+
+Northern hardwoods
+
+Southern Hardwoods
+
+Riparians
+
+Halesia
+
+
+
+
+#### Max biomass
+
+To find biomass and growth curves for parameterizing the NECN file of LANDIS-II for the Southern Apps Project.
+In LANDIS-II NECN, max biomass is a hypothetical maximum that a plot could hold if not in competition. To find that I am going to use
+known values of biomass and project them beyond a likely maximum. 
+
+This file is a continuation of the sorter that went through each FIA plot for the states of North Carolina, Tennessee, South Carolina,
+and Georgia, and calculated the Basal area for the plot and each species within it. 
+```{r}
+
+```
+
+In this following loop, we will
+
+Calculate the percent of total biomass
+Calculate the ratio of species biomass to total biomass
+We will isolate the top 60% stands in this ratio by age class, assuming this is growth under near to ideal conditions. 
+Where this regression is at a 150% occupancy of a species, we will set as Max AGB
+Review graphs of this process and save the results
+```{r,eval=FALSE,includ=FALSE}
+#par(mfrow=(2,20))
+df<-NULL
+
+for(species in uniquesp){
+  #print(species)
+ Speciesname<-as.character(SPLUT[,13][SPLUT[,2]==species])
+
+  read<-read.csv(paste(w_dir,species,"AGB.csv",sep=""))
+  read<-as.data.frame(read[complete.cases(read),])
+  #uniquepercent<-unique(read$perecentofAGB)
+ # for(t in uniquepercent){
+  #  agebreak<-read[read$perecentofAGB==t,]
+   # agebreak<-agebreak[agebreak$`AboveGround Carbon`> quantile(agebreak$`AboveGround Carbon`,probs=.80),]
+  #  out<-rbind(agebreak,out)
+  #}
+  
+
+  read$ration<-(read$sumofsp/read$perecentofAGB)
+  read$ration[is.na(read$ration)]<-0.0
+  readquant<-read[read$ration > quantile(read$ration,probs=.50),]
+  readquant$adjsum<-readquant$sumofsp*0.112085
+  reg1<-lm(readquant$adjsum~readquant$perecentofAGB)
+  #max<-max(read$sumofsp[!is.na(read$sumofsp)])
+  maxplot<-max(readquant$sumofsp*0.112085)
+  #SteepestMax<-maxplot$sumofsp/maxplot$perecentofAGB
+  
+  intercept<-as.numeric(reg1$coefficients[1])
+  slope<-as.numeric(reg1$coefficients[2])
+  likelymaximum<-((1.50)*slope)+intercept
+  #print(likelymaximum)#to## g per m2
+  jpeg(filename=(paste(species,"sum versus percent.jpeg")))
+  plot(readquant$adjsum~readquant$perecentofAGB, main=paste(Speciesname",","n=",length(readquant$sumofsp),",","Max AGB",round(likelymaximum,2))
+       ,xlim=c(0,2.0),ylim=c(0,likelymaximum*1.5),xlab="Percent of Stand",ylab="Above ground biomass g/m2",pch = 16,col="red",cex.lab=1.2,cex.axis=1.2)
+  abline(reg1)
+  abline(v=1.50,col="red")
+  abline(h=likelymaximum,col="red")
+  dev.off()
+  #print(likelymaximum)#to## g per m2
+ 
+  plot(readquant$adjsum~readquant$perecentofAGB, main=paste( Speciesname",","n=",length(readquant$sumofsp),",","Max AGB",round(likelymaximum,2))
+       ,xlim=c(0,2.0),ylim=c(0,likelymaximum*1.5),xlab="Percent of Stand",ylab="Above ground biomass g/m2",pch = 16,col="red",cex.lab=1.2,cex.axis=1.2)
+  abline(reg1)
+  abline(v=1.50,col="red")
+  
+    
+    
+    
+  intercept<-as.numeric(reg1$coefficients[1])
+  slope<-as.numeric(reg1$coefficients[2])
+
+  #SteepestMax*.112085
+A<-cbind(species,likelymaximum,maxplot,slope,intercept)
+df<-rbind(A,df)
+}
+
+colnames(df)<-c("Species","Linear Regression(gm-2) at 125% ","Maximum Measured(gm-2)","Slope","Intercept")
+#write.csv(w_dir,"AGBlist.csv")
+
+```
+
+Bringing in the values from the FIA analysis. I isolated out the top 25% of plots by above ground carbon per age, assuming this to be the ideal growth for each species. These were then plotted as box plots which the comparison of each run could be simulated against, as a calibration measure. 
+
+
+
+
+#### Functional Group Parameters
+
+Here we are parameterizing the growth curves of the LANDIS-II model against the box plots. Each line is a model run at a different point in the soil continuum from most sandy on the landscape to most clayey. 
+
+
+
+```{r,out.width="40%"}
+w_dir<-"C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21"
+Species<-"QuerPrin"
+
+File<-"GrowthCurves"
+
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+
+Using the FIA data we additionally fit a Mitscherlich curve to the relationship between age and biomass of the top 25 % of stands.
+This was compared to the biomass in an ideal scenario LANDIS-II runs. 
+
+
+```{r,out.width="40%"}
+File<-"QuerPrinAGB"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+
+We also compare the leaf area index of each species as a simulated forest, against established values for forests.  
+
+The values we are using for this are from:
+
+>He, L., Chen, J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary productivity and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
+
+On the left is a LANDIS output for chestnut oak and on the right are LAI values for a sampled oak/hickory forest.
+
+```{r,out.width="40%"}
+File<-"LAI"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Oak_Hickory"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
+```
+
+
+Here we looked at each of the major species in each functional group, as functional groups parameters in NECN are the major determinants of growth after the ideal growth ANPP parameter. If function group parameters seemed to work for the group but not an
+individual species, then ANPP was adjusted. 
+
+####Northern Hardwoods
+
+#####Quercus Prinus
+
+```{r,out.width="40%"}
+###Code example of running mechanism. 
+library(gridExtra)
+library(knitr)
+w_dir<-"C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21"
+Species<-"QuerPrin"
+
+File<-"GrowthCurves"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"QuerPrinAGB"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"LAI"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Oak_Hickory"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
+```
+
+##### Acer Rubra
+
+
+```{r,out.width="40%"}
+w_dir<-"C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21"
+Species<-"AcerRubr"
+
+File<-"GrowthCurves"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"AcerRubrAGB"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"LAI"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Maple_Beech_Birch"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
+```
+
+#### Northern Conifers
+##### Pinus Strobus 
+
+```{r,out.width="40%"}
+Species<-"PinuStorm"
+File<-"GrowthCurves"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"PinuStormAGB"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"LAI"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"White_Pine"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
+
+```
+
+##### Tsuga Canadensis
+
+
+```{r,out.width="40%"}
+
+Species<-"Tsug Cand"
+
+File<-"GrowthCurves"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Tsug CandAGB"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"LAI"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Hemlock"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
+```
+
+#### Southern Conifers
+##### Pinus Virginiana
+
+```{r,out.width="40%"}
+Species<-"PinuVirg"
+File<-"GrowthCurves"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"PinuVirgAGB"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"LAI"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Longleaf_Slash"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
+```
+
+
+
+##### Pinus Taeda
+```{r,out.width="40%"}
+Species<-"PinuTaed"
+
+File<-"GrowthCurves"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"PinuTaedAGB"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"LAI"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="30%"}
+File<-"Loblolly_Shortleaf"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
+```
+
+
+
+
+
+
+#### Southern Hardwoods
+
+##### liriodendron tulipifera
+
+
+
+
+
+
+##### Carya Glabra
+
+```{r,out.width="40%"}
+Species<-"CaryGlab"
+
+File<-"GrowthCurves"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"CaryGlabAGB"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"LAI"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Oak_Hickory"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
+```
+
+#### Riparian 
+
+##### Betula Alleghaniensis
+
+```{r,out.width="40%"}
+
+Species<-"BetuAlle"
+
+File<-"GrowthCurves"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="30%"}
+File<-"BetuAlleAGB"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="30%"}
+File<-"LAI"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="30%"}
+File<-"Maple_Beech_Birch"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
+```
+
+#### Abies 
+##### Frasier Fir 
+
+```{r,out.width="40%"}
+
+
+Species<-"Frasfir"
+
+File<-"GrowthCurves"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"FrasFirAGB"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"LAI"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
+```
+```{r,out.width="40%"}
+File<-"Fir_Spruce"
+knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
+```
+
+
+If you are interested in the code to create this see the R-Markdown file on this page.
+To return to the main page click [here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018)
