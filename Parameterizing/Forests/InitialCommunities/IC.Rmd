@@ -1,0 +1,2115 @@
+---
+title: "Initial Communities"
+
+author: "ZJ"
+
+date: "March 25, 2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r python stuff, message=FALSE,warning=FALSE,include=FALSE}
+library(reticulate)
+use_condaenv("randpython")
+#import("geopandas")
+#import("pandas")
+#import("gdal")
+#import("rasterio")
+#virtualenv_list()
+
+```
+
+Initial Communities: 
+In order to parameterize initial communities for LANDIS, you need the age classes and biomass for trees in each raster cell on the
+landscape. The problem here is one of coverage (have sufficient data about the location of certain stands) and data limitations (age
+class is not always provided, nor a sufficient measure of carbon or biomass). FIA data while often the richest source of data on forest
+stands is nowhere near to contiguous and is fuzzed to the public (locations are exchanged within a county) which can provide false
+spatial relations between trees. Imputation maps can estimate the amount of each tree species expected at each location, but often lack
+the more robust data needed for stand age and biomass.  Our concept here in creating an initial community is to use the strengths of
+both these methods. We will use the spatial estimations provided by imputation data and associate it with current and recent FIA plot
+to take advantage of their more robust data.  We will use several indexes of similarity ( or dissimilarity) to compare imputed raster
+cell compositions with the composition of FIA sites, assuming that the FIA sites provide a stand-in example for a stand of that type.
+
+
+####FS imputation maps 
+We begin by using FS imputation maps. These maps can be found at https://www.fs.usda.gov/rds/archive/Product/RDS-2013-0013.   These maps were created combining MODIS imagery with environmental variables, using a k-nearest neighbor and canonical correspondence
+analysis to estimate the abundance and distribution of each species at a 250 m pixel size (Wilson et al., 2013). 
+
+
+
+Citation:
+Wilson, Barry Tyler; Lister, Andrew J.; Riemann, Rachel I.; Griffith, Douglas M. 2013. Live tree species basal area of the contiguous
+United States (2000-2009). Newtown Square, PA: USDA Forest Service, Rocky Mountain Research Station.
+https://doi.org/10.2737/RDS-2013-0013
+
+
+First, each map was reprojected and masked to the study area.
+```{python,message=FALSE,warning=FALSE,include=FALSE,eval=FALSE}
+#Packages
+import geopandas as gp
+import rasterio as rt
+import rasterio.mask
+import gdal 
+from rasterio.mask import mask
+from rasterio.crs import CRS
+
+##########Functions
+
+def getFeatures(gdf):
+    """Function to parse features from GeoDataFrame in such a manner that rasterio wants them"""
+    import json
+    return [json.loads(gdf.to_json())['features'][0]['geometry']]
+
+
+##Imports
+"This is our list of species of intrest"
+
+specieslist=[832,315,356,373,391,402,407,421,491,544,591,602,731,762,812,
+             731,
+             762,
+             812,
+             931,
+             952,
+             316,
+             621,
+             129,
+             711,
+             132,
+             802,
+             833,
+             261,
+             372,
+             693,
+             901,
+             403,
+             837,
+             131,
+             110,
+             126,
+             409,
+             371,531,318,655,541,951,581,332,97,651,123,16,761,806]
+
+
+#specieslist=[611,491]
+"A simple loop to cut maps"
+for sp in specieslist:
+    print(sp)
+    "Bring in ty wilson's imputation map for a species"
+    filename="C:/Users/zjrobbin/Desktop/sAppsIC/Ty_wilson/Inputs/s"+str(sp)+".img"
+    input_raster=gdal.Open(filename)
+    "create a temp map, This is a weird gdal/rasterio work around"
+    output_raster=r"C:/Users/zjrobbin/Desktop/sAppsIC/Ty_wilson/Inputs/temp.tif"
+    "reformat raster to the format of AOI"
+    gdal.Warp(output_raster,input_raster,dstSRS='EPSG:26917')
+    "bring um back"
+    data=rt.open(output_raster)
+    " get the CRS cod for our projection"    
+    crs = CRS.from_epsg(26917)
+    #print(CRS.to_string(crs))
+    #Lut_tif="C:/Users/zjrobbin/Desktop/Geopandas/temp/practice"+ecoregion+".tif"
+    "load in the AOI shape"
+    AOI=gp.read_file(r"C:/Users/zjrobbin/Desktop/sAppsIC/Ty_wilson/Inputs/Dissolved_AOI.shp",crs={'init':'EPSG:26917'})
+    "get AOI's crs code"
+    geo=AOI.to_crs(crs=data.crs.data)
+    coords=getFeatures(geo)
+    ###Copy the meta data
+    out_meta = data.meta.copy()
+    
+    ####Preform a mask on the raster
+    out_img,out_transform=mask(raster=data,shapes=coords,crop=True)
+    out_meta = data.meta.copy()
+    epsg_code = int(data.crs.data['init'][5:])
+    out_meta.update({"driver": "GTiff",
+                             "height": out_img.shape[1],
+                             "width": out_img.shape[2],
+                             "transform": out_transform}
+                                )
+    ######
+    out_tif="C:/Users/zjrobbin/Desktop/sAppsIC/"+str(sp)+"_cut.tif"
+    #######
+    with rasterio.open(out_tif, "w", **out_meta) as dest:
+        dest.write(out_img)
+    ###rewritting as a presence absence map                 
+    data=rt.open(out_tif)
+    #get stats
+    width=data.width
+    height=data.height
+    projection=data.crs
+   #Get band
+    band1=data.read(1)
+    #Write new
+    new_dataset=rt.open("C:/Users/zjrobbin/Desktop/sAppsIC/PA"+str(sp)+"_cut.tif", 'w', driver='GTiff',height=height, width=width, count=1, dtype='float32', crs=projection) 
+    #Alter band
+    band1[band1!=0]=1
+    #Write
+    new_dataset.write(band1,1)
+    #Shut the door. 
+    new_dataset.close()
+```
+
+Here is what the intial maps looked like and here is our reprojection and masking 
+
+``` {r,fig.height=20.0,fig.width=14.0,align="center",message=FALSE,warning=FALSE}
+library(raster)
+library(rgdal)
+library(RColorBrewer)
+library(rasterVis)
+  
+div_raster_col<-brewer.pal(7,"Spectral")
+single_line_col<-brewer.pal(9,"YlGn")
+single_line_col[1]<-"#000000"
+
+TopTenSP<-c(832,316,621,129,711,806,132,802,833,261)
+
+###Basal Area Maps
+par(mar = c(1,1,2,2),mfrow=c(2,1))
+AOI<-readOGR("R:/fer/rschell/Robbins/Sapps/Model_Prep/sAppsIC_Active/Inputs/Ty_wilson/Inputs/Dissolved_AOI.shp",verbose=FALSE)
+TY_after<-raster("R:/fer/rschell/Robbins/Sapps/Model_Prep/Initial_Communities/Ty_wilson_Backup/Outputs/316_cut.tif")
+TY_before<-raster("R:/fer/rschell/Robbins/Sapps/Model_Prep/Initial_Communities/Ty_wilson_Backup/Inputs/s316.img")
+
+plot(TY_before,main=paste("Ty Wilson's Red Maple map"),axes=FALSE, box=FALSE,col=single_line_col,col.lab="white",breaks=c(0,5,30,45,60,75,100),bg="black")
+plot(AOI,border="white",add=TRUE)
+plot(TY_after,main=paste("Southern Apps. Red Maple",sep=""),axes=FALSE, box=FALSE,col=single_line_col,col.axis="white", breaks=c(0,5,30,45,60,75,100), bg="black" )
+plot(AOI,border="white",add=TRUE)
+```
+
+Now that we have a map of those species we need more than the Basal Area. To do this we will do an association by basal area, looking
+a four different mechanisms of association and look which ones look most like the FIA data we have gathered
+[here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/FIA%20Analysis) 
+
+
+
+
+We start but looking at the FIA plots we had identified in our FIA analysis and creating a data frame of each possible species in 
+our study. We also will get the total sum for each row. 
+
+```{r,message=FALSE,warning=FALSE}
+library(sp)
+library(raster); options(scipen=999) # scipen removes scientific notation from FIA data
+library(rgdal)
+library(plyr)
+library(dplyr)
+library(reshape2)
+SPLUT<-read.csv("R:/fer/rschell/Robbins/Sapps/Model_Prep/sAppsIC_Active/Inputs/SpeciesLUT.csv")
+SP<-unique(SPLUT$Species)
+```
+
+
+
+```{r,eval=FALSE}
+###Work Drives
+w_dir<-"C:/Users/zjrobbin/Desktop/sAppsIC/"
+setwd(w_dir)
+
+
+####We want to get all the data to look similar for comparison. 
+#
+#FIA data. 
+#
+###Loading in the FIA sites that are in the study area.
+TREEtbl_all<-read.csv("Inputs/AOI_TREE.csv")
+TREEtbl_all<-(TREEtbl_all[!is.na(TREEtbl_all$TPA_UNADJ),])
+
+###Get the plot numbers
+plot_numbers<-TREEtbl_all$PLT_CN
+
+# Bring in species excel file for my species of interest
+###This is a LUT table that should have the FIA codes for each speies
+spp_file <- read.csv(paste(w_dir,"Inputs/SpeciesLUT.csv",sep=""))
+spp <- spp_file[,"Species"] 
+
+#This selects just the  species of interest from all the species in the FIA plots. 
+tree_data <- TREEtbl_all[TREEtbl_all$SPCD %in% spp,]
+
+
+###Clean the Data####
+tree_data[is.na(tree_data$DIA),]<-0.0
+tree_data<-tree_data[order(-tree_data$DIA),]
+###Get the plotcn
+uniquepltcn<-unique(tree_data$PLT_CN)
+
+#This loop reformats the FIA data and expands it to look like the TW data Dia/
+Plt_DF<-NULL
+for( i in 1:length(uniquepltcn)){
+    two<-NULL
+    end<-NULL
+    Plot<-uniquepltcn[i]
+   # print(i)
+    Thisguy<-tree_data[tree_data$PLT_CN==uniquepltcn[i],]
+    ABFR<-sum(((Thisguy$DIA[Thisguy$SPCD==16]^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==16])
+    ####so the Diam is turned to Basal Area, Mutliplied by the expansion as a matrix, these are summed. then
+    ### I checked this for order of operation concerns.
+    PICRU<-sum((((Thisguy$DIA[Thisguy$SPCD==97])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==97])
+    PIEC2<-sum((((Thisguy$DIA[Thisguy$SPCD==110])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==110])
+    PIPU5<-sum((((Thisguy$DIA[Thisguy$SPCD==123])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==123])
+    PIRI<-sum((((Thisguy$DIA[Thisguy$SPCD==126])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==126])
+    PIST<-sum((((Thisguy$DIA[Thisguy$SPCD==129])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==129])
+    PITA<-sum((((Thisguy$DIA[Thisguy$SPCD==131])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==131])
+    PIVI2<-sum((((Thisguy$DIA[Thisguy$SPCD==132])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==132])
+    TSCA<-sum((((Thisguy$DIA[Thisguy$SPCD==261])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==261])
+    ACPE<-sum((((Thisguy$DIA[Thisguy$SPCD==315])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==315])
+    ACRU<-sum((((Thisguy$DIA[Thisguy$SPCD==316])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==316])
+    ACSA3<-sum((((Thisguy$DIA[Thisguy$SPCD==318])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==318])
+    AEFL<-sum((((Thisguy$DIA[Thisguy$SPCD==332])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==332])
+    AMAR<-sum((((Thisguy$DIA[Thisguy$SPCD==356])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==356])
+    BEAL<-sum((((Thisguy$DIA[Thisguy$SPCD==371])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==371])
+    BELE<-sum((((Thisguy$DIA[Thisguy$SPCD==372])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==372])
+    BENI<-sum((((Thisguy$DIA[Thisguy$SPCD==373])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==373])
+    CACA18<-sum((((Thisguy$DIA[Thisguy$SPCD==391])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==391])
+    CARCO<-sum((((Thisguy$DIA[Thisguy$SPCD==402])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==402])
+    CARGL<-sum((((Thisguy$DIA[Thisguy$SPCD==403])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==403])
+    CAROV<-sum((((Thisguy$DIA[Thisguy$SPCD==407])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==407])
+    CARAL<-sum((((Thisguy$DIA[Thisguy$SPCD==409])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==409])
+    CASDE<-sum((((Thisguy$DIA[Thisguy$SPCD==421])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==421])
+    COFL2<-sum((((Thisguy$DIA[Thisguy$SPCD==491])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==491])
+    FAGR<-sum((((Thisguy$DIA[Thisguy$SPCD==531])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==531])
+    FAXI<-sum((((Thisguy$DIA[Thisguy$SPCD==541])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==541])
+    FAPE<-sum((((Thisguy$DIA[Thisguy$SPCD==544])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==544])
+    HADI<-sum((((Thisguy$DIA[Thisguy$SPCD==581])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==581])
+    ILOP<-sum((((Thisguy$DIA[Thisguy$SPCD==591])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==591])
+    JUNI<-sum((((Thisguy$DIA[Thisguy$SPCD==602])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==602])
+    LIST2<-sum((((Thisguy$DIA[Thisguy$SPCD==611])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==611])
+    LITU<-sum((((Thisguy$DIA[Thisguy$SPCD==621])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==621])
+    MAAC<-sum((((Thisguy$DIA[Thisguy$SPCD==651])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==651])
+    MAMA<-sum((((Thisguy$DIA[Thisguy$SPCD==655])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==655])
+    NYSY<-sum((((Thisguy$DIA[Thisguy$SPCD==693])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==693])
+    OXAR<-sum((((Thisguy$DIA[Thisguy$SPCD==711])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==711])
+    PLOC<-sum((((Thisguy$DIA[Thisguy$SPCD==731])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==731])
+    PRPE<-sum((((Thisguy$DIA[Thisguy$SPCD==761])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==761])
+    PRSE<-sum((((Thisguy$DIA[Thisguy$SPCD==761])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==761])
+    QULA2<-sum((((Thisguy$DIA[Thisguy$SPCD==802])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==802])
+    QUCO2<-sum((((Thisguy$DIA[Thisguy$SPCD==806])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==806])
+    QUFA<-sum((((Thisguy$DIA[Thisguy$SPCD==812])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==812])
+    QUPR2<-sum((((Thisguy$DIA[Thisguy$SPCD==832])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==832])
+    QURU<-sum((((Thisguy$DIA[Thisguy$SPCD==833])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==833])
+    QUST<-sum((((Thisguy$DIA[Thisguy$SPCD==835])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==835])
+    LIST2<-sum((((Thisguy$DIA[Thisguy$SPCD==837])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==837])
+    ROBP<-sum((((Thisguy$DIA[Thisguy$SPCD==901])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==901])
+    OXAR<-sum((((Thisguy$DIA[Thisguy$SPCD==931])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==931])
+    TIAM<-sum((((Thisguy$DIA[Thisguy$SPCD==951])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==951])
+    TIAM2<-sum((((Thisguy$DIA[Thisguy$SPCD==952])^2)*.005454)*Thisguy$TPA_UNADJ[Thisguy$SPCD==952])
+    row<-cbind(Plot,ABFR,PICRU,PIEC2,PIPU5,PIRI,PIST,PITA,PIVI2,TSCA,ACPE,ACRU,ACSA3,AEFL,AMAR,BEAL,BELE,BENI,CACA18,CARCO,CARGL,CAROV,CARAL,CASDE,COFL2,FAGR,FAXI,FAPE,HADI,ILOP,JUNI,
+               LIST2,LITU,MAAC,MAMA,NYSY,OXAR,PLOC,PRPE,PRSE,QULA2,QUCO2,QUFA,QUPR2,QURU,QUST,LIST2,ROBP,OXAR,TIAM,TIAM2)
+    
+    Plt_DF<-rbind(Plt_DF,row)
+  }
+###Sum each row for index
+Plt_DF_Sums<-rowSums(Plt_DF[,-1])
+Plt_DF_2<-cbind(Plt_DF,Plt_DF_Sums)
+Plt_CN<-Plt_DF_2[,1]
+Plt_DF_2<-Plt_DF_2[,-1]
+Plt_DF_2<-cbind(Plt_DF_2,Plt_CN)
+Plt_DF_2<-as.data.frame(Plt_DF_2)
+
+
+print(head(Plt_DF_2))
+```
+
+
+*Now we load in our ty wilson maps and turn it into a dataframe. 
+```{r}
+####load in the Biomass Imputation Rasters for the top 50 species as according to FIA Analysis
+w_dir<-"C:/Users/zjrobbin/Desktop/sAppsIC/"
+clip_16 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/16_cut.tif",sep=""))
+clip_97 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/97_cut.tif",sep=""))
+clip_110 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/110_cut.tif",sep=""))
+clip_123 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/123_cut.tif",sep=""))
+clip_126 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/126_cut.tif",sep=""))
+clip_129 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/129_cut.tif",sep=""))
+clip_131 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/131_cut.tif",sep=""))
+clip_132 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/132_cut.tif",sep=""))
+clip_261 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/261_cut.tif",sep=""))
+clip_315 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/315_cut.tif",sep=""))
+clip_316 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/316_cut.tif",sep=""))
+clip_318 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/318_cut.tif",sep=""))
+clip_332 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/332_cut.tif",sep=""))
+clip_356 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/356_cut.tif",sep=""))
+clip_371 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/371_cut.tif",sep=""))
+clip_372 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/372_cut.tif",sep=""))
+clip_373 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/373_cut.tif",sep=""))
+clip_391 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/391_cut.tif",sep=""))
+clip_402 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/402_cut.tif",sep=""))
+clip_403 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/403_cut.tif",sep=""))
+clip_407 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/407_cut.tif",sep=""))
+clip_409 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/409_cut.tif",sep=""))
+clip_421 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/421_cut.tif",sep=""))
+clip_491 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/491_cut.tif",sep=""))
+clip_531 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/531_cut.tif",sep=""))
+clip_541 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/541_cut.tif",sep=""))
+clip_544 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/544_cut.tif",sep=""))
+clip_581 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/581_cut.tif",sep=""))
+clip_591 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/591_cut.tif",sep=""))
+clip_602 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/602_cut.tif",sep=""))
+clip_611 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/611_cut.tif",sep=""))
+clip_621 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/621_cut.tif",sep=""))
+clip_651 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/651_cut.tif",sep=""))
+clip_655 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/655_cut.tif",sep=""))
+clip_693 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/693_cut.tif",sep=""))
+clip_711 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/711_cut.tif",sep=""))
+clip_731 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/731_cut.tif",sep=""))
+clip_761 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/761_cut.tif",sep=""))
+clip_762 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/762_cut.tif",sep=""))
+clip_802 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/802_cut.tif",sep=""))
+clip_806 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/806_cut.tif",sep=""))
+clip_812 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/812_cut.tif",sep=""))
+clip_832 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/832_cut.tif",sep=""))
+clip_833 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/833_cut.tif",sep=""))
+clip_835 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/833_cut.tif",sep=""))
+clip_837 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/837_cut.tif",sep=""))
+clip_901 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/901_cut.tif",sep=""))
+clip_931 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/931_cut.tif",sep=""))
+clip_951 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/951_cut.tif",sep=""))
+clip_952 <- raster(paste(w_dir,"/Inputs/Ty_wilson/Outputs/952_cut.tif",sep=""))
+
+# Stack the rasters
+clip_stack<-stack(c(clip_16, clip_97, clip_110, clip_123 , clip_126,clip_129, clip_131, clip_132, clip_261, clip_315,
+              clip_316,clip_318,clip_332,clip_356,clip_371,clip_372,clip_373,clip_391,clip_402,clip_403,clip_407,
+              clip_409,clip_421,clip_491,clip_531,clip_541,clip_544,clip_581,clip_591,clip_602,clip_611,
+              clip_621,clip_651,clip_655,clip_693,clip_711,clip_731,clip_761,clip_762,clip_802,clip_806,clip_812,clip_832,clip_833,
+              clip_835,clip_837,clip_901,clip_931,clip_951,clip_952))
+
+has.data = which(!is.na(getValues(max(clip_stack, na.rm=TRUE))))
+N_hasdata<-length(has.data)
+###Visualize
+plot(clip_stack)
+###Create Dataframe
+clip_stack_df <- as.data.frame(clip_stack)
+####Clear the rasters
+rm(clip_16, clip_97, clip_110, clip_123 , clip_126,clip_129, clip_131, clip_132, clip_261, clip_315,
+  clip_316,clip_318,clip_332,clip_356,clip_371,clip_372,clip_373,clip_391,clip_402,clip_403,clip_407,
+  clip_409,clip_421,clip_491,clip_531,clip_541,clip_544,clip_581,clip_591,clip_602,clip_611,
+  clip_621,clip_651,clip_655,clip_693,clip_711,clip_731,clip_761,clip_762,clip_802,clip_806,clip_812,clip_832,clip_833,
+  clip_835,clip_837,clip_901,clip_931,clip_951,clip_952)
+###Count how many locations contain data
+count1=as.data.frame(rowSums(clip_stack_df[,1:11]))
+N_zeros_indataframe<-sum(is.na(count1))
+N_zero_and_hasdata<-sum(N_zeros_indataframe,N_hasdata)
+NumberofRaster<-nrow(clip_stack_df)
+
+
+
+# Extract data for each cell of raster stack
+cr <- extract(clip_stack, c(1: ncell(clip_stack)))
+clip_ras_df <- as.data.frame(cr)
+```
+
+
+
+
+```{r}
+########Create a threshold for which to remove low proportion trees#####
+########This was used out of fear of over distribution of species. 
+# Becuase we believe the Ty Wilson data to be perhaps too liberal with placing low basal area trees across a wider area, we set a #tresehold of removal to remove basal area below .05 of the total basal area. This also makes association earier.
+Threshold=.05
+cr_bi <- cr
+Sum<-rowSums(cr_bi)
+totalBa<-sum(Sum)
+cr_bi<-cbind(cr_bi,Sum)
+Sumper=Sum*Threshold
+cr_bi<-cbind(cr_bi,Sumper)
+
+
+test1<-cr_bi[459415,]
+cr_bi[cr_bi<Sumper]<-0
+test2<-cr_bi[459415,]
+cr_bi<-as.data.frame(cr_bi[,(-52)])
+test1<-as.data.frame((cr_bi[459415,]))
+###This creates a market to locate each raster cell.
+Marker<-as.data.frame(1:nrow(cr))
+cr_bi<-cbind(cr_bi,Marker)
+###Create the data frame
+colnames(cr_bi)<-c('ABFR','PICRU','PIEC2','PIPU5','PIRI','PIST','PITA','PIVI2','TSCA','ACPE','ACRU','ACSA3','AEFL','AMAR','BEAL','BELE','BENI','CACA18','CARCO','CARGL','CAROV','CARAL','CASDE','COFL2','FAGR','FAXI','FAPE','HADI','ILOP','JUNI',
+                   'LIST2','LITU','MAAC','MAMA','NYSY','OXAR','PLOC','PRPE','PRSE','QULA2','QUCO2','QUFA','QUPR2','QURU','QUST','LIST2','LITU',"OXAR","TIAM","TIAM2","Sum","Cell")
+
+#nrow(cr_bi)
+
+```
+
+```{r,eval=FALSE}
+#####Isolate all the empty cells so we don't need to process them
+zeros=cr_bi[(cr_bi[,1]==0 &cr_bi[,2]==0&
+                   cr_bi[,3]==0&
+                   cr_bi[,4]==0&
+                   cr_bi[,5]==0&
+                   cr_bi[,6]==0&
+                   cr_bi[,7]==0&
+                   cr_bi[,8]==0&
+                   cr_bi[,9]==0&
+                   cr_bi[,10]==0&
+                   cr_bi[,11]==0&
+                  cr_bi[,12]==0&
+                  cr_bi[,13]==0&
+               cr_bi[,14]==0&
+               cr_bi[,15]==0&
+               cr_bi[,16]==0&
+               cr_bi[,17]==0&
+               cr_bi[,18]==0&
+               cr_bi[,19]==0&
+               cr_bi[,20]==0&
+               cr_bi[,21]==0&
+               cr_bi[,22]==0&
+               cr_bi[,23]==0&
+               cr_bi[,24]==0&
+               cr_bi[,25]==0&
+               cr_bi[,26]==0&
+               cr_bi[,27]==0&
+               cr_bi[,28]==0&
+               cr_bi[,29]==0&
+               cr_bi[,30]==0&
+               cr_bi[,31]==0&
+               cr_bi[,32]==0&
+               cr_bi[,33]==0&
+               cr_bi[,34]==0&
+               cr_bi[,35]==0&
+               cr_bi[,36]==0&
+               cr_bi[,37]==0&
+               cr_bi[,38]==0&
+               cr_bi[,39]==0&
+               cr_bi[,40]==0&
+               cr_bi[,41]==0&
+               cr_bi[,42]==0&
+               cr_bi[,43]==0&
+               cr_bi[,44]==0&
+               cr_bi[,45]==0&
+               cr_bi[,46]==0&
+               cr_bi[,47]==0&
+               cr_bi[,48]==0&
+               cr_bi[,49]==0&
+               cr_bi[,50]==0&
+               cr_bi[,51]==0),]
+
+
+####Isolate non-empty Cells for processing
+cr_bi_spp=cr_bi[!(cr_bi[,1]==0 &cr_bi[,2]==0&
+                    cr_bi[,3]==0&
+                    cr_bi[,4]==0&
+                    cr_bi[,5]==0&
+                    cr_bi[,6]==0&
+                    cr_bi[,7]==0&
+                    cr_bi[,8]==0&
+                    cr_bi[,9]==0&
+                    cr_bi[,10]==0&
+                    cr_bi[,11]==0&
+                    cr_bi[,12]==0&
+                    cr_bi[,13]==0&
+                    cr_bi[,14]==0&
+                    cr_bi[,15]==0&
+                    cr_bi[,16]==0&
+                    cr_bi[,17]==0&
+                    cr_bi[,18]==0&
+                    cr_bi[,19]==0&
+                    cr_bi[,20]==0&
+                    cr_bi[,21]==0&
+                    cr_bi[,22]==0&
+                    cr_bi[,23]==0&
+                    cr_bi[,24]==0&
+                    cr_bi[,25]==0&
+                    cr_bi[,26]==0&
+                    cr_bi[,27]==0&
+                    cr_bi[,28]==0&
+                    cr_bi[,29]==0&
+                    cr_bi[,30]==0&
+                    cr_bi[,31]==0&
+                    cr_bi[,32]==0&
+                    cr_bi[,33]==0&
+                    cr_bi[,34]==0&
+                    cr_bi[,35]==0&
+                    cr_bi[,36]==0&
+                    cr_bi[,37]==0&
+                    cr_bi[,38]==0&
+                    cr_bi[,39]==0&
+                    cr_bi[,40]==0&
+                    cr_bi[,41]==0&
+                    cr_bi[,42]==0&
+                    cr_bi[,43]==0&
+                    cr_bi[,44]==0&
+                    cr_bi[,45]==0&
+                    cr_bi[,46]==0&
+                    cr_bi[,47]==0&
+                    cr_bi[,48]==0&
+                    cr_bi[,49]==0&
+                    cr_bi[,50]==0&
+                    cr_bi[,51]==0),]
+####Do those two add up? they should
+nrow(zeros)+nrow(cr_bi_spp)
+
+cr_bi_spp<-as.data.frame(cr_bi_spp)
+
+```
+
+Both data frames (imputation data, and FIA plots) are reformatted to have matching features. In this case, that is a basal area 
+sum for each species, and a basal area sum for each total plot in units of a gram per meter squared. Then each raster cell is 
+evaluated against each plot for dissimilarity using a formula such as this: 
+
+
+```{r,echo=TRUE}
+####This is the New_Sorensons_Similarity_function
+
+New_Sorensons_Similarity<-function(Break,Plt_DF_2){####Break is just our cr_bi_spp broken down for speed
+                                                    ####Plt_DF_2 is the FIA product above
+ ###Create Null objects to feed
+  Log<-NULL
+  Output<-NULL
+  for(j in 1:nrow(Break)){
+    ##Each raster cell
+    practice<-Break[j,]
+    cell<-practice$Cell
+    print(cell)
+    ####Get just the trees, no sums
+    finder1<-practice[,c(-51,-52)]
+    Sample1<-Plt_DF_2
+    Sample2<-finder1
+    DeltaSamples<-NULL
+    ###Preforming the Indexing
+    if(!is.null(nrow(Sample2))){
+      for(i in 1:length(Sample2)){
+        #The top half of the function
+        ###is a iterable maximum function.
+        absw=abs(Sample2[,i]-Sample1[,i])
+        mixed<-(Sample2[,i]+Sample1[,i])
+        top<-(mixed-absw)
+        halfed=.5*top
+        DeltaSamples<-cbind(DeltaSamples,halfed)
+        
+      }
+    }
+    ###The sum of Top
+      Top<-rowSums(DeltaSamples)
+    ###The sum of bottom     
+      Bottom<-Plt_DF_2[,51]+practice[,51]
+    ###The index
+    index<-Top/Bottom
+   ###Assign each site its index
+    Plt_indexed<-cbind(Plt_DF_2,index)
+   ###Find the one with the highest index
+    Closestplot<-max(Plt_indexed[,52][Plt_indexed[,53]==max(index)])
+    #Record the score
+    indexscore<-(Plt_indexed$index[Plt_indexed$Plt_CN==Closestplot])
+    ###Create a row of the cell, its assinged plot and the score
+    row<-cbind(cell,Closestplot,indexscore)    
+    Output<-rbind(row,Output)
+    ###This is for analysis log
+    row2<-cbind(j,indexscore,finder1)
+    row3<-cbind(j,indexscore,Plt_DF_2[Plt_DF_2$Plt_CN==Closestplot,])
+    row3<-row3[,c(-53,-54)]
+    colnames(row3)<-c("iteration","index",'ABFR','PICRU','PIEC2','PIPU5','PIRI','PIST','PITA','PIVI2','TSCA','ACPE','ACRU','ACSA3','AEFL',
+                      'AMAR','BEAL','BELE','BENI','CACA18','CARCO','CARGL','CAROV','CARAL','CASDE','COFL2','FAGR','FAXI','FAPE','HADI','ILOP',
+                      'JUNI','LIST2','LITU','MAAC','MAMA','NYSY','OXAR','PLOC','PRPE','PRSE','QULA2','QUCO2','QUFA','QUPR2','QURU','QUST',
+                      'LIST2','LITU',"OXAR","TIAM","TIAM2")
+    colnames(row2)<-c("iteration","index",'ABFR','PICRU','PIEC2','PIPU5','PIRI','PIST','PITA','PIVI2','TSCA','ACPE','ACRU','ACSA3','AEFL',
+                      'AMAR','BEAL','BELE','BENI','CACA18','CARCO','CARGL','CAROV','CARAL','CASDE','COFL2','FAGR','FAXI','FAPE','HADI','ILOP',
+                      'JUNI','LIST2','LITU','MAAC','MAMA','NYSY','OXAR','PLOC','PRPE','PRSE','QULA2','QUCO2','QUFA','QUPR2','QURU','QUST',
+                      'LIST2','LITU',"OXAR","TIAM","TIAM2")
+    Log<-rbind(Log,row2,row3)
+    
+  }
+  
+  return(list(Output,Log))
+}
+```
+
+
+The formulas we used for this were, 
+
+Bray Curtis: 
+$1- ((2Cij)/Si+Sj)$
+
+where C is the Basal area of species in common between the two sites and S is the total basal area at each site. 
+
+Jaccards: 
+$1- (Ci+Cj/Si+Sj)$ 
+The Basal area of species that are include in both sites(inclusive) divided by the the totals 
+
+
+
+Euclidean Distance: 
+$Sqrt((ai+aj)^2+(bi+bj)^2..(ni+nj)^2)$
+the common biomass is square and the square root of the sum is taken. 
+
+
+And Sorensens: 
+$\frac{2*\sum(min(aij+bij))}{Si+Sj}$
+
+
+The two least dissimilar plots are assigned to one another. This process is repeated for each raster cell. 
+
+We tested several associations so we could compare the results with the initial maps and the FIA data we had gathered earlier
+
+
+```{r,,message=FALSE,warning=FALSE,include=FALSE,eval=FALSE}
+###Faster before 50,000
+#FakeBreak<-cr_bi_spp[1:500,]
+FirstBreak<-cr_bi_spp[1:breaklist[1],]
+SecondBreak<-cr_bi_spp[breaklist[1]:breaklist[2],]
+ThirdBreak<-cr_bi_spp[breaklist[2]:breaklist[3],]
+FourthBreak<-cr_bi_spp[breaklist[3]:breaklist[4],]
+FifthBreak<-cr_bi_spp[breaklist[4]:breaklist[5],]
+SixthBreak<-cr_bi_spp[breaklist[5]:breaklist[6],]
+SeventhBreak<-cr_bi_spp[breaklist[6]:breaklist[7],]
+EighthBreak<-cr_bi_spp[breaklist[7]:breaklist[8],]
+NinthBreak<-cr_bi_spp[breaklist[8]:breaklist[9],]
+TenthBreak<-cr_bi_spp[breaklist[9]:breaklist[10],]
+###make sure it adds up
+nrow(FirstBreak)+nrow(SecondBreak)+nrow(ThirdBreak)+nrow(FourthBreak)+nrow(FifthBreak)+
+  nrow(SixthBreak)+nrow(SeventhBreak)+nrow(EighthBreak)+nrow(NinthBreak)+nrow(TenthBreak)
+nrow(cr_bi_spp)
+
+
+
+#####Preform Association.
+FirstSection<-New_Sorensons_Similarity(FirstBreak,Plt_DF_2)
+SecondSection<-New_Sorensons_Similarity(SecondBreak,Plt_DF_2)
+ThirdSection<-New_Sorensons_Similarity(ThirdBreak,Plt_DF_2)
+FourthSection<-New_Sorensons_Similarity(FourthBreak,Plt_DF_2)
+FifthSection<-New_Sorensons_Similarity(FifthBreak,Plt_DF_2)
+SixthSection<-New_Sorensons_Similarity(SixthBreak,Plt_DF_2)
+SeventhSection<-New_Sorensons_Similarity(SeventhBreak,Plt_DF_2)
+EighthSection<-New_Sorensons_Similarity(EighthBreak,Plt_DF_2)
+NinthSection<-New_Sorensons_Similarity(NinthBreak,Plt_DF_2)
+TenthSection<-New_Sorensons_Similarity(TenthBreak,Plt_DF_2)
+
+
+
+##Post run save point
+save.image(file="New_Sorensons_Similarity_Practice.Rdata")
+
+###Extract the Output and the Log
+Output<-rbind(as.data.frame(FirstSection[1]),as.data.frame(SecondSection[1]),as.data.frame(ThirdSection[1]),
+              as.data.frame(FourthSection[1]),as.data.frame(FifthSection[1]),as.data.frame(SixthSection[1]),
+              as.data.frame(SeventhSection[1]),as.data.frame(EighthSection[1]),
+              as.data.frame(NinthSection[1]),as.data.frame(TenthSection[1]))
+
+length(unique(Output$Closestplot))
+
+Log<-rbind(as.data.frame(FirstSection[2]),as.data.frame(SecondSection[2]),as.data.frame(ThirdSection[2]),
+            as.data.frame(FourthSection[2]),as.data.frame(FifthSection[2]),as.data.frame(SixthSection[2]),
+            as.data.frame(SeventhSection[2]),as.data.frame(EighthSection[2]),as.data.frame(NinthSection[2]),
+            as.data.frame(NinthSection[2]),as.data.frame(TenthSection[2]))
+
+colnames(Log)<-c("iteration","index",'ABFR','PICRU','PIEC2','PIPU5','PIRI','PIST','PITA','PIVI2','TSCA','ACPE','ACRU','ACSA3','AEFL',
+                  'AMAR','BEAL','BELE','BENI','CACA18','CARCO','CARGL','CAROV','CARAL','CASDE','COFL2','FAGR','FAXI','FAPE','HADI','ILOP',
+                  'JUNI','LIST2','LITU','MAAC','MAMA','NYSY','OXAR','PLOC','PRPE','PRSE','QULA2','QUCO2','QUFA','QUPR2','QURU','QUST',
+                  'LIST2','LITU',"OXAR","TIAM","TIAM2")
+
+write.csv(Output,paste(w_dir,"New_Sorensons_Similarity_Practice.csv",sep=""))
+Output<-read.csv(paste(w_dir,"New_Sorensons_Similarity_Practice.csv",sep=""))
+
+```
+
+
+
+```{r,eval=FALSE}
+###Check for plots that are assigned, more than one index. 
+NewOutput<-Output[!duplicated(Output$cell),]
+NewOutput<-NewOutput[,-1]
+###Return the ZeroCells
+zeroscells<-as.data.frame(zeros$Cell)
+zeroscellsPLT_CN=0
+zeroscellsx<-0
+zeroscellsindex<-0
+zerobind<-cbind(zeroscells,zeroscellsPLT_CN,zeroscellsindex)
+colnames(zerobind)<-c("cell","Closestplot","indexscore")
+
+Output2<-rbind(zerobind,NewOutput)
+Output2<-Output2[order(Output2$cell,decreasing=FALSE),]
+####
+listofoccupied<-cr_bi$Cell
+listoffinal<-Output2$cell
+###Fill in any missing cells
+missing<-listofoccupied[!(listofoccupied %in% Output2$cell)]
+missingrow<-cbind(missing,"0","0")
+colnames(missingrow)<-c("cell","Closestplot","indexscore")  
+Output3<-rbind(Output2,missingrow)  
+Output4<-Output3[order(as.numeric(Output3$cell),decreasing=FALSE),]
+print(Output)
+
+write.csv(Output4,paste(w_dir,"New_Sorensons_Similarity_Output_9_30.csv",sep=""))
+write.csv(Log,paste(w_dir,"New_Sorensons_Similarity_log_9_30.csv",sep=""))
+```
+
+
+#### Method Comparison
+Lets look at the four methods to see which is best. 
+
+```{r,include=FALSE, eval=FALSE,warning=FALSE}
+#####
+#####Here we load in and  compare our modeling methods. Sorenson's, Jaccard's, Curtis-Bray, Euclidian.
+#####It compares these model outputs to the TW and FIA data 
+#####ZR 2018
+
+
+###Libraries#
+  library(ggplot2)
+  library(ggrepel)
+  library(plyr)
+  library(wesanderson)
+  library(cowplot)
+  library(raster)
+
+###Color Setup 
+  LtoM <-colorRampPalette(c('red', 'yellow' ))
+  Mid <- "snow3"
+  MtoH <-colorRampPalette(c('lightgreen', 'darkgreen'))
+  MtoH2<-colorRampPalette(c('burlywood','cadetblue3'))
+  LtoM2<-colorRampPalette(c('coral','chocolate'))
+
+###Work Drives
+w_dir<-"C:/Users/zjrobbin/Desktop/sAppsIC/Inputs"
+setwd(w_dir)
+
+
+
+
+#####Ty Wilson Imputations
+clip_16 <- raster(paste(w_dir,"/Ty_wilson/Outputs/16_cut.tif",sep=""))
+clip_97 <- raster(paste(w_dir,"/Ty_wilson/Outputs/97_cut.tif",sep=""))
+clip_110 <- raster(paste(w_dir,"/Ty_wilson/Outputs/110_cut.tif",sep=""))
+clip_123 <- raster(paste(w_dir,"/Ty_wilson/Outputs/123_cut.tif",sep=""))
+clip_126 <- raster(paste(w_dir,"/Ty_wilson/Outputs/126_cut.tif",sep=""))
+clip_129 <- raster(paste(w_dir,"/Ty_wilson/Outputs/129_cut.tif",sep=""))
+clip_131 <- raster(paste(w_dir,"/Ty_wilson/Outputs/131_cut.tif",sep=""))
+clip_132 <- raster(paste(w_dir,"/Ty_wilson/Outputs/132_cut.tif",sep=""))
+clip_261 <- raster(paste(w_dir,"/Ty_wilson/Outputs/261_cut.tif",sep=""))
+clip_315 <- raster(paste(w_dir,"/Ty_wilson/Outputs/315_cut.tif",sep=""))
+clip_316 <- raster(paste(w_dir,"/Ty_wilson/Outputs/316_cut.tif",sep=""))
+clip_318 <- raster(paste(w_dir,"/Ty_wilson/Outputs/318_cut.tif",sep=""))
+clip_332 <- raster(paste(w_dir,"/Ty_wilson/Outputs/332_cut.tif",sep=""))
+clip_356 <- raster(paste(w_dir,"/Ty_wilson/Outputs/356_cut.tif",sep=""))
+clip_371 <- raster(paste(w_dir,"/Ty_wilson/Outputs/371_cut.tif",sep=""))
+clip_372 <- raster(paste(w_dir,"/Ty_wilson/Outputs/372_cut.tif",sep=""))
+clip_373 <- raster(paste(w_dir,"/Ty_wilson/Outputs/373_cut.tif",sep=""))
+clip_402 <- raster(paste(w_dir,"/Ty_wilson/Outputs/402_cut.tif",sep=""))
+clip_403 <- raster(paste(w_dir,"/Ty_wilson/Outputs/403_cut.tif",sep=""))
+clip_407 <- raster(paste(w_dir,"/Ty_wilson/Outputs/407_cut.tif",sep=""))
+clip_409 <- raster(paste(w_dir,"/Ty_wilson/Outputs/409_cut.tif",sep=""))
+clip_491 <- raster(paste(w_dir,"/Ty_wilson/Outputs/491_cut.tif",sep=""))
+clip_531 <- raster(paste(w_dir,"/Ty_wilson/Outputs/531_cut.tif",sep=""))
+clip_541 <- raster(paste(w_dir,"/Ty_wilson/Outputs/541_cut.tif",sep=""))
+clip_544 <- raster(paste(w_dir,"/Ty_wilson/Outputs/544_cut.tif",sep=""))
+clip_581 <- raster(paste(w_dir,"/Ty_wilson/Outputs/581_cut.tif",sep=""))
+clip_591 <- raster(paste(w_dir,"/Ty_wilson/Outputs/591_cut.tif",sep=""))
+clip_602 <- raster(paste(w_dir,"/Ty_wilson/Outputs/602_cut.tif",sep=""))
+clip_611 <- raster(paste(w_dir,"/Ty_wilson/Outputs/611_cut.tif",sep=""))
+clip_621 <- raster(paste(w_dir,"/Ty_wilson/Outputs/621_cut.tif",sep=""))
+clip_651 <- raster(paste(w_dir,"/Ty_wilson/Outputs/651_cut.tif",sep=""))
+clip_655 <- raster(paste(w_dir,"/Ty_wilson/Outputs/655_cut.tif",sep=""))
+clip_693 <- raster(paste(w_dir,"/Ty_wilson/Outputs/693_cut.tif",sep=""))
+clip_711 <- raster(paste(w_dir,"/Ty_wilson/Outputs/711_cut.tif",sep=""))
+clip_731 <- raster(paste(w_dir,"/Ty_wilson/Outputs/731_cut.tif",sep=""))
+clip_761 <- raster(paste(w_dir,"/Ty_wilson/Outputs/761_cut.tif",sep=""))
+clip_762 <- raster(paste(w_dir,"/Ty_wilson/Outputs/762_cut.tif",sep=""))
+clip_802 <- raster(paste(w_dir,"/Ty_wilson/Outputs/802_cut.tif",sep=""))
+clip_806 <- raster(paste(w_dir,"/Ty_wilson/Outputs/806_cut.tif",sep=""))
+clip_812 <- raster(paste(w_dir,"/Ty_wilson/Outputs/812_cut.tif",sep=""))
+clip_832 <- raster(paste(w_dir,"/Ty_wilson/Outputs/832_cut.tif",sep=""))
+clip_833 <- raster(paste(w_dir,"/Ty_wilson/Outputs/833_cut.tif",sep=""))
+clip_835 <- raster(paste(w_dir,"/Ty_wilson/Outputs/833_cut.tif",sep=""))
+clip_837 <- raster(paste(w_dir,"/Ty_wilson/Outputs/837_cut.tif",sep=""))
+clip_901 <- raster(paste(w_dir,"/Ty_wilson/Outputs/901_cut.tif",sep=""))
+clip_931 <- raster(paste(w_dir,"/Ty_wilson/Outputs/931_cut.tif",sep=""))
+clip_951 <- raster(paste(w_dir,"/Ty_wilson/Outputs/951_cut.tif",sep=""))
+clip_952 <- raster(paste(w_dir,"/Ty_wilson/Outputs/952_cut.tif",sep=""))
+
+# Stack the rasters
+clip_stack<-stack(c(clip_16, clip_97, clip_110, clip_123 , clip_126,clip_129, clip_131, clip_132, clip_261, clip_315,
+                    clip_316,clip_318,clip_332,clip_356,clip_371,clip_372,clip_373,clip_402,clip_403,clip_407,
+                    clip_409,clip_491,clip_531,clip_541,clip_544,clip_581,clip_591,clip_602,clip_611,
+                    clip_621,clip_651,clip_655,clip_693,clip_711,clip_731,clip_761,clip_762,clip_802,clip_806,clip_812,clip_832,clip_833,
+                    clip_835,clip_837,clip_901,clip_931,clip_951,clip_952))
+
+has.data = which(!is.na(getValues(max(clip_stack, na.rm=TRUE))))
+N_hasdata<-length(has.data)
+plot(clip_stack)
+clip_stack_df <- as.data.frame(clip_stack)
+rm(clip_16, clip_97, clip_110, clip_123 , clip_126,clip_129, clip_131, clip_132, clip_261, clip_315,
+   clip_316,clip_318,clip_332,clip_356,clip_371,clip_372,clip_373,clip_391,clip_402,clip_403,clip_407,
+   clip_409,clip_421,clip_491,clip_531,clip_541,clip_544,clip_581,clip_591,clip_602,clip_611,
+   clip_621,clip_651,clip_655,clip_693,clip_711,clip_731,clip_761,clip_762,clip_802,clip_806,clip_812,clip_832,clip_833,
+   clip_835,clip_837,clip_901,clip_931,clip_951,clip_952)
+count1=as.data.frame(rowSums(clip_stack_df[,1:11]))
+N_zeros_indataframe<-sum(is.na(count1))
+N_zero_and_hasdata<-sum(N_zeros_indataframe,N_hasdata)
+
+
+
+
+NumberofRaster<-nrow(clip_stack_df)
+
+# Extract data for each cell of raster stack
+cr <- extract(clip_stack, c(1: ncell(clip_stack)))
+clip_ras_df <- as.data.frame(cr)
+
+cr[is.na(cr[])] <- 0 # replace NA with zero
+
+
+
+
+Marker<-as.data.frame(1:nrow(cr))
+cr_bi <- cr
+Sum<-rowSums(cr_bi)
+cr_bi<-cbind(cr_bi,Sum)
+Threshold=.05
+Sumper=Sum*Threshold
+cr_bi<-cbind(cr_bi,Sumper)
+test1<-cr_bi[459415,]
+cr_bi[cr_bi<Sumper]<-0
+test2<-cr_bi[459415,]
+
+cr_bi<-as.data.frame(cr_bi[,(-52)])
+test1<-as.data.frame((cr_bi[459415,]))
+cr_bi<-cbind(cr_bi,Marker)
+colnames(cr_bi)<-c('16','97','110','123','126','129','131','132','261'
+                   ,'315','316','318','332','356','371','372','373','402','403','407',
+                   '409','491','531','541','544','581','591','602','611','621','651','655',
+                   '693','711','731','761','762','802','806','812','832','833',
+                   '835','837','901','931','951','952',"Sum","Cell")
+
+SP<-c('16','97','110','123','126','129','131','132','261'
+      ,'315','316','318','332','356','371','372','373','402','403','407',
+      '409','491','531','541','544','581','591','602','611','621','651','655',
+      '693','711','731','761','762','802','806','812','832','833',
+      '835','837','901','931','951','952')
+totalBa<-sum(cr_bi$Sum)
+
+output<-NULL
+###This creates a SUM BA for each species for comparison
+for(i in SP){
+ as<-cr_bi[,paste(i)]
+ SumBA<-sum(as)
+ PerBA<-SumBA/totalBa
+ model<-("TW")
+ row<-cbind(i,SumBA,PerBA,model)
+ output<-rbind(row,output)
+}
+###This is the DataFrame With TyWilson Data
+ TW<-output
+ 
+
+ 
+ #####FIA######
+wdir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Initial_Communities/FIA_Sorter_Backup/"
+setwd(wdir)
+outdir<-"/FIA/FIA_Graphing"
+IVIDATA<-read.csv(paste(wdir,"AOI_FIA_Plotdata.csv",sep=""))
+Uniquespecies<-unique(IVIDATA$SPCD)
+Tot_N_species<-length(Uniquespecies)        
+LandscapeDF<-NULL
+AllBA<-sum(IVIDATA$BA)
+
+for(i in Uniquespecies){
+
+  Block<-IVIDATA[IVIDATA$SPCD==i,]
+  SumIVI<-sum(Block$IVI)
+  SumBA<-sum(Block$BA)
+  PercentTotal<-SumBA/AllBA
+  Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+  LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+}
+###The FIA_Data
+FIA_Data<-data.frame(LandscapeDF)
+
+###Switching Drives for the model outputs
+####
+
+
+wdir<-"C:/Users/zjrobbin/Desktop/sAppsIC/"
+setwd(wdir)
+
+##CurtisBray###
+###These are the same for each model
+##They work by looking at the same system used in Mappingoutputs.R Look there for more intricate explanation
+
+AgeGraphs<-read.csv(paste(wdir,"Outputs/Sapps_BC_AGE_TREE_HT_10_2.csv",sep=""))
+Crosswalk<-read.csv(paste(wdir,"Outputs/IC_BC_Cleaned_10_1.csv",sep=""))#[,c("Cell","FIA_site")]
+unique(AgeGraphs$calc_age_rounded)
+Plts<-unique(AgeGraphs$PLT_CN)
+output<-NULL
+CBplots<-length(unique(Crosswalk$Closestplot))
+
+BAperha<-(((AgeGraphs$DIA)^2)*.005454)*AgeGraphs$TPA_UNADJ
+
+AgeGraphs$BAperha<-BAperha
+
+output<-NULL
+for(i in 1:length(Plts)){
+  print(i)
+  One<-as.data.frame(AgeGraphs[AgeGraphs$PLT_CN==Plts[i],])
+  plt<-Plts[i]
+  IC<-aggregate(round(One$CARBON_AG),by=list(SPCD=One$SPCD,AGE=as.numeric(One$calc_age_rounded),BAperha=One$BAperha),FUN=sum)
+  IC$PLT_CN<-plt
+  colnames(IC)<-c("SPCD","AGE","Basal_Area","AboveGround Carbon","PLT_CN")
+  output<-rbind(IC,output)
+}
+unique(output$AGE)
+sp<-unique(output$SPCD)
+
+colnames(Crosswalk)<-c("x","Cell","PLT_CN","index")
+uniquespps<-unique(output$SPCD)
+
+One<-as.data.frame(output)
+IC_under<-aggregate(One$Basal_Area,by=list(SPCD=One$SPCD,PLT_CN=One$PLT_CN),FUN=sum)
+
+CellswithValues<-join(Crosswalk, IC_under, by="PLT_CN")
+Sp<-unique(CellswithValues$SPCD)
+print(Sp)
+Sp<-Sp[!is.na(Sp)]
+CellswithValues$SPCD[is.na(CellswithValues$SPCD)]<-0
+colnames(CellswithValues)<-c("X","Cell","PLT_CN","Index","SPCD","BA")
+totalBa<-sum(!is.na(CellswithValues$BA))
+
+out<-NULL
+
+for(i in Sp){
+  
+  SubCWV<-CellswithValues[CellswithValues$SPCD==i,]
+  SumBA<-sum(SubCWV$BA)
+  PercBA<-SumBA/totalBa
+  row<-cbind(i,SumBA,PercBA)
+  out<-rbind(row,out)
+  }
+
+CurtisBray<-as.data.frame(out)
+totalBa<-sum(CurtisBray$SumBA)
+CurtisBray$PercBA<-CurtisBray$SumBA/totalBa
+
+###Euclidian Distance
+AgeGraphs<-read.csv(paste(wdir,"Outputs/Sapps_Euclidian_FIA_AGE_TREE_HT_10_1.csv",sep=""))
+Crosswalk<-read.csv(paste(wdir,"Outputs/Euclidian_DIST_Output_9_29.csv",sep=""))#[,c("Cell","FIA_site")]
+unique(AgeGraphs$calc_age_rounded)
+Plts<-unique(AgeGraphs$PLT_CN)
+output<-NULL
+
+EUplots<-length(unique(Crosswalk$Closestplot))
+
+
+BAperha<-(((AgeGraphs$DIA)^2)*.005454)*AgeGraphs$TPA_UNADJ
+AgeGraphs$BAperha<-BAperha
+
+output<-NULL
+for(i in 1:length(Plts)){
+  print(i)
+  One<-as.data.frame(AgeGraphs[AgeGraphs$PLT_CN==Plts[i],])
+  plt<-Plts[i]
+  IC<-aggregate(round(One$CARBON_AG),by=list(SPCD=One$SPCD,AGE=as.numeric(One$calc_age_rounded),BAperha=One$BAperha),FUN=sum)
+  IC$PLT_CN<-plt
+  colnames(IC)<-c("SPCD","AGE","Basal_Area","AboveGround Carbon","PLT_CN")
+  output<-rbind(IC,output)
+}
+unique(output$AGE)
+sp<-unique(output$SPCD)
+
+colnames(Crosswalk)<-c("x","Cell","PLT_CN","index")
+uniquespps<-unique(output$SPCD)
+print(i)
+One<-as.data.frame(output)
+IC_under<-aggregate(One$Basal_Area,by=list(SPCD=One$SPCD,PLT_CN=One$PLT_CN),FUN=sum)
+CellswithValues<-join(Crosswalk, IC_under, by="PLT_CN")
+Sp<-unique(CellswithValues$SPCD)
+Sp<-Sp[!is.na(Sp)]
+CellswithValues$SPCD[is.na(CellswithValues$SPCD)]<-0
+colnames(CellswithValues)<-c("X","Cell","PLT_CN","Index","SPCD","BA")
+totalBa<-sum(!is.na(CellswithValues$BA))
+out<-NULL
+for(i in Sp){
+  
+  SubCWV<-CellswithValues[CellswithValues$SPCD==i,]
+  SumBA<-sum(SubCWV$BA)
+  PercBA<-SumBA/totalBa
+  row<-cbind(i,SumBA,PercBA)
+  out<-rbind(row,out)
+}
+EDist<-as.data.frame(out)
+totalBa<-sum(EDist$SumBA)
+EDist$PercBA<-EDist$SumBA/totalBa
+
+###Jaccards#
+AgeGraphs<-read.csv(paste(wdir,"Outputs/Sapps_Jorgy_FIA_AGE_TREE_HT_10_1.csv",sep=""))
+
+
+Crosswalk<-read.csv(paste(wdir,"Outputs/Jaccards_Similarity_Output_9_30.csv",sep=""))#[,c("Cell","FIA_site")]
+unique(AgeGraphs$calc_age_rounded)
+
+JAplot<-length(unique(Crosswalk$Closestplot))
+Plts<-(unique(AgeGraphs$PLT_CN))
+BAperha<-(((AgeGraphs$DIA)^2)*.005454)*AgeGraphs$TPA_UNADJ
+AgeGraphs$BAperha<-BAperha
+print(BAperha)
+max(BAperha)
+min(BAperha)
+output<-NULL
+for(i in 1:length(Plts)){
+  
+  print(i)
+  One<-as.data.frame(AgeGraphs[AgeGraphs$PLT_CN==Plts[i],])
+  plt<-Plts[i]
+  IC<-aggregate(round(One$CARBON_AG),by=list(SPCD=One$SPCD,AGE=as.numeric(One$calc_age_rounded),BAperha=One$BAperha),FUN=sum)
+  IC$PLT_CN<-plt
+  colnames(IC)<-c("SPCD","AGE","Basal_Area","AboveGround Carbon","PLT_CN")
+  output<-rbind(IC,output)
+}
+unique(output$AGE)
+sp<-unique(output$SPCD)
+for(i in sp){
+  dsa<-output[output$SPCD==i,]
+  plot(dsa$`AboveGround Carbon`~dsa$AGE,main=i)
+}
+
+colnames(Crosswalk)<-c("x","Cell","PLT_CN","index")
+uniquespps<-unique(output$SPCD)
+print(i)
+One<-as.data.frame(output)
+IC_under<-aggregate(One$Basal_Area,by=list(SPCD=One$SPCD,PLT_CN=One$PLT_CN),FUN=sum)
+CellswithValues<-join(Crosswalk, IC_under, by="PLT_CN")
+Sp<-unique(CellswithValues$SPCD)
+Sp<-Sp[!is.na(Sp)]
+CellswithValues$SPCD[is.na(CellswithValues$SPCD)]<-0
+colnames(CellswithValues)<-c("X","Cell","PLT_CN","Index","SPCD","BA")
+totalBa<-sum(!is.na(CellswithValues$BA))
+out<-NULL
+
+for(i in Sp){
+  
+  SubCWV<-CellswithValues[CellswithValues$SPCD==i,]
+  SumBA<-sum(SubCWV$BA)
+  PercBA<-SumBA/totalBa
+  row<-cbind(i,SumBA,PercBA)
+  out<-rbind(row,out)
+}
+
+Jaccard<-as.data.frame(out[-49,])
+totalBa<-sum(Jaccard$SumBA)
+Jaccard$PercBA<-Jaccard$SumBA/totalBa
+
+###SORENSEN
+AgeGraphs<-read.csv(paste(wdir,"Outputs/Sapps_Sorenson's_FIA_AGE_TREE_HT_10_1.csv",sep=""))
+Crosswalk<-read.csv(paste(wdir,"Outputs/New_Sorensons_Similarity_Output_9_30.csv",sep=""))#[,c("Cell","FIA_site")]
+unique(AgeGraphs$calc_age_rounded)
+
+SOplot<-length(unique(Crosswalk$Closestplot))
+Plts<-(unique(AgeGraphs$PLT_CN))
+BAperha<-(((AgeGraphs$DIA)^2)*.005454)*AgeGraphs$TPA_UNADJ
+AgeGraphs$BAperha<-BAperha
+print(BAperha)
+max(BAperha)
+min(BAperha)
+output<-NULL
+
+for(i in 1:length(Plts)){
+  print(i)
+  One<-as.data.frame(AgeGraphs[AgeGraphs$PLT_CN==Plts[i],])
+  plt<-Plts[i]
+  IC<-aggregate(round(One$CARBON_AG),by=list(SPCD=One$SPCD,AGE=as.numeric(One$calc_age_rounded),BAperha=One$BAperha),FUN=sum)
+  IC$PLT_CN<-plt
+  colnames(IC)<-c("SPCD","AGE","Basal_Area","AboveGround Carbon","PLT_CN")
+  output<-rbind(IC,output)
+}
+unique(output$AGE)
+sp<-unique(output$SPCD)
+for(i in sp){
+  dsa<-output[output$SPCD==i,]
+  plot(dsa$`AboveGround Carbon`~dsa$AGE,main=i)
+}
+
+colnames(Crosswalk)<-c("x","Cell","PLT_CN","index")
+uniquespps<-unique(output$SPCD)
+print(i)
+One<-as.data.frame(output)
+IC_under<-aggregate(One$Basal_Area,by=list(SPCD=One$SPCD,PLT_CN=One$PLT_CN),FUN=sum)
+CellswithValues<-join(Crosswalk, IC_under, by="PLT_CN")
+Sp<-unique(CellswithValues$SPCD)
+Sp<-Sp[!is.na(Sp)]
+CellswithValues$SPCD[is.na(CellswithValues$SPCD)]<-0
+colnames(CellswithValues)<-c("X","Cell","PLT_CN","Index","SPCD","BA")
+totalBa<-sum(!is.na(CellswithValues$BA))
+out<-NULL
+
+for(i in Sp){
+  
+  SubCWV<-CellswithValues[CellswithValues$SPCD==i,]
+  SumBA<-sum(SubCWV$BA)
+  PercBA<-SumBA/totalBa
+  row<-cbind(i,SumBA,PercBA)
+  out<-rbind(row,out)
+}
+
+Sorensons<-as.data.frame(out[-49,])
+totalBa<-sum(Sorensons$SumBA)
+Sorensons$PercBA<-Sorensons$SumBA/totalBa
+
+
+
+
+####Gathering Data together
+SpeciesLUT<-read.csv("C:/Users/zjrobbin/Desktop/sAppsIC/Inputs/SpeciesLUT.csv")
+
+##names
+Sorensons$model<-"Sorenson"
+EDist$model<-"EDist"
+Jaccard$model<-"Jaccard"
+CurtisBray$model<-"BC"
+FIA_Data$model<-"FIA"
+FIA_Data<-FIA_Data[,c(-2)]
+
+colnames(FIA_Data)<-c("i","SumBA","PercBA","model")
+colnames(TW)<-c("i","SumBA","PercBA","model")
+Alltogether<-as.data.frame(rbind(Jaccard,CurtisBray,FIA_Data,TW,EDist,Sorensons))
+##Save for graphing
+write.csv(Alltogether,paste(wdir,"Multi-model_comparison_10_30.csv",sep=""))
+```
+
+
+```{r fig.width=12.0, fig.height=11.0}
+
+
+
+Alltogether<-read.csv("R:/fer/rschell/Robbins/Sapps/Model_Prep/sAppsIC_Active/Final_Materials/Meeting_10_20/Multi-model_comparison_10_30.csv")
+                   
+
+###create list of the top 20 species
+shortsp<-c(129,132,261,316,372,621,711,802,806,833,832,693,901,403,837,131,110,126,409,371,531)
+lesstogether<-Alltogether[Alltogether$i %in% shortsp,]
+
+shorter<-lesstogether[order(lesstogether[,1],lesstogether[,2]),]
+shorter$SumBA=round(as.numeric(shorter$SumBA,digits=2))
+shorter$PercBA=as.numeric(shorter$PercBA)
+shorter$percent=100*round(shorter$PercBA,digits=4)
+
+###This might be appendix stuff. 
+
+
+####Graphics
+deltashorter<-NULL
+for(sp in shortsp){
+  Name<-SPLUT$LANDIS_CODE[SPLUT$Species==sp]
+  ag=shorter[shorter$i==sp,]
+  TWsum=ag$PercBA[ag$model=='TW']
+  ag$deltaPerc=100*as.numeric(round(ag$PercBA-TWsum,digits=4))
+  deltashorter=rbind(deltashorter,ag)
+}
+
+
+
+palette1="Royal1"
+
+par(mfrow=c(2,6))
+```
+
+
+
+We looked at each method for its comparison of total basal area. All species overestimated the Basal area, with Sorensen's and 
+Bray Curtis being the closest. 
+
+```{r,fig.width=12,fig.height=10,message=FALSE,warning=FALSE}
+
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(plyr)
+library(wesanderson)
+library(cowplot)
+library(raster)
+library(ggplot2)
+Out_dir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/sAppsIC_Active/Outputs/"
+FIA_dir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Initial_Communities/FIA_Sorter_Backup/"
+IVIDATA<-read.csv(paste(FIA_dir,"AOI_FIA_Plotdata.csv",sep=""))
+
+models<-unique(Alltogether$model)
+
+
+CBsum<-round(as.numeric(sum(Alltogether$SumBA[Alltogether$model==models[2]])),digits=0)
+TWsum<-round(sum(as.numeric(Alltogether$SumBA[209:256])),digits=0)
+JACsum<-round(as.numeric(sum(Alltogether$SumBA[Alltogether$model==models[1]])),digits=0)
+Edistsum<-round(round(as.numeric(sum(Alltogether$SumBA[Alltogether$model==models[5]])),digits=0),digits=0)
+SOrrenSum<-round(as.numeric(sum(Alltogether$SumBA[Alltogether$model==models[6]])),digits=0)
+
+
+SorrenSim<-read.csv(paste(Out_dir,"New_Sorensons_Similarity_Output_9_30.csv",sep=""))
+SOplot<-length(unique(SorrenSim$Closestplot))
+CBsim<-read.csv(paste(Out_dir,"Bray_Curtis_Output.csv",sep=""))
+CBplots<-length(unique(CBsim$Closestplot))
+Jacsim<-read.csv(paste(Out_dir,"Jaccards_Similarity_Output_9_30.csv",sep=""))
+JAplot<-length(unique(Jacsim$Closestplot))
+Edistsim<-read.csv(paste(Out_dir,"Euclidian_DIST_Output_9_29.csv",sep=""))
+EUplots<-length(unique(Edistsim$Closestplot))
+FIA_Over<-length(unique(IVIDATA$PLT_CN))
+
+plots<-rbind(CBplots,FIA_Over,JAplot,EUplots,SOplot)
+values<-rbind(CBsum,TWsum,JACsum,Edistsum,SOrrenSum)
+#Plots<-rbind(CBplots,EUplots )
+names<-rbind("BC","TW","JAC","EDist","Sorrenson")
+thing<-as.data.frame(cbind(as.numeric(as.character(values)),names))
+colnames(thing)<-c("values","names")
+
+
+
+plot3<-ggplot(thing, aes(x=names,y=as.numeric(as.character(values))))+ 
+  geom_bar(size = 2,stat = "identity",fill=wes_palette(n=5, name="Zissou1")) + 
+
+  scale_color_manual(values = wes_palette(n=5, name="Zissou1"))+
+  labs(fill = "# of cells")+
+  theme_minimal()+
+  theme(panel.grid.major.x=element_blank())+
+  theme(text = element_text(size=20))+
+  ggtitle(paste("Total Landscape Basal Area",sep=""))+
+  xlab("")+ 
+  ylab("ft/acre")
+print(plot3)
+
+
+FIA_Over<-length(unique(IVIDATA$PLT_CN))
+plots<-rbind(CBplots,FIA_Over,JAplot,EUplots,SOplot)
+names<-rbind("BC","FIA","JAC","EDist","Sorrens")
+thing<-as.data.frame(cbind(as.numeric(as.character(plots)),names))
+colnames(thing)<-c("plots","names")
+```
+
+This plot shows the number of FIA plots utilized in each analysis, with the FIA number being the total number in the evaluation. The Bray Curtis analysis utilized the most, with the Euclidian distance utilizing the least. 
+
+```{r,fig.width=10,fig.height=6,message=FALSE}
+plot4<-ggplot(thing, aes(x=names,y=as.numeric(as.character(plots))))+ 
+  geom_bar(size = 2,stat = "identity",fill=wes_palette(n=5, name="Zissou1")) + 
+  
+  scale_color_manual(values = wes_palette(n=5, name="Zissou1"))+
+  labs(fill = "# of cells")+
+  theme_minimal()+
+  theme(panel.grid.major.x=element_blank())+
+  theme(text = element_text(size=20))+
+  ggtitle(paste("Number of FIA plots",sep=""))+
+  xlab("")+ 
+  ylab("")
+
+print(plot4)
+```
+
+This model prediction of assemblage is a comparison from the output to the FIA and Imputed data we have on species composition.
+Because the associations select the least dissimilar plot, there is a possibility for the inclusion or exclusion of species in the
+association. We find here the Sorensen's plots are the most accurate in terms of assemblage to both the FIA and imputed maps. 
+
+```{r,fig.width=12,fig.height=6,message=FALSE}
+
+colm<-NULL
+SP<-SP[-1]
+
+for(ij in SP){
+OneSp<-Alltogether[Alltogether$i==ij,]
+VarJACFIA<-(as.numeric(OneSp$PercBA[OneSp$model=="FIA"])-as.numeric(OneSp$PercBA[OneSp$model=="Jaccard"]))^2
+VarJAcTW<-(as.numeric(OneSp$PercBA[OneSp$model=="TW"])-as.numeric(OneSp$PercBA[OneSp$model=="Jaccard"]))^2
+BAJac<-(as.numeric(OneSp$SumBA[OneSp$model=="TW"])-as.numeric(OneSp$SumBA[OneSp$model=="Jaccard"]))^2
+VarEDFIA<-(as.numeric(OneSp$PercBA[OneSp$model=="FIA"])-as.numeric(OneSp$PercBA[OneSp$model=="EDist"]))^2
+VarEDTW<-(as.numeric(OneSp$PercBA[OneSp$model=="TW"])-as.numeric(OneSp$PercBA[OneSp$model=="EDist"]))^2
+BAED<-(as.numeric(OneSp$SumBA[OneSp$model=="TW"])-as.numeric(OneSp$SumBA[OneSp$model=="EDist"]))^2
+VarCBFIA<-(as.numeric(OneSp$PercBA[OneSp$model=="FIA"])-as.numeric(OneSp$PercBA[OneSp$model=="BC"]))^2
+VarCBTW<-(as.numeric(OneSp$PercBA[OneSp$model=="TW"])-as.numeric(OneSp$PercBA[OneSp$model=="BC"]))^2
+BACB<-(as.numeric(OneSp$SumBA[OneSp$model=="TW"])-as.numeric(OneSp$SumBA[OneSp$model=="BC"]))^2
+VarSORFIA<-(as.numeric(OneSp$PercBA[OneSp$model=="FIA"])-as.numeric(OneSp$PercBA[OneSp$model=="Sorenson"]))^2
+VarSORTW<-(as.numeric(OneSp$PercBA[OneSp$model=="TW"])-as.numeric(OneSp$PercBA[OneSp$model=="Sorenson"]))^2
+BASOR<-(as.numeric(OneSp$SumBA[OneSp$model=="TW"])-as.numeric(OneSp$SumBA[OneSp$model=="Sorenson"]))^2
+
+Row<-cbind(VarJACFIA,VarJAcTW,VarEDFIA,VarSORFIA,VarEDTW,VarCBFIA,VarCBTW,VarSORTW,BAJac,BAED,BACB,BASOR)
+colm<-rbind(Row,colm)
+}
+
+colm<-as.data.frame(colm)
+sumJACFIA<-sum(colm$VarJACFIA)^.5
+sumJACTW<-sum(colm$VarJAcTW)^.5
+sumEDFIA<-sum(colm$VarEDFIA)^.5
+sumEDTW<-sum(colm$VarEDTW)^.5
+
+sumCBFIA<-sum(colm$VarCBFIA)^.5
+sumCBTW<-sum(colm$VarCBTW)^.5
+sumSORTW<-sum(colm$VarSORTW)^.5
+sumSORFIA<-sum(colm$VarSORFIA)^.5
+sumBAJAC<-sum(colm$BAJac)^.5
+sumBAED<-sum(colm$BAED)^.5
+sumBAC<-sum(colm$BACB)^.5
+sumBASOR<-sum(colm$BASOR)^.5
+Comparison<-rbind(sumJACFIA,sumJACTW,sumEDFIA,sumEDTW,sumCBFIA,sumCBTW,sumSORFIA,sumSORTW)
+Name<-rbind("JAC~FIA","JAC~TW","ED~FIA","ED~TW","BC~FIA","BC~TW","SOR~FIA","SOR~TW")
+dfa<-as.data.frame(cbind(as.numeric(Comparison),Name))
+
+colnames(dfa)<-c("Numbers","Names")
+palette3<-"Darjeeling1"
+plot3<-ggplot(dfa, aes(x=Names,y=as.numeric(as.character(Numbers))))+ 
+  geom_bar(size = 2,stat = "identity",fill=rep(wes_palette(n=4, name=palette3),2)) + 
+  scale_color_manual(values = wes_palette(n=4, name=palette3))+
+  labs(fill = "# of cells")+
+  theme_minimal()+
+  theme(panel.grid.major.x=element_blank())+
+  theme(text = element_text(size=20))+
+  ggtitle(paste("Model prediction of assembledge",sep=""))+
+  xlab("")+ 
+  ylab("Sq. variance in species percentage")
+print(plot3)
+palette3<-"Chevalier1"
+
+Comparison<-rbind(sumBAC,sumBAED,sumBAJAC,sumBASOR)
+Name<-rbind("BC","ED","JAC","Sor")
+dfa<-as.data.frame(cbind(as.numeric(Comparison),Name))
+colnames(dfa)<-c("Numbers","Names")
+```
+In looking at each species estimated Basal from the imputed maps, Sorenson's shows the least variation across the 50 species. 
+In the end, we chose the Sorenson's association because it best represented the species assemblage.
+
+For a project that wants to include so many species, this seems like the right measure to choose. It was also one of the more accurate
+in terms of total biomass, but we have to be aware of how initial biomass interplays with the equilibrium biomass on our landscape. 
+
+
+```{r,fig.width=6,fig.height=5,message=FALSE}
+plot4<-ggplot(dfa, aes(x=Names,y=as.numeric(as.character(Numbers))))+ 
+  geom_bar(size = 2,stat = "identity",fill=(wes_palette(n=4, name=palette3))) + 
+  scale_color_manual(values = wes_palette(n=4, name=palette3))+
+  labs(fill = "# of cells")+
+  theme_minimal()+
+  theme(panel.grid.major.x=element_blank())+
+  theme(text = element_text(size=20))+
+  ggtitle(paste("Sq variance in species BA",sep=""))+
+  xlab("")+ 
+  ylab("Variance in BA")
+print(plot4)
+
+```
+
+
+#### Height Age and Site Index Association. 
+
+Now that we have a plot associated with each raster cell with the need to use the values from FIA to get age and carbon. To do this 
+we will use to Carmean Hann, and Jacobs (1989) to associate age with height and site index. 
+Each species has unique parameters to its growth curve, which is used with its height and site index to estimate its age. 
+Now each tree in each plot will have age and carbon necessary to build the cohorts at each location. 
+
+$AgeT=(1/c_3)*ln[1-\frac{HT}{c1*SI^{c2}}]^{(\frac{1}{c4})*(SI^{c5})}$
+
+Citation: Carmean, W. H., Hahn, J. T., & Jacobs, R. D. (1989). Site index curves for forest tree species in the eastern United States. General Technical Report NC-128. St. Paul, MN: US Dept. of Agriculture, Forest Service, North Central Forest Experiment Station, 128.
+
+
+```{r,warning=FALSE}
+SPLUT<-read.csv("R:/fer/rschell/Robbins/Sapps/Model_Prep/sAppsIC_Active/Inputs/SpeciesLUT.csv")
+library(knitr)
+SP_print<-SPLUT[,c(2,4,7,8,9,10,11)]
+colnames(SP_print)[2]<-c("Species Name")
+kable(SP_print[c(0:10),],align=c('l'))
+
+```
+
+
+
+```{r,eval=FALSE}
+
+
+options(scipen=999) #This removes scientific notation in printing. Plot CNs are very long
+wdir<-"C:/Users/zjrobbin/Desktop/sAppsIC/"
+setwd(wdir)
+
+
+
+###Bring in the the Sorenson'sanalysis
+Plotdata<-read.csv(paste(wdir,"Outputs/New_Sorensons_Similarity_Output_9_30.csv",sep=""))
+
+
+ICcount<-unique(Plotdata$Closestplot)
+print(length(ICcount))
+
+###Load in plots in area
+tree_data_all<-read.csv(paste(wdir,"Inputs/AOI_TREE.csv",sep=""))
+length(unique(tree_data_all$PLT_CN))
+tree_data_all[is.na(tree_data_all)]<-0
+ 
+#Have to remove the trees that don't have height.  We need height to estimate age.
+tree_data_HT<-subset(tree_data_all,tree_data_all[,'HT']>0)
+length(unique(tree_data_HT$PLT_CN))
+rm(NC_TREE,SC_TREE,VA_TREE,tree_data_all)
+
+
+ 
+#Only use recent years
+ years<-c(2004,2005, 2006, 2007, 2008, 2009,2010,2011,2012,2013,2014,2015,2016,2017)
+ tree_data_SelectYears <- tree_data_HT[tree_data_HT$INVYR_x %in% years,]  
+###Get Plots for years
+ tree_data_SelectPlots <- tree_data_SelectYears[tree_data_SelectYears$PLT_CN %in% ICcount,]
+ PLT_CN_unique_trees<-unique(tree_data_SelectPlots[,"PLT_CN"])
+ print(length(PLT_CN_unique_trees))
+
+#This loop selects just the 44 species of interest from all the species in the FIA plots. Ignores other species.
+ spp_file<-read.csv(paste(wdir,"Inputs/SpeciesLUT.csv",sep=""))
+ spp<-spp_file[,"Species"]
+ number_of_species<-length(spp)
+###just the species of intrest
+ tree_data_SelectSpp <- tree_data_SelectPlots[tree_data_SelectPlots$SPCD %in% spp,]
+ PLT_CN_unique_spp_vector<-(unique(tree_data_SelectSpp$PLT_CN))
+ print(length(PLT_CN_unique_spp_vector))
+###Remove excess
+ rm(tree_data_SelectPlots, tree_data_SelectYears)
+
+#Read in all the COND table csv files from FIA.  You need these to get stand age and site index.
+ COND_NC<-read.csv(paste(wdir,"Inputs/NC_COND.csv",sep=""))
+ COND_SC<-read.csv(paste(wdir,"Inputs/SC_COND.csv",sep=""))
+ COND_TN<-read.csv(paste(wdir,"Inputs/TN_COND.csv",sep=""))
+ COND_GA<-read.csv(paste(wdir,"Inputs/GA_COND.csv",sep=""))
+ COND_all<-rbind(COND_NC, COND_SC,COND_TN,COND_GA)
+ COND_only_years <- COND_all[COND_all$INVYR %in% years,]
+ print(nrow(COND_only_years))
+
+#Remove plots that are not forested.  COND class 1 is forested.
+ COND_only_forests <- subset(COND_only_years, COND_only_years$COND_STATUS_CD==1) 
+ print(nrow(COND_only_forests))
+
+#Double-check to see how many PLT_CNs we lost in COND table.
+ unique_PLTCN_COND<-length(unique(COND_only_years$PLT_CN))
+ print(length(ICcount))
+ print(unique_PLTCN_COND)
+
+ check<-(tree_data_SelectSpp$PLT_CN %in%  unique_PLTCN_COND)
+
+#########################
+#Use this to fill in the missing data, i.e. avg site index for entire landscape.
+ ForestwithIndex<-COND_only_forests[!is.na(COND_only_forests$SICOND),]
+ average_Site_Condition<-round(mean(ForestwithIndex$SICOND), digits=)
+  
+###########################################
+#Use this to calculate the average stand age and site index and fill in any missing data.
+length( PLT_CN_unique_trees)
+COND_matrix<-NULL
+for (z in PLT_CN_unique_trees){#for each PLT_CN
+  print(z)
+  each_plot_subset <- subset(COND_only_forests, COND_only_forests[,"PLT_CN"] == z)
+  number_plots<-nrow(each_plot_subset)
+  stand_age_mean <- mean(each_plot_subset$STDAGE) #summing across cohort
+  site_index_avg <- mean(each_plot_subset$SICOND) #summing across cohort
+  if (number_plots==0){
+    site_index_mean<-average_Site_Condition
+  } else {
+    site_index_mean<-site_index_avg
+  }
+  plot_matrix <- cbind(z, stand_age_mean, site_index_mean)
+  colnames(plot_matrix)<-c("PLT_CN", "STDAGE_mean", "SICOND_mean")
+  COND_matrix <- rbind(COND_matrix, plot_matrix)
+}
+COND_matrix<-as.data.frame(COND_matrix)
+print(nrow(COND_matrix))
+COND_matrix[,3][is.na(COND_matrix[,3])]<-average_Site_Condition
+print(length(ICcount))
+
+#Merge tree database and Condition Table database
+ Merged_Tree_Cond<-merge(tree_data_SelectSpp, COND_matrix, "PLT_CN", by.y="PLT_CN")
+ Merged_NAs_Trees<-Merged_Tree_Cond[!complete.cases(Merged_Tree_Cond),]
+ Merged_Tree_Cond$PLT_CN
+ colnames(Merged_Tree_Cond)[3]<-"INVYR"
+ length(unique(Merged_Tree_Cond$PLT_CN))
+#Double-check to see how many PLT_CNs we lost.
+ unique_PLTCN_end_COND<-length(unique(Merged_Tree_Cond$PLT_CN))
+ print("unique PLT_CNs was originally 279,055")
+ print(unique_PLTCN_end_COND)
+ 
+#Clear out memory before proceeding
+ rm(COND_all, COND_only_years, COND_only_forests, COND_matrix, COND_NC, COND_SC, COND_GA,COND_TN) 
+ 
+###########################################
+ #####Read in Tree Files for infomation on stands
+ NC_TREE <- read.csv(paste(wdir,"Inputs/NC_TREE.csv",sep="")) #load NC_Tree table
+ SC_TREE <- read.csv(paste(wdir,"Inputs/SC_TREE.csv",sep="")) #load SC_Tree table
+ GA_TREE <- read.csv(paste(wdir,"Inputs/GA_TREE.csv",sep=""))  #load VA_Tree table
+ TN_TREE <- read.csv(paste(wdir,"Inputs/TN_TREE.csv",sep=""))  #load VA_Tree table
+ TREEtbl_all <- rbind(NC_TREE, SC_TREE, GA_TREE,TN_TREE) 
+ #####Get only the columns relevent PLT_CN,INVYR,PLOt,SUBP,TREE,CARBON_AG
+
+ Shorter<-TREEtbl_all[,c(2,4,8,9,10,121)]
+ 
+
+ withcarbon<-merge(Merged_Tree_Cond,Shorter, by=c("PLT_CN","INVYR","PLOT","SUBP","TREE"))
+ colnames(TREEtbl_all)
+ plot(withcarbon$CARBON_AG~withcarbon$DIA)
+ Merged_Tree_Cond<-withcarbon
+
+ tree_data_final<-subset(Merged_Tree_Cond,Merged_Tree_Cond[,"CARBON_AG"]>0) #& dta_all_sp[,"DIA"] > 0 
+ rm(TREEtbl_all,NC_TREE,SC_TREE,TN_TREE,GA_TREE)
+#Double-check to see how many PLT_CNs we lost in the merge.
+  No_Biomass<-tree_data_final[!complete.cases(tree_data_final),]
+  unique(No_Biomass$PLT_CN)
+  length(unique(tree_data_final$PLT_CN))
+###########################
+#This is the loop to calculate age of all the trees.
+
+roundUp <- function(x) 10*ceiling(x/10)   #Need to round the age to a multiple of 10.
+
+age_added_matrix<-NULL#This will become new matrix with age added to matrix
+for (each_tree in 1:nrow(tree_data_final)){#For every tree in the forested FIA plots in the state (which one is dependent on input file
+  ###Here is a chapman Richards nonlinear functional form. This uses height Site index to determine age
+  ### using 5 species specific perameters. We found ours in FVS lit. 
+  print(each_tree)
+  #print(dta_27_spp[each_tree,"each tree"])
+  tree<-tree_data_final[each_tree,] #unique tree
+  Plot<-tree["PLT_CN"]#Diameter (inches)
+  H<-tree["HT"]#Height (ft)
+  SIndex<-tree["SICOND_mean"]#Site index
+  species<-tree["SPCD"]#species numeric code
+  
+  for (look in 1:nrow(spp_file)){
+   #for every species in look up table
+    sp_look<-spp_file[look,"Species"] #unique species number (from lookup table)
+    if (sp_look==species){
+      
+      #age_matrix<-NULL
+      #If lookup table species code is equal to tree species code, then...
+        name<-(spp_file[look,"X"])#coefficient for b1
+        final_spp_code<-(spp_file[look,"Species"])#coefficient for b1
+        coef_b1<-(spp_file[look,"b1"])#coefficient for b1
+        coef_b2<-(spp_file[look,"b2"])#coeffcient for b2
+        coef_b3<-(spp_file[look,"b3"])#coeffcient for b3
+        coef_b4<-(spp_file[look,"b4"])#coeffcient for b4
+        coef_b5<-(spp_file[look,"b5"])#coeffcient for b5
+        longevity<-(spp_file[look,"Longevity"])#longevity values
+        if(H <= (coef_b1*SIndex^(coef_b2))) {
+          age<-(log (1-(H/(coef_b1 * SIndex^(coef_b2)))^(1/(coef_b4*(SIndex^(coef_b5)))))/coef_b3)
+        }
+        else {age<-(log (1-(((coef_b1*SIndex^(coef_b2))-1)/(coef_b1 * SIndex^(coef_b2)))^(1/(coef_b4*(SIndex^(coef_b5)))))/coef_b3)
+        }
+        age<-as.matrix(age)
+        colnames(age)<-c("age")
+        
+        age_rounded10_uncorrected <- roundUp(age)
+        H
+        (coef_b1*SIndex^(coef_b2))
+        #age_rounded10<-round(age, digits=-1)
+        
+        if(age_rounded10_uncorrected > longevity) {
+          age_rounded10<-longevity
+        }
+        else {age_rounded10<-age_rounded10_uncorrected
+        }
+        age_rounded10<-as.matrix(age_rounded10)
+        colnames(age_rounded10)<-c("age_rounded10")
+        
+        } #closes loop around if statement for selected species.
+    #colnames(age_matrix)<-c("calc_age", "calc_age_rounded")
+    } #closes loop around lookup table
+age_added_to_tree<-cbind.data.frame(tree,name, final_spp_code, age, age_rounded10) 
+#colnames(age_added_to_tree)<-c("CommonName", "Final_spp_Code", "calc_age", "calc_age_rounded")
+age_added_matrix<-rbind(age_added_matrix,age_added_to_tree)#row bind tree with calc_age to next row.  This is final matrix
+}
+age_added_matrix[age_added_matrix$SPCD=="835",]
+
+
+print("Done with Final age matrix")
+length(unique(age_added_matrix$PLT_CN))
+colnames(age_added_matrix)<-c(colnames(tree), "CommonName", "Final_spp_Code", "calc_age", "calc_age_rounded")
+
+write.csv(age_added_matrix,(paste(wdir,"Sapps_Sorenson's_FIA_AGE_TREE_HT_10_1.csv",sep="")))
+```
+
+Here we can compare the age and DBH distribution of each species 
+
+The ages all seem reasonable to me, though we will have to look out for the undersampled species like Prunus pensylvanica, 
+Picea rubens, and Betula nigra. 
+
+
+```{r,fig.height=10.0,fig.width=12.0,align="center",message=FALSE,warning=FALSE}
+wdir<-"C:/Users/zjrobbin/Desktop/sAppsIC/"
+age_added_matrix<-read.csv(paste(wdir,"Sapps_Sorenson's_FIA_AGE_TREE_HT_10_1.csv",sep=""))
+
+makeTransparent = function(..., alpha) {
+
+  if(alpha<0 | alpha>1) stop("alpha must be between 0 and 1")
+
+  alpha = floor(255*alpha)  
+  newColor = col2rgb(col=unlist(list(...)), alpha=FALSE)
+
+  .makeTransparent = function(col, alpha) {
+    rgb(red=col[1], green=col[2], blue=col[3], alpha=alpha, maxColorValue=255)
+  }
+
+  newColor = apply(newColor, 2, .makeTransparent, alpha=alpha)
+
+  return(newColor)
+
+}
+
+calc_age<-age_added_matrix[,"calc_age_rounded"]
+stand_age<-age_added_matrix[,"STDAGE_mean"]
+spec<-age_added_matrix[,"CommonName"]
+dbh<-age_added_matrix[,"DIA"]
+
+outliercolor<-makeTransparent("lightblue",alpha=.5)
+par(mar = c(4,16,2,2))
+
+
+boxplot(calc_age~spec, cex.axis=0.8, las=2,horizontal=TRUE,cex=1.0,pars=list(outcol=outliercolor),col="brown", main="Age Distribution")
+
+
+```
+
+The DBH distributions seem correct, with clustering around the less than 15 but good distributions for the species we would expect to
+be long living, or more vigorous. 
+
+
+```{r,,fig.height=10.0,fig.width=12.0,align="center"}
+par(mar = c(4,17,2,2))
+
+boxplot(dbh~spec, cex.axis=0.8, las=2,horizontal=TRUE,cex=1.0,col="brown", main="DBH Distribuion",pars=list(outcol="lightblue"))
+pars=list(outcol="red")
+```
+Once we have this age assigned to each stand, we can use FIA calculation of above ground carbon to estimate biomass (2x carbon).
+We can then look at the distribution of age curves versus total carbon, our oaks and pines seem to be the most represented and also
+have higher carbon values, we will have to be careful in our landscape runs to check how the sparse species persist on the landscape.
+We should also look out for Frasier fir and species that only begin with 10 age cohorts. 
+
+```{r,fig.height=10.0,fig.width=12.0,align="center",warning=FALSE}
+#####
+## This script makes maps from the Sorenson's and IC_2_get_age outputs
+## it makes AGE and Carbon maps, as well as the IC.txt and Initial communities maps##
+##
+##ZR 2018
+
+##Libraries and Drive
+  library(plyr)
+  library(dplyr)
+  library(sp)
+  library(raster); options(scipen=999) # scipen removes scientific notation from FIA data
+  library(rgdal)
+  library(plyr) #This removes scientific notation in printing. Plot CNs are very long
+wdir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Initial_Communities/sAppsIC/"
+setwd(wdir)
+
+###The Output from IC 2 Get Age
+AgeGraphs<-read.csv(paste(wdir,"/Sapps_Sorenson's_FIA_AGE_TREE_HT_10_1.csv",sep=""))
+
+Plts<-unique(AgeGraphs$PLT_CN)
+
+###Turn DIA to BA
+BAperha<-(((AgeGraphs$DIA)^2)*.005454)*AgeGraphs$TPA_UNADJ
+AgeGraphs$BAperha<-BAperha
+
+
+output<-NULL
+###This loop aggregates the FIA Plots Age and  Biomass by species in plts
+for(i in 1:length(Plts)){
+
+One<-as.data.frame(AgeGraphs[AgeGraphs$PLT_CN==Plts[i],])
+plt<-Plts[i]
+IC<-aggregate(round(One$CARBON_AG),by=list(SPCD=One$SPCD,AGE=as.numeric(One$calc_age_rounded),BAperha=One$BAperha),FUN=sum)
+IC$PLT_CN<-plt
+colnames(IC)<-c("SPCD","AGE","Basal_Area","AboveGround Carbon","PLT_CN")
+output<-rbind(IC,output)
+}
+
+
+###Check the Carbon and Age ratios# Look at this agian 
+sp<-unique(output$SPCD)
+```
+
+
+Here are the results of that association.
+```{r,fig.height=10.0,fig.width=12.0,align="center",warning=FALSE}
+par(mfrow=c(5,5))
+for(i in sp){
+dsa<-output[output$SPCD==i,]
+Name<-as.character(SPLUT$LANDIS_CODE[SPLUT$Species==i])
+plot(dsa$`AboveGround Carbon`~dsa$AGE,main=Name,xlab="Age",ylab="Carbon g",col="darkgreen")
+}
+
+```
+
+
+```{r}
+###altered carbon (gets rid of zeros)
+output$`AboveGround Carbon`[output$`AboveGround Carbon`<10]<-10
+
+####Read in crosswalk between rastercells and FIA plots
+Crosswalk<-read.csv(paste(wdir,"New_Sorensons_Similarity_Output_9_30.csv",sep=""))
+
+colnames(Crosswalk)<-c("x","Cell","PLT_CN","index")
+
+uniquespps<-unique(output$SPCD)
+```
+We now take the above ground carbon multiple it by FIA Growing trees per acre multiplier, convert it from ft2 per acre to g/m2 and multiply it by two to represent above ground biomass. 
+
+
+Now we can print this out into an Initial communities file. Here is an R version of it. It can also be seen in the text file on this page. 
+
+```{r, eval=FALSE}
+#
+TPA.factor <- 6.018046 #trees/acre adjust (TPA in FIA)
+conv.factor <- .112085 #Convert from lbs/acre to g/m-2
+
+#
+#Creating Inital Communites
+fia.cohort.plot<-AgeGraphs[,c(9,2,22,26)]
+
+fia.cohort.plot$CARBON_AG<-round(fia.cohort.plot$CARBON_AG)*TPA.factor*conv.factor*2
+
+#Remove round up to 20
+fia.cohort.plot$CARBON_AG[fia.cohort.plot$CARBON_AG<=20]<-20
+
+fia.cohort.plot <- fia.cohort.plot[complete.cases(fia.cohort.plot),]
+###Bring in LUT with lanDiS Code names
+SpeciesLUT<-read.csv(paste(wdir,"SpeciesLUT.csv",sep=""))
+colnames(SpeciesLUT)[2]<-"SPCD"
+SpeciesLUT.merge<-SpeciesLUT[,c(2,13)]
+##Merge Plots and and Species LUT
+PLT_CN<-unique(fia.cohort.plot$PLT_CN)
+fia.cohort.plot.with.names<-merge(fia.cohort.plot,SpeciesLUT.merge,by="SPCD")
+MapCode<-as.numeric(1:length(PLT_CN))
+mapcode.plots<-cbind(PLT_CN,MapCode)
+###MapPlotcodemerge
+fia.ic.merge <- merge(fia.cohort.plot.with.names, mapcode.plots, by = "PLT_CN")
+fia.ic.merge<-fia.ic.merge[order(-fia.ic.merge$MapCode),]
+fia.ic.merge<-as.data.frame(fia.ic.merge)
+#carbon<-as.data.frame(fia.ic.merge$CARBON_AG*conv.factor)
+###OutputFile
+IC.output.file<-paste(wdir,"IC_NULL_Github.txt",sep="")
+
+###Conversion factors
+
+
+
+####IC files text writing
+Log<-NULL
+for (l in 1:length(unique(fia.ic.merge$MapCode))){ ##Loop for individual mapcode
+
+  ic.mapcode.select <- subset(fia.ic.merge, fia.ic.merge$MapCode==l)
+  IC.mapcode <- noquote(paste("MapCode ", l)) 
+  cat(NULL, file=IC.output.file, sep="\n", append=TRUE)#write blank space
+  cat(IC.mapcode, file=IC.output.file, "\n", append=TRUE) #write  mapcode
+  for (k in unique(ic.mapcode.select$LANDIS_CODE)) {##Loop for individual species
+    
+    ic.spp.select <- subset(ic.mapcode.select, ic.mapcode.select$LANDIS_CODE==k)
+    ic.cohort.biomass.list <-NULL
+    ic.spp.list<-NULL
+    for (m in unique(ic.spp.select$calc_age_rounded)){
+      ic.cohort.select <- subset(ic.spp.select, ic.spp.select$calc_age_rounded==m)
+      ic.cohort.biomass.lbs <- as.numeric(sum(ic.cohort.select$CARBON_AG)) #converting to numeric     
+      ic.cohort.biomass.gm.expand <- ic.cohort.biomass.lbs #(ic.cohort.biomass.lbs * TPA.factor) #applying expansion factor UPDATE
+      ic.cohort.biomass.gm <- ic.cohort.biomass.gm.expand  #converting from lbs/acre to g m-2 
+      ic.cohort.biomass <- paste(m, " (", round(ic.cohort.biomass.gm), ")", sep="")
+      logrow<-cbind(k,m,ic.cohort.biomass.gm)
+      Log<-rbind(Log,logrow)
+      ic.cohort.biomass.list <- c(ic.cohort.biomass.list, ic.cohort.biomass)
+      indent<-noquote("      ")
+      ic.spp.list <- c(indent,k, ic.cohort.biomass.list)
+      #cat(ic.cohort.biomass.list, file=IC.output.file, "\n", append=TRUE)
+    }
+    
+    cat(ic.spp.list, file=IC.output.file, "\n", append=TRUE)
+  }
+}
+library(knitr)
+IC_in<-as.data.frame(read.csv(paste("C:/Users/zjrobbin/Desktop/IC_NULL_Github.txt",sep=""),header=FALSE))
+colnames(IC_in)<-c("Initial Community")
+kable(IC_in[c(0:20),],caption="Species Names and FS numbers",align=c('l'))
+
+```
+
+
+
+##### Print the Initial Communites map. 
+
+```{r,eval=FALSE}
+
+
+
+###This is a log for analysis
+write.csv(Log,paste(wdir,"LogofIC.csv",sep=""))
+
+
+####Writing the IC map#
+MapcodeMap<-merge(CellswithValues,mapcode.plots,by="PLT_CN",all=TRUE)
+MapcodeMap$MapCode[is.na(MapcodeMap$MapCode)]<-(-9999)
+MapcodeMap2<-MapcodeMap[order(MapcodeMap$Cell),]
+Plots<-MapcodeMap2$MapCode
+
+###A Raster we want to write this like
+ExampleRaster<-raster("R:/fer/rschell/Robbins/Sapps/Model_Prep/Initial_Communities/Ty_wilson_Backup/Outputs/110_cut.tif")
+#proj<-projection(ExampleRaster)
+
+codes_out_unlist <- as.numeric(Plots) 
+length(codes_out_unlist)
+
+output_matrix<-matrix(codes_out_unlist,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=CRS("+init=EPSG:26917"))
+#plot(new_output_raster)
+new_output_file_name<-paste(wdir,"InitialCommunities.img",sep="")
+#pdf(paste(i,"outputIC.pdf",sep=""))
+
+rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)#This will write a raster that should line up correctly with your input raster
+new_output_raster[new_output_raster$layer==-9999]<-NA
+plot(new_output_raster,main=paste("Intial Communities map"),box=FALSE,col=single_line_col)
+#dev.off()
+```
+We will also print the initial communities map. This map is always un-intelligible because map codes are assigned in no visually descriptive way, just 1 through the number of initial communities. 
+
+We can assign the basal area values from our association to look at some of the landscape features of our species. 
+
+
+##### The Top Ten Species On The Landscape
+
+
+Here is our total landscape basal area. 
+
+
+
+```{r,fig.height=20.0,fig.width=14.0,align="center",message=FALSE}
+TopTenSP<-c(832,316,621,129,711,806,132,802,833,261)
+###Basal Area Maps
+
+par(mar = c(1,1,2,2),mfrow=c(4,3))
+adder<-NULL
+AOI<-readOGR("R:/fer/rschell/Robbins/Sapps/Model_Prep/sAppsIC_Active/Inputs/Ty_wilson/Inputs/Dissolved_AOI.shp",verbose=FALSE)
+ExampleRaster<-raster("R:/fer/rschell/Robbins/Sapps/Model_Prep/Initial_Communities/Ty_wilson_Backup/Outputs/110_cut.tif",sep="")
+
+for(i in TopTenSP){
+  Name<-as.character(SPLUT$LANDIS_CODE[SPLUT$Species==i])
+  One<-as.data.frame(output[output$SPCD==i,])
+  IC_under<-aggregate(One$Basal_Area,by=list(PLT_CN=One$PLT_CN),FUN=sum)
+  CellswithValues<-join(Crosswalk, IC_under, by="PLT_CN")
+  colnames(CellswithValues)<-c("X","Cell","PLT_CN","INDEX","MAX_AGE")
+  CellswithValues[is.na(CellswithValues)]<-0
+  
+  Print<-CellswithValues[order(CellswithValues$Cell),]
+  Plots<-as.numeric(CellswithValues$MAX_AGE)
+
+  proj<-projection(ExampleRaster)
+  codes_out_unlist <- Plots 
+ 
+  ##maxage<-max(CellswithValues$MAX_AGE)
+  
+  output_matrix<-matrix(codes_out_unlist,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+  new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),
+                            ymx=ymax(ExampleRaster), crs=proj)
+  plot(new_output_raster,main=paste(Name,"BA m2/ha ",sep=" "),axes=FALSE, box=FALSE,col=single_line_col, breaks=c(0,20,40,60,80,100) )
+  plot(AOI,border="black",add=TRUE)
+
+  breaks=c(0,20,40,60,80,100)
+  
+  new_output_file_name<-paste(wdir,"/Graphics/",i, "BAmaps.img",sep="")
+ # tiff(paste(wdir,"Graphics/",i,"BA.tiff",sep=""),width=9,height=7,units='in',res=300)
+  
+
+}
+
+```
+Here we should compare to imputation maps. 
+
+
+
+#### Our total landscape basal area.
+
+```{r, fig.height=7.0, fig.width= 7.0}
+
+#### Total Basal Area 
+  One<-as.data.frame(output)
+  IC_under<-aggregate(One$Basal_Area,by=list(PLT_CN=One$PLT_CN),FUN=sum)
+  CellswithValues<-join(Crosswalk, IC_under, by="PLT_CN")
+  colnames(CellswithValues)<-c("X","Cell","PLT_CN","INDEX","MAX_AGE")
+  CellswithValues[is.na(CellswithValues)]<-0
+  
+  Print<-CellswithValues[order(CellswithValues$Cell),]
+  Plots<-as.numeric(CellswithValues$MAX_AGE)
+  
+  ExampleRaster<-raster(paste("R:/fer/rschell/Robbins/Sapps/Model_Prep/Initial_Communities/Ty_wilson_Backup/Outputs/110_cut.tif"))
+  proj<-projection(ExampleRaster)
+  codes_out_unlist <- Plots #unlist the attribute table so that the next step will become a double matrix.
+  #Mmax(codes_out_unlist)
+  #print(max(CellswithValues$MAX_AGE))
+  #print(min(CellswithValues$MAX_AGE))
+  maxage<-max(CellswithValues$MAX_AGE)
+  
+  output_matrix_SOR<-matrix(codes_out_unlist,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+  
+  new_output_raster_SOR<-raster(output_matrix_SOR,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),
+                            ymx=ymax(ExampleRaster), crs=proj)
+  
+  new_output_file_name<-paste(wdir,"/Graphics/",i, "BAmaps.img",sep="")
+ # tiff(paste(wdir,"Graphics/",i,"BA.tiff",sep=""),width=9,height=7,units='in',res=300)
+  par(mar = c(1,1,2,2))
+  plot(new_output_raster_SOR,main=paste("Total Landscape Basal Area",sep=""),axes=FALSE, box=FALSE,col=single_line_col)
+
+```
+We can see much of our spatial distribution is the same, however, we might have a less intense cluster around some  of the national
+park areas in the center of the map.
+
+In analyzing the difference in the basal area we can see there is an 11.5 % percent difference in total basal area, this must be taken
+into account when assessing the initial conditions of the map, however, given that there is no empirical way to validate either method
+of association, we will call this good. 
+
+
+```{r, fig.height=7.0, fig.width= 7.0}
+AOI<-readOGR("R:/fer/rschell/Robbins/Sapps/Model_Prep/sAppsIC_Active/Inputs/Ty_wilson/Inputs/Dissolved_AOI.shp",verbose=FALSE)
+cr_bi_df<-as.data.frame(cr_bi)
+#display.brewer.all()
+  raster_col<-brewer.pal(6,"YlGnBu")
+  codes_out_unlist <- cr_bi[,51]
+
+  output_matrix_TY<-matrix(codes_out_unlist,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+  new_output_raster_TY<-raster(output_matrix_TY,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster),crs=proj)
+  
+  #new_output_file_name<-paste(wdir,"/Graphics/",i, "BAmaps.img",sep="")
+ # tiff(paste(wdir,"Graphics/",i,"BA.tiff",sep=""),width=9,height=7,units='in',res=300)
+  
+   plot(new_output_raster_TY,main=paste("Total Landscape Basal Area",sep=""),axes=FALSE, box=FALSE,col=single_line_col)
+ 
+```
+
+
+
+Here we look at the total differnce on the landscape. 
+
+```{r}
+Tba_Sor<-sum(as.data.frame(new_output_raster_SOR$layer))
+
+Tba_TY<-totalBa
+
+print(paste("Basal Area on our landscape",Tba_Sor))
+print(paste("Basal Area according to Ty Wilson",Tba_TY))
+print(paste("This is a",(round((Tba_TY-Tba_Sor)/Tba_Sor,digits=4)*100),"% difference"))
+
+```
+
+Here is a map looking at which areas the basal areas diverge in negative values indicate where we underestimate the imputation maps, 
+My take away here is that we may be over assigning on a wide dispersion (dark blue spots), but under assigning in high-density
+clusters(pale blue areas).
+
+We can also look at the above ground carbon for our most prevalent species and the total carbon on the landscape. 
+
+
+```{r,fig.height=10}
+
+
+#new_output_file_name<-paste(wdir,"/Graphics/",i, "BAmaps.img",sep="")
+ # tiff(paste(wdir,"Graphics/",i,"BA.tiff",sep=""),width=9,height=7,units='in',res=300)
+new_output_raster<-(new_output_raster_SOR- new_output_raster_TY )
+new_output_raster[new_output_raster[] ==0 ] <- NA  
+par(mar = c(1,1,2,2))
+plot(new_output_raster,main=paste("Divergent Basal Area g/m2",sep=""),axes=FALSE, box=FALSE,col=raster_col)
+plot(AOI,border="black",add=TRUE)
+```
+
+
+```{r,fig.height=20.0,fig.width=14.0,align="center",message=FALSE,warning=FALSE}
+### Carbon Maps
+par(mar = c(1,1,2,2),mfrow=c(4,3))
+adder<-NULL
+AOI<-readOGR("R:/fer/rschell/Robbins/Sapps/Model_Prep/sAppsIC_Active/Inputs/Ty_wilson/Inputs/Dissolved_AOI.shp",verbose=FALSE)
+ExampleRaster<-raster("R:/fer/rschell/Robbins/Sapps/Model_Prep/Initial_Communities/Ty_wilson_Backup/Outputs/110_cut.tif",sep="")
+for(i in TopTenSP){
+  
+  One<-as.data.frame(output[output$SPCD==i,])
+  IC_under<-aggregate(One$`AboveGround Carbon`,by=list(PLT_CN=One$PLT_CN),FUN=sum)
+  CellswithValues<-join(Crosswalk, IC_under, by="PLT_CN")
+  colnames(CellswithValues)<-c("X","Cell","PLT_CN","INDEX","Carbon")
+  CellswithValues[is.na(CellswithValues)]<-0
+  Print<-CellswithValues[order(CellswithValues$Cell),]
+  Plots<-CellswithValues$Carbon
+
+  proj<-projection(ExampleRaster)
+  codes_out_unlist <- as.numeric(Plots)
+  output_matrix<-matrix(codes_out_unlist,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+  
+  new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+ 
+  
+  #new_output_file_name<-paste(wdir,i, "PRACITCEEMaxage.",sep="")
+  #tiff(paste(wdir,"/Graphics/",i,"AB_CARBBON.tiff",sep=""),width=9,height=7,units='in',res=300)
+  plot(new_output_raster,main=paste("AB_Carbon",i,sep="   "),axes=FALSE, box=FALSE,col=single_line_col,breaks=c(0,200,2000,4000,6000,8000,10000,14000),bg="black"  )
+  plot(AOI,border="white",add=TRUE)
+  #dev.off()
+  
+
+}
+
+```
+
+
+
+
+Here we can also see the total green carbon on the landscape
+```{r}
+#### Total lAndscaPE Carbon
+  One<-as.data.frame(output)
+  IC_under<-aggregate(One$`AboveGround Carbon`,by=list(PLT_CN=One$PLT_CN),FUN=sum)
+  CellswithValues<-join(Crosswalk, IC_under, by="PLT_CN")
+  colnames(CellswithValues)<-c("X","Cell","PLT_CN","INDEX","MAX_AGE")
+  CellswithValues[is.na(CellswithValues)]<-0
+  
+  Print<-CellswithValues[order(CellswithValues$Cell),]
+  Plots<-as.numeric(CellswithValues$MAX_AGE)
+  
+  ExampleRaster<-raster(paste("R:/fer/rschell/Robbins/Sapps/Model_Prep/Initial_Communities/Ty_wilson_Backup/Outputs/110_cut.tif"))
+  proj<-projection(ExampleRaster)
+  codes_out_unlist <- Plots #unlist the attribute table so that the next step will become a double matrix.
+  #Mmax(codes_out_unlist)
+  #print(max(CellswithValues$MAX_AGE))
+  #print(min(CellswithValues$MAX_AGE))
+  maxage<-max(CellswithValues$MAX_AGE)
+  
+  output_matrix<-matrix(codes_out_unlist,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+  new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+  
+  new_output_file_name<-paste(wdir,"/Graphics/",i, "BAmaps.img",sep="")
+ # tiff(paste(wdir,"Graphics/",i,"BA.tiff",sep=""),width=9,height=7,units='in',res=300)
+  
+  plot(new_output_raster,main=paste("Total Carbon g/m2",sep=""),axes=FALSE, box=FALSE,col=single_line_col)
+  
+```
+
+##### Appendix
+
+A) 
+Individual species association by similarity index
+```{r}
+#Individual Species association by similarity index
+for(asds in shortsp){
+Name<-as.character(SPLUT$LANDIS_CODE[SPLUT$Species==asds])
+
+Onesp<-deltashorter[deltashorter$i==asds,]
+Onesp$SumBA=round(as.numeric(Onesp$SumBA,digits=2))
+Onesp$PercBA=as.numeric(Onesp$PercBA)
+Onesp$percent=100*round(Onesp$PercBA,digits=4)
+Onesp<-as.data.frame(Onesp)
+Onesp$model<-(Onesp$model)
+plot1<-ggplot(Onesp, aes(x=model,y=Onesp$percent))+ 
+  geom_bar(size = 2,stat = "identity",fill=rep(wes_palette(n=3, name=palette1),2)) + 
+  scale_color_manual(values = wes_palette(n=3, name=palette1),2)+
+  labs(fill = "# of cells")+
+  theme_minimal()+
+  theme(panel.grid.major.x=element_blank())+
+  theme(text = element_text(size=10))+
+  ggtitle(paste("Percent of landscape ",Name,sep=" "))+
+  xlab("")+ 
+  ylab("Percent")+
+  geom_label_repel(aes(label=(round(Onesp$percent,digits=4)),vjust=1.0))
+
+
+palette2="IsleofDogs2"
+
+plot2<-ggplot(Onesp, aes(x=model,y=Onesp$SumBA))+ 
+    geom_bar(size = 2,stat = "identity",fill=rep(wes_palette(n=3, name=palette2),2)) + 
+    scale_color_manual(values = wes_palette(n=3, name=palette2),2)+
+    labs(fill = "# of cells")+
+    theme_minimal()+
+    theme(panel.grid.major.x=element_blank())+
+    theme(text = element_text(size=10))+
+    ggtitle(paste("Basal Area ",Name,sep=" "))+
+    xlab("")+ 
+    ylab("Ba ft2/acre")+
+    geom_label_repel(aes(label=(round(Onesp$SumBA,digits=4)),vjust=1.0))
+
+
+
+print(plot_grid(plot1,plot2))
+}
+
+```
+
+
+
+
+
+
+
+```{r}
+
+```
+
