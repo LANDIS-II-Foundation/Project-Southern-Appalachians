@@ -19,6 +19,53 @@ use_condaenv("Backupgeo")
 # pandas$listdir(".")
 ```
 
+##### Climate Regions
+
+Here are the climate regions we decided on based on [USGS isobioclimates](https://rmgsc.cr.usgs.gov/ecosystems/datadownload.shtml)
+```{r,message=FALSE}
+library(rgdal)
+library(raster)
+AOI<-readOGR('C:/Users/zjrobbin/Desktop/Prism_3_6/Climate_regions/AOI_26917.shp',verbose = FALSE)
+
+HE<-readOGR('C:/Users/zjrobbin/Desktop/Prism_3_6/Climate_regions/High_Elevation.shp',verbose = FALSE)
+HE<-spTransform(HE, crs(AOI))
+MEM<-readOGR('C:/Users/zjrobbin/Desktop/Prism_3_6/Climate_regions/Mid_El_Montane.shp',verbose = FALSE)
+MEM<-spTransform(MEM, crs(AOI))
+NM<-readOGR('C:/Users/zjrobbin/Desktop/Prism_3_6/Climate_regions/North_Montane.shp',verbose = FALSE)
+NM<-spTransform(NM, crs(AOI))
+LE<-readOGR('C:/Users/zjrobbin/Desktop/Prism_3_6/Climate_regions/Low_elevation.shp',verbose = FALSE)
+LE<-spTransform(LE, crs(AOI))
+```
+
+High elevation
+
+```{r}
+plot(AOI)
+plot(HE,add=TRUE,col="blue")
+```
+
+Mid-elevation montane
+
+```{r}
+plot(AOI)
+plot(MEM,add=TRUE,col="orange")
+```
+
+Northern montane
+
+```{r}
+plot(AOI)
+plot(NM,add=TRUE,col="purple")
+```
+
+Low elevation
+
+```{r}
+plot(AOI)
+plot(LE,add=TRUE,col="green")
+```
+
+
 ##### Historic Climate 
 
 This data is from the PRISM dataset for the years 1981 to Nov 2018. Because the geodata portal does not handle multi-polygons well, I made this script to take the raw
@@ -26,8 +73,6 @@ This data is from the PRISM dataset for the years 1981 to Nov 2018. Because the 
 min and max temperature. 
 
 http://www.prism.oregonstate.edu/recent/
-
-
 
 ```{python, eval=FALSE}
 #### Percipitation
