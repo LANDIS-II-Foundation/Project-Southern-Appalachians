@@ -1,0 +1,931 @@
+---
+title: "Climate Files"
+author: "Zachary Robbins"
+date: "Updated June 28, 2019"
+output: github_document
+---
+
+```{r setup, include=FALSE }
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+library(reticulate)
+if(.Platform$OS.type == "windows") Sys.setenv(PATH= paste("C:/Anaconda3/Library/bin",Sys.getenv()["PATH"],sep=";"))
+library(reticulate)
+use_condaenv("Backupgeo")
+# pandas<-import("pandas")
+# import('fiona')
+# import("geopandas")
+# os<-import("os")
+# os$listdir()
+# pandas$listdir(".")
+```
+
+##### Historic Climate 
+
+This data is from the PRISM dataset for the years 1981 to Nov 2018. Because the geodata portal does not handle multi-polygons well, I made this script to take the raw
+.bil files from PRISM, match them with the climate regions maps and then calculate the mean std, var for each. This takes a while. There is one each for perciptiation, 
+min and max temperature. 
+
+http://www.prism.oregonstate.edu/recent/
+
+
+
+```{python, eval=FALSE}
+#### Percipitation
+
+
+###Libraries##
+import geopandas as gp
+import pandas as pd
+import rasterio as rt
+
+import gdal 
+from rasterio.mask import mask
+
+from rasterio.crs import CRS
+import numpy as np
+
+####Functions##
+def getFeatures(gdf):
+    """Function to parse features from GeoDataFrame in such a manner that rasterio wants them"""
+    import json
+    return [json.loads(gdf.to_json())['features'][0]['geometry']]
+
+def ReadBilFile(bil):
+
+    gdal.GetDriverByName('EHdr').Register()
+    img = gdal.Open(bil)
+    band = img.GetRasterBand(1)
+    data = band.ReadAsArray()
+    return data
+
+
+###Drives###
+climatefiles_Dir="E:/Prism_Data/"
+shapefile_Dir="C:/Users/zjrobbin/Desktop/Prism_2_27/Climate_regions/"
+work_dir="C:/Users/zjrobbin/Desktop/Prism_3_6/"
+
+#####Inputs#####
+###Prism in epsg:4269
+
+
+#Ecoregions=("High_Elevation","Low_elevation","Mid_El_Montane","North_Montane")
+Ecoregions=("High_Elevation_Dissolve","North_Montane_Dissolved","Low_elevation_Dissolved","Mid_El_Montane_Dissolve")
+ecoone="South_Crys"
+
+
+years=list(range(1983,2018))
+#years=("19812017")
+#print(years)
+
+Months=("01","02","03","04","05","06","07","08","09","10","11","12")
+Days31=("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26",
+      "27","28","29","30","31")
+Day30=("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26",
+      "27","28","29","30")
+Day28=("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26",
+      "27","28")
+Thirty=["09","04","06","11"]
+
+Model="ppt_daily"
+yearbyyear=pd.DataFrame()
+for year in years:
+    monthtoyear=pd.DataFrame()
+    print(year)
+    for Month in Months:
+        if Month=="02":
+            days=Day28
+        elif Month in Thirty:
+            days=Day30
+        else:
+            days=Days31
+        daytomonth=pd.DataFrame()
+        for day in days:
+            find=(str(year)+Month+day)
+            print(find)
+            Timestep=(str(year)+"-"+Month+"-"+day+"T00:00:00Z")
+            print(Timestep)
+            filename = climatefiles_Dir+Model+"/PRISM_ppt_stable_4kmD2_"+find+"_bil.bil"
+          
+            print(filename)
+           ###Change Structure
+            input_raster = gdal.Open(filename)
+            fomat="GTiff"
+            driver=gdal.GetDriverByName(fomat)
+            tempfilename=work_dir+"temp.tif"
+            dst_ds=driver.CreateCopy(tempfilename,input_raster,0)
+            ##Set empty data
+            something=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            Meanstack=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            VarStack=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            StdStack=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            
+            for ecoregion in Ecoregions:
+                #ecoregion="Mid_El_Montane_Dissolve"
+                #print(ecoregion)
+                data=rt.open(tempfilename)
+                data.crs
+                crs = CRS.from_epsg(4269)
+                out_tif=work_dir+"temp2.tif"
+            
+                filein=(shapefile_Dir+ecoregion+".shp")
+                AOI=gp.read_file(filein)
+                geo=AOI
+                coords=getFeatures(geo)
+                #print(coords)
+                out_meta = data.meta.copy()
+
+                
+#print(out_meta)
+
+
+
+                out_img,out_transform=mask(raster=data,shapes=coords,crop=True)
+                
+                out_meta = data.meta.copy()
+                #print(out_img)
+                #epsg_code = int(data.crs.data['init'][5:])
+                #out_meta.update({"driver": "GTiff",
+                   #          "height": out_img.shape[1],
+                  #           "width": out_img.shape[2],
+                 #            "transform": out_transform}
+                   #             )
+        
+                #with rasterio.open(out_tif, "w", **out_meta) as dest:
+                 #   dest.write(out_img)
+                       
+                #data=rt.open(out_tif)
+                #out_tif=None
+                
+                band1=out_img
+                #print(band1)
+                meancalc=band1[band1!=-9999]
+            #print(np.mean(meancalc))
+                mean=(np.mean(meancalc))
+                variance=(np.var(meancalc))
+                STD=(np.std(meancalc))
+                Mean=pd.DataFrame([[Timestep,mean]],columns=["Timestep",ecoregion])
+                StTime=pd.DataFrame([[Timestep,STD]],columns=['Timestep',(ecoregion+"STD")])
+                VarTime=pd.DataFrame([[Timestep,variance]],columns=['Timestep',(ecoregion+"VAR")])
+                Meanstack=pd.merge(Meanstack,Mean,how='inner',on="Timestep")
+                VarStack=pd.merge(VarStack,VarTime, how='inner', on='Timestep')
+                StdStack=pd.merge(StdStack,StTime,how='inner', on='Timestep')
+                #print(StdStack)
+                #stepone=pd.merge(Meanstack,VarStack,how='inner', on='Timestep')
+                #onemonth=pd.merge(stepone,StTime, how='inner',on='Timestep')
+               # outline=pd.DataFrame([[Timestep,mean]],columns=["Timestep",ecoregion])
+                           #print(VarStack)
+                stepone=pd.merge(Meanstack,VarStack,how='inner', on='Timestep')
+                oneday=pd.merge(stepone,StdStack, how='inner',on='Timestep')
+                data=None
+                #something=pd.merge(something,outline,how='inner',on="Timestep")
+            #print(something)
+            
+            daytomonth=daytomonth.append(oneday)
+        monthtoyear=monthtoyear.append(daytomonth)
+        monthtoyear.head
+    monthtoyear.to_csv(work_dir+"Outputs/"+str(year)+Model+".csv")
+
+
+Models=["ppt_daily","tmax_daily","tmin_daily"]
+
+Years=list(range(1982,2017))
+Background=pd.read_csv(work_dir+"Outputs/"+str(1981)+Model+".csv")
+for Year in Years:
+    one=pd.read_csv(work_dir+"Outputs/"+str(Year)+Model+".csv")
+    Background=pd.concat([one,Background],ignore_index=True)
+
+
+list(Background.columns.values)
+ppt=Background[['Timestep','High_Elevation_Dissolve',
+ 'High_Elevation_DissolveSTD',
+ 'High_Elevation_DissolveVAR',
+ 'Low_elevation_Dissolved',
+ 'Low_elevation_DissolvedSTD',
+ 'Low_elevation_DissolvedVAR',
+ 'Mid_El_Montane_Dissolve',
+ 'Mid_El_Montane_DissolveSTD',
+ 'Mid_El_Montane_DissolveVAR',
+ 'North_Montane_Dissolved',
+ 'North_Montane_DissolvedSTD',
+ 'North_Montane_DissolvedVAR' ]]
+
+ppt=ppt.sort_values(by=['Timestep'])
+
+
+
+Years=list(range(1982,2017))
+Model="tmax_daily"
+Background=pd.read_csv(work_dir+"Outputs/"+str(1981)+Model+".csv")
+for Year in Years:
+    one=pd.read_csv(work_dir+"Outputs/"+str(Year)+Model+".csv")
+    Background=pd.concat([one,Background],ignore_index=True)
+
+
+list(Background.columns.values)
+tmax=Background[['Timestep','High_Elevation_Dissolve',
+ 'High_Elevation_DissolveSTD',
+ 'High_Elevation_DissolveVAR',
+ 'Low_elevation_Dissolved',
+ 'Low_elevation_DissolvedSTD',
+ 'Low_elevation_DissolvedVAR',
+ 'Mid_El_Montane_Dissolve',
+ 'Mid_El_Montane_DissolveSTD',
+ 'Mid_El_Montane_DissolveVAR',
+ 'North_Montane_Dissolved',
+ 'North_Montane_DissolvedSTD',
+ 'North_Montane_DissolvedVAR' ]]
+tmax=tmax.sort_values(by=['Timestep'])
+
+Years=list(range(1982,2017))
+Model="tmin_daily"
+Background=pd.read_csv(work_dir+"Outputs/"+str(1981)+Model+".csv")
+for Year in Years:
+    one=pd.read_csv(work_dir+"Outputs/"+str(Year)+Model+".csv")
+    Background=pd.concat([one,Background],ignore_index=True)
+
+
+list(Background.columns.values)
+tmin=Background[['Timestep','High_Elevation_Dissolve',
+ 'High_Elevation_DissolveSTD',
+ 'High_Elevation_DissolveVAR',
+ 'Low_elevation_Dissolved',
+ 'Low_elevation_DissolvedSTD',
+ 'Low_elevation_DissolvedVAR',
+ 'Mid_El_Montane_Dissolve',
+ 'Mid_El_Montane_DissolveSTD',
+ 'Mid_El_Montane_DissolveVAR',
+ 'North_Montane_Dissolved',
+ 'North_Montane_DissolvedSTD',
+ 'North_Montane_DissolvedVAR' ]]
+tmin=tmin.sort_values(by=['Timestep'])
+
+New=pd.concat([ppt,tmax,tmin])
+New.to_csv(work_dir+"Apps_Climate_3_6_example.csv")
+
+
+#####Temperature
+####Max
+###Drives###
+climatefiles_Dir="E:/Prism_Data/"
+shapefile_Dir="C:/Users/zjrobbin/Desktop/Prism_3_6/Climate_regions/"
+work_dir="C:/Users/zjrobbin/Desktop/Prism_3_6/"
+
+#####Inputs#####
+###Prism in epsg:4269
+
+
+#Ecoregions=("High_Elevation","Low_elevation","Mid_El_Montane","North_Montane")
+Ecoregions=("High_Elevation_Dissolve","North_Montane_Dissolved","Low_elevation_Dissolved","Mid_El_Montane_Dissolve")
+ecoone="South_Crys"
+
+
+years=list(range(1997,1998))
+
+#years=("19812017")
+#print(years)
+
+Months=("01","02","03","04","05","06","07","08","09","10","11","12")
+Days31=("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26",
+      "27","28","29","30","31")
+Day30=("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26",
+      "27","28","29","30")
+Day28=("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26",
+      "27","28")
+Thirty=["09","04","06","11"]
+
+Model="tmax_daily"
+yearbyyear=pd.DataFrame()
+for year in years:
+    monthtoyear=pd.DataFrame()
+    print(year)
+    for Month in Months:
+        if Month=="02":
+            days=Day28
+        elif Month in Thirty:
+            days=Day30
+        else:
+            days=Days31
+        daytomonth=pd.DataFrame()
+        for day in days:
+            find=(str(year)+Month+day)
+            print(find)
+            Timestep=(str(year)+"-"+Month+"-"+day+"T00:00:00Z")
+            print(Timestep)
+            filename = climatefiles_Dir+Model+"/PRISM_tmax_stable_4kmD1_"+find+"_bil.bil"
+          
+            print(filename)
+           ###Change Structure
+            input_raster = gdal.Open(filename)
+            fomat="GTiff"
+            driver=gdal.GetDriverByName(fomat)
+            tempfilename=work_dir+"temp.tif"
+            dst_ds=driver.CreateCopy(tempfilename,input_raster,0)
+            ##Set empty data
+            something=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            Meanstack=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            VarStack=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            StdStack=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            
+            for ecoregion in Ecoregions:
+                #ecoregion="Mid_El_Montane_Dissolve"
+                #print(ecoregion)
+                data=rt.open(tempfilename)
+                data.crs
+                crs = CRS.from_epsg(4269)
+                out_tif=work_dir+"temp2.tif"
+            
+                filein=(shapefile_Dir+ecoregion+".shp")
+                AOI=gp.read_file(filein)
+                geo=AOI
+                coords=getFeatures(geo)
+                #print(coords)
+                out_meta = data.meta.copy()
+
+                
+#print(out_meta)
+
+
+
+                out_img,out_transform=mask(raster=data,shapes=coords,crop=True)
+                
+                out_meta = data.meta.copy()
+                #print(out_img)
+                #epsg_code = int(data.crs.data['init'][5:])
+                #out_meta.update({"driver": "GTiff",
+                   #          "height": out_img.shape[1],
+                  #           "width": out_img.shape[2],
+                 #            "transform": out_transform}
+                   #             )
+        
+                #with rasterio.open(out_tif, "w", **out_meta) as dest:
+                 #   dest.write(out_img)
+                       
+                #data=rt.open(out_tif)
+                #out_tif=None
+                
+                band1=out_img
+                #print(band1)
+                meancalc=band1[band1!=-9999]
+            #print(np.mean(meancalc))
+                mean=(np.mean(meancalc))
+                variance=(np.var(meancalc))
+                STD=(np.std(meancalc))
+                Mean=pd.DataFrame([[Timestep,mean]],columns=["Timestep",ecoregion])
+                StTime=pd.DataFrame([[Timestep,STD]],columns=['Timestep',(ecoregion+"STD")])
+                VarTime=pd.DataFrame([[Timestep,variance]],columns=['Timestep',(ecoregion+"VAR")])
+                Meanstack=pd.merge(Meanstack,Mean,how='inner',on="Timestep")
+                VarStack=pd.merge(VarStack,VarTime, how='inner', on='Timestep')
+                StdStack=pd.merge(StdStack,StTime,how='inner', on='Timestep')
+                #print(StdStack)
+                #stepone=pd.merge(Meanstack,VarStack,how='inner', on='Timestep')
+                #onemonth=pd.merge(stepone,StTime, how='inner',on='Timestep')
+               # outline=pd.DataFrame([[Timestep,mean]],columns=["Timestep",ecoregion])
+                           #print(VarStack)
+                stepone=pd.merge(Meanstack,VarStack,how='inner', on='Timestep')
+                oneday=pd.merge(stepone,StdStack, how='inner',on='Timestep')
+                data=None
+                #something=pd.merge(something,outline,how='inner',on="Timestep")
+            #print(something)
+            
+            daytomonth=daytomonth.append(oneday)
+        monthtoyear=monthtoyear.append(daytomonth)
+        monthtoyear.head
+    monthtoyear.to_csv(work_dir+"Outputs/"+str(year)+Model+".csv")
+
+
+###### Min 
+
+
+##Drives###
+climatefiles_Dir="E:/Prism_Data/"
+shapefile_Dir="C:/Users/zjrobbin/Desktop/Prism_2_27/Climate_regions/"
+work_dir="C:/Users/zjrobbin/Desktop/Prism_2_27/"
+
+#####Inputs#####
+###Prism in epsg:4269
+
+
+#Ecoregions=("High_Elevation","Low_elevation","Mid_El_Montane","North_Montane")
+Ecoregions=("High_Elevation_Dissolve","North_Montane_Dissolved","Low_elevation_Dissolved","Mid_El_Montane_Dissolve")
+ecoone="South_Crys"
+
+
+years=list(range(1981,1989))
+#years=("19812017")
+#print(years)
+
+Months=("01","02","03","04","05","06","07","08","09","10","11","12")
+Days31=("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26",
+      "27","28","29","30","31")
+Day30=("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26",
+      "27","28","29","30")
+Day28=("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26",
+      "27","28")
+Thirty=["09","04","06","11"]
+
+Model="tmin_daily"
+yearbyyear=pd.DataFrame()
+for year in years:
+    monthtoyear=pd.DataFrame()
+    print(year)
+    for Month in Months:
+        if Month=="02":
+            days=Day28
+        elif Month in Thirty:
+            days=Day30
+        else:
+            days=Days31
+        daytomonth=pd.DataFrame()
+        for day in days:
+            find=(str(year)+Month+day)
+            print(find)
+            Timestep=(str(year)+"-"+Month+"-"+day+"T00:00:00Z")
+            print(Timestep)
+            filename = climatefiles_Dir+Model+"/PRISM_tmin_stable_4kmD1_"+find+"_bil.bil"
+          
+            print(filename)
+           ###Change Structure
+            input_raster = gdal.Open(filename)
+            fomat="GTiff"
+            driver=gdal.GetDriverByName(fomat)
+            tempfilename=work_dir+"temp.tif"
+            dst_ds=driver.CreateCopy(tempfilename,input_raster,0)
+            
+            ##Set empty data
+            something=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            Meanstack=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            VarStack=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            StdStack=pd.DataFrame([[Timestep]],columns=["Timestep"])
+            
+            for ecoregion in Ecoregions:
+                #ecoregion="Mid_El_Montane_Dissolve"
+                #print(ecoregion)
+                data=rt.open(tempfilename)
+                data.crs
+                crs = CRS.from_epsg(4269)
+                out_tif=work_dir+"temp2.tif"
+            
+                filein=(shapefile_Dir+ecoregion+".shp")
+                AOI=gp.read_file(filein)
+                geo=AOI
+                coords=getFeatures(geo)
+                #print(coords)
+                out_meta = data.meta.copy()
+
+                
+#print(out_meta)
+
+
+
+                out_img,out_transform=mask(raster=data,shapes=coords,crop=True)
+                
+                out_meta = data.meta.copy()
+                #print(out_img)
+                #epsg_code = int(data.crs.data['init'][5:])
+                #out_meta.update({"driver": "GTiff",
+                   #          "height": out_img.shape[1],
+                  #           "width": out_img.shape[2],
+                 #            "transform": out_transform}
+                   #             )
+        
+                #with rasterio.open(out_tif, "w", **out_meta) as dest:
+                 #   dest.write(out_img)
+                       
+                #data=rt.open(out_tif)
+                #out_tif=None
+                
+                band1=out_img
+                #print(band1)
+                meancalc=band1[band1!=-9999]
+            #print(np.mean(meancalc))
+                mean=(np.mean(meancalc))
+                variance=(np.var(meancalc))
+                STD=(np.std(meancalc))
+                Mean=pd.DataFrame([[Timestep,mean]],columns=["Timestep",ecoregion])
+                StTime=pd.DataFrame([[Timestep,STD]],columns=['Timestep',(ecoregion+"STD")])
+                VarTime=pd.DataFrame([[Timestep,variance]],columns=['Timestep',(ecoregion+"VAR")])
+                Meanstack=pd.merge(Meanstack,Mean,how='inner',on="Timestep")
+                VarStack=pd.merge(VarStack,VarTime, how='inner', on='Timestep')
+                StdStack=pd.merge(StdStack,StTime,how='inner', on='Timestep')
+                #print(StdStack)
+                #stepone=pd.merge(Meanstack,VarStack,how='inner', on='Timestep')
+                #onemonth=pd.merge(stepone,StTime, how='inner',on='Timestep')
+               # outline=pd.DataFrame([[Timestep,mean]],columns=["Timestep",ecoregion])
+                           #print(VarStack)
+                stepone=pd.merge(Meanstack,VarStack,how='inner', on='Timestep')
+                oneday=pd.merge(stepone,StdStack, how='inner',on='Timestep')
+                data=None
+                #something=pd.merge(something,outline,how='inner',on="Timestep")
+            #print(something)
+            
+            daytomonth=daytomonth.append(oneday)
+        monthtoyear=monthtoyear.append(daytomonth)
+        monthtoyear.head
+    monthtoyear.to_csv(work_dir+"Outputs/"+str(year)+Model+".csv")
+
+
+```
+
+
+These are then combined on top of one another and rearranged in the mean/mean/mean/std/std/std/var/var/var style of LANDIS-II climate inputs.
+
+```{r}
+w_dir<-'C:/Users/zjrobbin/Desktop/Prism_3_6/'
+library(scales)
+
+AppsOriginal<-read.csv(paste(w_dir,'Apps_Climate_3_6.csv',sep=""),stringsAsFactors = FALSE)
+
+AppsArranged<-AppsOriginal[,c(2,12,6,9,3,14,8,11,5,13,7,10,4)]
+AppsArranged[,1]<-as.factor(AppsArranged[,1])
+
+
+for(i in seq(2,13,1)){
+AppsArranged[,c(i)]<-as.numeric(as.character(AppsArranged[,c(i)]))
+}
+
+write.csv(AppsArranged,paste(w_dir,"Apps_Hist_6_4.csv",sep=""))
+```
+
+Here are those climate files plotted
+
+###### The daily maximums for each ecoregion.
+
+```{r,fig.height=10.0,fig.width=10.0, warning=FALSE}
+#### Figures
+Historic<-read.csv(paste("F:/NetCdfWork/current/Apps_Climate_3_6.csv",sep=""))
+
+
+HistPrecip<-Historic[c(1:13141),]
+HistTMax<-Historic[c(13141:26281),]
+HistTmin<-Historic[c(26281:nrow(Historic)),]
+#plot(HistTmin)
+#colnames(HistTmin)
+HistTmin<-HistTmin[,-1]
+HistTMax<-HistTMax[,-1]
+HistTMax<-HistTMax[c(-1,-nrow(HistTMax)),]
+HistTMax$Counter<-1:nrow(HistTMax)
+HistTmin$Counter<-1:nrow(HistTmin)
+HistPrecip$Counter<-1:nrow(HistPrecip)
+HistPrecip<-HistPrecip[c(-nrow(HistPrecip)),]
+Ecoregions<-c("High_Elevation_Dissolve","North_Montane_Dissolved","Low_elevation_Dissolved" ,"Mid_El_Montane_Dissolve")
+
+Ecoregion<-Ecoregions[1]
+par(mfrow=c(4,1))
+for(Ecoregion in Ecoregions){
+plot(as.matrix(HistTMax[Ecoregion])~as.POSIXct(HistTMax$Timestep),type='l',lty=1,main=paste("Daily maximums",Ecoregion),col=alpha('blue', 0.3),cex.lab=1.3,xlab=" ", ylab="Degrees Celcius")
+
+abline(h=0,col='lightblue')
+}
+```
+
+The daily minimums for each ecoregion.
+
+
+```{r, fig.height=10.0,fig.width=10.0}
+Ecoregion<-Ecoregions[1]
+par(mfrow=c(4,1))
+for(Ecoregion in Ecoregions){
+plot(as.matrix(HistTmin[Ecoregion])~as.POSIXct(HistTmin$Timestep),type='l',lty=1,main=paste("Daily minimums",Ecoregion),col=alpha('red', 0.3),cex.lab=1.3,xlab=" ", ylab="Degrees Celcius")
+
+abline(h=0,col='blue')
+}
+```
+
+Percipitation 
+
+
+```{r, fig.width=10.0,fig.height=10.0}
+Ecoregion<-Ecoregions[1]
+par(mfrow=c(4,1))
+
+for(Ecoregion in Ecoregions){
+plot(as.matrix(HistPrecip[Ecoregion])~as.POSIXct(HistPrecip$Timestep),type='l',lty=1,main=paste("Percipitation",Ecoregion),col=alpha('blue', 0.3),cex.lab=1.3,xlab=" ", ylab="mm2/day")
+
+
+}
+
+# library(dygraphs)
+# library(xts)          # To make the convertion data-frame / xts format
+#  
+# # Create data + verify it is date format + change them to xts format:
+# data=data.frame(time=seq(from=Sys.Date()-40, to=Sys.Date(), by=1 ), value=runif(41))
+# str(data$time)
+# data=xts(x = HistPrecip$High_Elevation_Dissolve, order.by = as.POSIXct(HistPrecip$Timestep))
+#  
+# # Default = line plot --> See chart #316
+#  
+# # Add points
+# dygraph(data) %>%
+#   dyOptions( drawPoints = TRUE, pointSize = 4 )
+```
+
+
+##### Future climate projections
+
+Here we are using downscaled climate projections from GFDL-ESM2M thought this script could be used for any of the NetCDF climate files found at https://climate.northwestknowledge.net/MACA/data_portal.php
+From the MACA website:
+
+Multivariate Adaptive Constructed Analogs (MACA) is a statistical method for downscaling Global Climate Models (GCMs) from their native coarse resolution to a higher spatial resolution that captures reflects observed patterns of daily near-surface meteorology and simulated changes in GCMs experiments. This method has been shown to be slightly preferable to direct daily interpolated bias correction in regions of complex terrain due to its use of a historical library of observations and multivariate approach. 
+
+The files for this project can be can be downloaded directly by copying these links found [here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/blob/master/Parameterizing/Climate/Net_cdf_macav2livneh_Source.txt)
+
+We processed a relative concentration pathway 4.5 and 8.5 for the years 2006-2099.
+
+Find out more information here http://www.climatologylab.org/maca.html
+
+
+```{python,eval=FALSE}
+w_dir='E:/NetCdfWork/'
+
+## Librarys
+from datetime import datetime, timedelta
+from netCDF4 import num2date, date2num
+import matplotlib.pyplot as plt
+import geopandas
+import rasterio as rt 
+import numpy as np
+from netCDF4 import Dataset
+from rasterio.mask import mask
+from rasterio.crs import CRS
+import pandas as pd
+from rasterio.plot import show
+import os
+
+
+##Function
+def getFeatures(gdf):
+    """Function to parse features from GeoDataFrame in such a manner that rasterio wants them"""
+    import json
+    return [json.loads(gdf.to_json())['features'][0]['geometry']]
+
+
+
+
+Ecoregions=("High_Elevation_Dissolve","North_Montane_Dissolved","Low_elevation_Dissolved","Mid_El_Montane_Dissolve")
+
+
+    
+
+listofruns=('RCP45Tempmin','RCP85Tempmin','RCP45Tempmax','RCPT85Tempmax','RCP45PPT','RCP85PPT')
+files=('macav2livneh_tasmin_GFDL-ESM2M_r1i1p1_rcp45_2006_2099_CONUS_daily_aggregated',
+       'macav2livneh_tasmin_GFDL-ESM2M_r1i1p1_rcp85_2006_2099_CONUS_daily_aggregated',
+       'macav2livneh_tasmax_GFDL-ESM2M_r1i1p1_rcp45_2006_2099_CONUS_daily_aggregated',
+       'macav2livneh_tasmax_GFDL-ESM2M_r1i1p1_rcp85_2006_2099_CONUS_daily_aggregated',
+       'macav2livneh_pr_GFDL-ESM2M_r1i1p1_rcp45_2006_2099_CONUS_daily_aggregated',
+       'macav2livneh_pr_GFDL-ESM2M_r1i1p1_rcp85_2006_2099_CONUS_daily_aggregated')
+key=('air_temperature','air_temperature','air_temperature','air_temperature','precipitation','precipitation')
+files=('macav2livneh_pr_GFDL-ESM2M_r1i1p1_rcp45_2006_2099_CONUS_daily_aggregated',
+       'macav2livneh_pr_GFDL-ESM2M_r1i1p1_rcp85_2006_2099_CONUS_daily_aggregated')
+listofruns=('RCP45PPT','RCP85PPT')
+key=('precipitation','precipitation')
+
+for r in list(range(0,(len(files)))):
+    print((w_dir+'/netCDFs/'+files[r]+'.nc'))
+    Precip = Dataset((w_dir+'/netCDFs/'+files[r]+'.nc'), "r")
+    
+    print(Precip.variables)
+    Precip['time']
+    for i in Precip.variables:
+        print(i)
+    print(Precip.variables['time'])
+    
+    Array= np.array(Precip.variables[key[r]])
+    Time=np.array(Precip.variables['time'])
+    var=[key[r]]
+    lat=np.array(Precip.variables['lat'])
+    lon=np.array(Precip.variables['lon'])
+    lon2=-(360-lon)
+    
+    ##Adjust dates
+    #days since 1900-01-01
+    ### Set standard dates
+    dates = [datetime(1900,1,1)+n*timedelta(hours=24) for n in Time]
+    
+    
+    out_meta={'crs':CRS.from_epsg(4269),
+         'driver': 'GTiff',
+         'count':34333,
+         'dtype': 'float32',
+         'height': len(lon2),
+         'nodata': None,
+         'transform':((max(lon2)-min(lon2))/len(lon2),0.0,min(lon2),0.0,-(max(lat)-min(lat))/len(lat),max(lat)), 
+          #'transform': (min(lat), max(lat),(max(lat)-min(lat))/len(lat),min(lon),max(lon),(max(lon2)-min(lon2))/len(lon),max(lon)),
+         'width': len(lat)}
+    
+    new_output=rt.open(w_dir+'All.tif', 'w', **out_meta) 
+    new_output.write(Array)
+    new_output.close()
+    
+    Template=rt.open(w_dir+'All.tif')              
+    #   new_output=rt.open(w_dir+'temp'+str(i)+'.tif', 'w', **out_meta) 
+    #   new_output.write(Array,1)
+    #   new_output.close()
+    #   Template=rt.open(w_dir+'temp'+str(i)+'.tif')  
+    something=pd.DataFrame([[dates]],columns=["Timestep"])
+    Meansmoosh=pd.DataFrame([[dates]],columns=["Timestep"])
+    Varsmoosh=pd.DataFrame([[dates]],columns=["Timestep"])
+    
+    for ecoregion in Ecoregions:
+        print(ecoregion)
+        Climateregion = geopandas.read_file((w_dir+'ecoregions/'+ecoregion+'.shp'))
+        coords=getFeatures(Climateregion)
+            ###Mask
+        out_img,out_transform=mask(raster=Template,shapes=coords,crop=True,nodata=-9999)
+        MeanStack=pd.DataFrame(columns=["Timestep"])
+        VarStack=pd.DataFrame(columns=["Timestep"])
+        StdStack=pd.DataFrame(columns=["Timestep"])    
+        
+        for i in list(range(1,len(dates))):
+            Timestep=dates[i]
+            print(Timestep)
+            band1=out_img[i,:,:]
+            
+            meancalc=band1[band1!=-9999]
+            if var == 'air_temperature':
+                meancalc=meancalc-273.15
+            #print(np.mean(meancalc))
+            mean=(np.mean(meancalc))
+          
+            variance=(np.var(meancalc))
+            STD=(np.std(meancalc)) 
+            Mean=pd.DataFrame([[Timestep,mean]],columns=["Timestep",ecoregion])
+            
+            StTime=pd.DataFrame([[Timestep,STD]],columns=['Timestep',ecoregion+"STD"])
+            VarTime=pd.DataFrame([[Timestep,variance]],columns=['Timestep',(ecoregion+"VAR")])  
+            
+            MeanStack=MeanStack.append(Mean)
+            StdStack=StdStack.append(StTime)
+            VarStack=VarStack.append(VarTime)
+            
+            
+        stepone=None    
+        
+        stepone=pd.merge(MeanStack,VarStack,how='inner', on='Timestep')
+        one_eco=pd.merge(stepone,StdStack, how='inner',on='Timestep')        
+        one_eco.to_csv(w_dir+'Outputs/'+ecoregion+'_'+listofruns[r]+'.csv')
+    Template.close()
+
+       
+        
+        
+        
+        
+
+    data=None
+    ###endecoregion loop
+    
+    daytomonth=daytomonth.append(oneday)
+   
+
+#os.remove(w_dir+'temp'+str(i)+'.tif')
+    
+    
+Template.close()   
+    
+monthtoyear=monthtoyear.append(daytomonth)
+monthtoyear.head
+monthtoyear.to_csv(work_dir+"Outputs/"+str(year)+Model+".csv")
+```
+
+
+```{r}
+## Then to post process them.
+w_dir<-'F:/NetCdfWork/Outputs/'
+setwd(w_dir)
+Scenarios<-c('RCP45Tempmin','RCP85Tempmin','RCP45Tempmax','RCPT85Tempmax','RCP45PPT','RCP85PPT')
+Climate_Regions<-c("High_Elevation_Dissolve","North_Montane_Dissolved","Low_elevation_Dissolved","Mid_El_Montane_Dissolve")
+
+CR<-Climate_Regions[1]
+Scen<-Scenarios[1]
+RCP45<-c('RCP45PPT','RCP45Tempmin','RCP45Tempmax')
+Stacked45<-NULL
+for(Scen in RCP45){
+
+HE<-read.csv(paste(w_dir,CR,"_",Scen,'.csv',sep=""))
+HE<-HE[,c(3,2,4,5)]
+NM<-read.csv(paste(w_dir,Climate_Regions[2],"_",Scen,'.csv',sep=""))
+NM<-NM[,c(3,2,4,5)]
+LE<-read.csv(paste(w_dir,Climate_Regions[3],"_",Scen,'.csv',sep=""))
+LE<-LE[,c(3,2,4,5)]
+MEM<-read.csv(paste(w_dir,Climate_Regions[4],"_",Scen,'.csv',sep=""))
+MEM<-MEM[,c(3,2,4,5)]
+
+HENM<-merge(HE,NM,by='Timestep')
+HENMLE<-merge(HENM,LE,by='Timestep')
+All<-merge(HENMLE,MEM,by='Timestep')
+All[nrow(All)+1,] <- NA
+Stacked45<-rbind(All,Stacked45)
+}
+
+write.csv(Stacked45,"RCP45_Climate_raw.csv")
+
+RCP85<-c('RCP85PPT','RCP85Tempmin','RCPT85Tempmax')
+Stacked85<-NULL
+for(Scen in RCP85){
+  
+  HE<-read.csv(paste(w_dir,CR,"_",Scen,'.csv',sep=""))
+  HE<-HE[,c(3,2,4,5)]
+  NM<-read.csv(paste(w_dir,Climate_Regions[2],"_",Scen,'.csv',sep=""))
+  NM<-NM[,c(3,2,4,5)]
+  LE<-read.csv(paste(w_dir,Climate_Regions[3],"_",Scen,'.csv',sep=""))
+  LE<-LE[,c(3,2,4,5)]
+  MEM<-read.csv(paste(w_dir,Climate_Regions[4],"_",Scen,'.csv',sep=""))
+  MEM<-MEM[,c(3,2,4,5)]
+  
+  HENM<-merge(HE,NM,by='Timestep')
+  HENMLE<-merge(HENM,LE,by='Timestep')
+  All<-merge(HENMLE,MEM,by='Timestep')
+  All[nrow(All)+1,] <- NA
+  Stacked85<-rbind(All,Stacked85)
+}
+
+write.csv(Stacked85,"RCP85_Climate_raw.csv")
+
+```
+
+
+
+
+
+```{r, warning=FALSE, fig.width=10.0, fig.height=10.0}
+Tempmax45<-Stacked45[c(0:34332),]
+Tempmin45<-Stacked45 [c(34332:68666),]
+Tempmin45$Counter<-1:nrow(Tempmin45)
+ppt45<-Stacked45[c(68666:nrow(Stacked45)),]
+Tempmax45$Counter<-1:nrow(Tempmax45)
+
+
+Tempmax85<-Stacked85[c(0:34332),]
+Tempmin85<-Stacked85[c(34332:68666),]
+pptmax<-Stacked85[c(68666:nrow(Stacked85)),]
+Tempmin85$Counter<-1:nrow(Tempmin85)
+Tempmax85$Counter<-1:nrow(Tempmax85)
+
+
+library(scales)
+
+
+par(mfrow=c(3,1))
+par(mar=c(1,5,2,1))
+### colnames(Tempmax85)
+
+Ecoregions<-c("High_Elevation_Dissolve","North_Montane_Dissolved","Low_elevation_Dissolved" ,"Mid_El_Montane_Dissolve")
+
+Ecoregion<-Ecoregions[1]
+
+for(Ecoregion in Ecoregions){
+###print(Ecoregion)
+  
+par(mfrow=c(3,1))
+par(mar=c(1,5,2,1))  
+  
+plot(as.matrix(Tempmax85[Ecoregion])~Tempmax85$Counter,type='l',lty=1,main="Daily maximums",col=alpha('red', 0.3),cex.lab=1.3, xaxt='n',xlab=" ", ylab="Degrees Celcius")
+Axis(side=1, labels=FALSE)
+lines(as.matrix(HistTMax[Ecoregion])~HistTMax$Counter,col='black')
+lines(as.matrix(Tempmax45[Ecoregion])~Tempmax45$Counter,col=alpha('blue', 0.3))
+abline(h=273.15,col='blue')
+abline(h=310.15,col='red')
+
+##Min
+plot(as.matrix(Tempmin85[Ecoregion])~Tempmin85$Counter,type='l',lty=1,main="Daily minimums",col=alpha('red', 0.3),cex.lab=1.3, xaxt='n',xlab=" ", ylab="Degrees Celcius")
+Axis(side=1, labels=FALSE)
+lines(as.matrix(HistTmin[Ecoregion])~HistTmin$Counter,col='black')
+lines(as.matrix(Tempmin45[Ecoregion])~Tempmin45$Counter,col=alpha('blue', 0.3))
+abline(h=273.15,col='blue')
+abline(h=310.15,col='red')
+plot.new()
+legend(x="top", ncol=3,legend=c("Historic Climate 1985-2018","RCP 4.5 2006-2099","RCP 8.5 2006-2099"),
+       fill=c("black","blue","red"), lty=c(1,1,1), title=paste(Ecoregion,"Model Runs"),cex=1.0,text.font = 2.0)
+
+
+
+filename<-paste(w_dir,Ecoregion,"Temps.jpeg",sep="") 
+
+jpeg(file = filename, bg = "transparent",res=300, units = 'in', width = 10, height = 4)
+
+par(mfrow=c(3,1))
+par(mar=c(1,5,2,1))  
+
+plot(as.matrix(Tempmax85[Ecoregion])~Tempmax85$Counter,type='l',lty=1,main="Daily maximums",col=alpha('red', 0.3),cex.lab=1.3, xaxt='n',xlab=" ", ylab="Degrees Celcius")
+Axis(side=1, labels=FALSE)
+lines(as.matrix(HistTMax[Ecoregion])~HistTMax$Counter,col='black')
+lines(as.matrix(Tempmax45[Ecoregion])~Tempmax45$Counter,col=alpha('blue', 0.3))
+abline(h=273.15,col='blue')
+abline(h=310.15,col='red')
+
+##Min
+plot(as.matrix(Tempmin85[Ecoregion])~Tempmin85$Counter,type='l',lty=1,main="Daily minimums",col=alpha('red', 0.3),cex.lab=1.3, xaxt='n',xlab=" ", ylab="Degrees Celcius")
+Axis(side=1, labels=FALSE)
+lines(as.matrix(HistTmin[Ecoregion])~HistTmin$Counter,col='black')
+lines(as.matrix(Tempmin45[Ecoregion])~Tempmin45$Counter,col=alpha('blue', 0.3))
+abline(h=273.15,col='blue')
+abline(h=310.15,col='red')
+plot.new()
+legend(x="top", ncol=3,legend=c("Historic Climate 1985-2018","RCP 4.5 2006-2099","RCP 8.5 2006-2099"),
+       fill=c("black","blue","red"), lty=c(1,1,1), title=paste(Ecoregion,"Model Runs"),cex=1.0,text.font = 2.0)
+# mtext(Ecoregion, side=1, line=-1, outer=TRUE)
+
+dev.off()
+
+}
+```
