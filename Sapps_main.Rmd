@@ -1,7 +1,6 @@
 ---
 title: "Southern Appalachians LANDIS-II Project"
-output:rmarkdown::github_document: 
-          keep_md:true
+output: github_document
 ---
 
 
@@ -35,6 +34,7 @@ knitr::include_graphics("C:/Users/zjrobbin/Desktop/sApps/Sapssa.jpeg")
 
 * Derek Wallace *U.S. Forest Service*
 
+* Christopher Gerstle *North Carolina State University*
 
 
 </center>
