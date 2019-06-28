@@ -1,0 +1,1362 @@
+---
+title: "FIA Analysis"
+author: "Zachary Robbins"
+output: github_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r python stuff,message=FALSE,warning=FALSE,include=FALSE,eval=FALSE}
+library(reticulate)
+use_condaenv("basic")
+import("scipy")
+#import("geopandas")
+import("pandas")
+import("gdal")
+import("rasterio")
+import("numpy")
+
+virtualenv_list()
+```
+### Landscape Makeup 
+
+
+To understand the makeup of our landscape, we used FIA data isolated to our study-area over the last 15 years. The FIA data we 
+used was fuzzed, so we may have included some sites outside of our study area and vice versa. However given the size of the study 
+area (millions of hectares) and the number of samples obtained (3032 plots), we assume this effect to be small. 
+
+* First we isolate the locations using thier geospatial location on the site level using FIA_SITE table, 
+
+* Second, using the FIA_TREE table we calculate the basal area of each tree and the total basal area for the plot
+
+* Third we calculated a truncated important value index equal to:
+ $$\frac{No Of Trees Of Species X}{No Of Trees Of All Species}+\frac{BA of Species X}{Total BA of The Species} $$
+
+This was done in order to account for the prevalence of low basal area species which may represent the emergent understory/ 
+future overstory. 
+
+The results fromm this are cumulative counts of these measures. 
+
+
+```{python,include=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+import pandas as pd
+import geopandas as gp 
+##import shapely.wkt as shap
+from shapely.geometry import Point
+
+
+##FIA=pd.read_csv("B:/NC/NC_TREE.csv",index_col=0,usecols=['PLT_CN','INVYR','COUNTYCD','PLOT','SUBP','TREE','SPCD','HT','DIA','CR'])
+#SC
+NC_Plt=pd.read_csv("B:/FIA/NC/NC_PLOT.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD'])                                                                                 
+NC_Plt['Coordinates']=list(zip(NC_Plt.LON,NC_Plt.LAT))
+NC_Plt['Coordinates']=NC_Plt['Coordinates'].apply(Point)
+
+
+crs={'init':'epsg:4326'}#### Set as what it is then change if needed. 
+NC_map=gp.GeoDataFrame(NC_Plt,crs=crs,geometry='Coordinates')
+NC_map_26917=NC_map.to_crs({'init':'EPSG:26917'})
+
+
+#NC_map_26917.plot(color='red')
+
+AOI=gp.read_file("C:/Users/zjrobbin/Desktop/AOI.shp",crs={'init':'EPSG:26917'})
+NC_join= gp.sjoin(NC_map_26917, AOI, how="left", op="within")
+NC_join=NC_join.dropna()
+NC_join.plot(color='red')
+NC_join.to_csv('NCPlots.csv')
+
+###SC
+SC_Plt=pd.read_csv("B:/FIA/SC/SC_PLOT.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD'])                                                                                 
+SC_Plt['Coordinates']=list(zip(SC_Plt.LON,SC_Plt.LAT))
+SC_Plt['Coordinates']=SC_Plt['Coordinates'].apply(Point)
+
+
+crs={'init':'epsg:4326'}#### Set as what it is then change if needed. 
+SC_map=gp.GeoDataFrame(SC_Plt,crs=crs,geometry='Coordinates')
+SC_map_26917=SC_map.to_crs({'init':'EPSG:26917'})
+
+
+#SC_map_26917.plot(color='red')
+
+AOI=gp.read_file("C:/Users/zjrobbin/Desktop/AOI.shp",crs={'init':'EPSG:26917'})
+SC_join= gp.sjoin(SC_map_26917, AOI, how="left", op="within")
+SC_join=SC_join.dropna()
+SC_join.plot(color='red')
+SC_join.to_csv('SCPlots.csv')
+####TN
+
+TN_Plt=pd.read_csv("B:/FIA/TN/TN_PLOT.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD'])                                                                                 
+TN_Plt['Coordinates']=list(zip(TN_Plt.LON,TN_Plt.LAT))
+TN_Plt['Coordinates']=TN_Plt['Coordinates'].apply(Point)
+
+
+crs={'init':'epsg:4326'}#### Set as what it is then change if needed. 
+TN_map=gp.GeoDataFrame(TN_Plt,crs=crs,geometry='Coordinates')
+TN_map_26917=TN_map.to_crs({'init':'EPSG:26917'})
+
+
+#TN_map_26917.plot(color='red')
+
+AOI=gp.read_file("C:/Users/zjrobbin/Desktop/AOI.shp",crs={'init':'EPSG:26917'})
+TN_join= gp.sjoin(TN_map_26917, AOI, how="left", op="within")
+TN_join=TN_join.dropna()
+TN_join.plot(color='red')
+TN_join.to_csv('TNPlots.csv')
+#####GA
+
+
+GA_Plt=pd.read_csv("B:/FIA/GA/GA_PLOT.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD'])                                                                                 
+GA_Plt['Coordinates']=list(zip(GA_Plt.LON,GA_Plt.LAT))
+GA_Plt['Coordinates']=GA_Plt['Coordinates'].apply(Point)
+
+
+crs={'init':'epsg:4326'}#### Set as what it is then change if needed. 
+GA_map=gp.GeoDataFrame(GA_Plt,crs=crs,geometry='Coordinates')
+GA_map_26917=GA_map.to_crs({'init':'EPSG:26917'})
+
+
+#GA_map_26917.plot(color='red')
+
+AOI=gp.read_file("C:/Users/zjrobbin/Desktop/AOI.shp",crs={'init':'EPSG:26917'})
+GA_join= gp.sjoin(GA_map_26917, AOI, how="left", op="within")
+GA_join=GA_join.dropna()
+GA_join.plot(color='red')
+GA_join.to_csv('GAPlots.csv')
+mapsmerge=[GA_join,TN_join,SC_join,NC_join]
+Appsmaps=pd.concat(mapsmerge)
+#Appsmaps.plot(color='red')
+
+Appsmaps.to_csv('Appsmaps.csv')
+
+Plt_lst=pd.read_csv("B:/FIA/Appsmaps.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD','US_L4NAME'])
+States=['NC','SC','TN','GA']
+AllStOut=pd.DataFrame()
+i=0
+for State in States:
+    
+    FIA=pd.DataFrame()
+    FIA=pd.read_csv("B:/FIA/"+State+'/'+State+"_TREE.csv",index_col=-1,usecols=['PLT_CN','INVYR','COUNTYCD','PLOT','SUBP','TREE','SPCD','HT','DIA','CR'])
+    Plt_lst=pd.read_csv("B:/FIA/"+State+"Plots.csv",usecols=['PLOT','COUNTYCD','LAT','LON','INVYR','ELEV','STATECD','US_L4NAME'])
+    
+#Needs indents
+##Years(2010:2017)
+    Years=(Plt_lst.INVYR.unique())
+####Yearhasendless build loop
+    print(Years)
+    Years=[2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018]
+    StateNm=State
+    OneStOut=pd.DataFrame()
+    for Year in Years:
+        YearSub=(FIA.loc[FIA.INVYR==Year])
+        Pltsyear=(Plt_lst.loc[Plt_lst.INVYR==Year])
+        CoInSt=(Plt_lst.COUNTYCD.unique())
+    #print(CoInSt)
+        OneYrOut=pd.DataFrame()
+        for CDX in CoInSt:
+            CountySub=(YearSub.loc[YearSub.COUNTYCD==CDX])
+            PltsCoSub=Pltsyear.loc[Pltsyear.COUNTYCD==CDX]
+            Labeled=pd.merge(CountySub,PltsCoSub,on='PLOT',how='outer')
+            Labeled=Labeled.dropna()
+    # print(Labeled)
+#print(Labeled)
+
+###Pltlvl
+            PltsinCo=(Labeled.PLOT.unique())
+            CoOut=pd.DataFrame()
+            for PLX in PltsinCo:
+                i=i+1
+                print(i)
+                OnePlt=(Labeled.loc[Labeled.PLOT==PLX])
+                Lat=OnePlt.LAT.values[0]
+                Lon=OnePlt.LON.values[0]
+                
+                ##print(OnePlt)
+                SpinPlt=(OnePlt.SPCD.unique())
+                TotalBA=((OnePlt.DIA)**2)*.00545
+                TotalBA=TotalBA.dropna()
+                TotalBA=sum(TotalBA)
+                if TotalBA<.1:
+                    TotalBA=.1
+                TotalCt=len(OnePlt.SPCD)
+                
+        #print(TotalBA)
+        #print(TotalCt)
+                Pltout=pd.DataFrame()
+        #print(SpinPlt)
+                for SPX in SpinPlt:
+                    
+               
+                    OneSP=pd.DataFrame()
+                    OneSP=OnePlt.loc[OnePlt.SPCD==SPX]
+                    Ecoregion=OneSP.US_L4NAME.values[0]
+                    SPBA=((OneSP.DIA)**2)*.00545
+                    PLT_CN=OneSP.PLT_CN.values[0]
+                    SPBA=SPBA.dropna()
+                    SPBA=sum(SPBA)
+                    SpCt=len(OneSP.SPCD)
+                    RelDen=(SpCt/TotalCt)*100
+                    RelDom=(SPBA/TotalBA)*100
+                    IVI=RelDen+RelDom
+                
+                    outline=pd.DataFrame([[PLT_CN,Ecoregion,StateNm,Lat,Lon,CDX,PLX,SPX,IVI,SPBA]],columns=['PLT_CN','Ecoregion','State','LAT','LON','COUNTYCD','PLOT','SPCD','IVI','BA'])
+                    Pltout=Pltout.append(outline)
+   # print(Pltout)
+    #print(sum(Pltout.IVI))
+                CoOut=CoOut.append(Pltout)
+            OneYrOut=OneYrOut.append(CoOut)
+        OneStOut=OneStOut.append(OneYrOut)
+##print(OneYrOut)
+    AllStOut=AllStOut.append(OneStOut)
+        ##print(OneYrOut)
+AllStOut.to_csv('B:/FIA/plottreemergedall.csv')        
+
+FIA=pd.DataFrame()
+
+```
+
+
+
+```{r pressure, echo=FALSE,message=FALSE,warning=FALSE}
+#####
+#FIA IVI SORTER AND MAPPER
+###
+library(ggplot2)
+library(ggrepel)
+LtoM <-colorRampPalette(c('red', 'yellow' ))
+Mid <- "snow3"
+MtoH <-colorRampPalette(c('lightgreen', 'darkgreen'))
+MtoH2<-colorRampPalette(c('burlywood','cadetblue3'))
+LtoM2<-colorRampPalette(c('coral','chocolate'))
+
+wdir<-"B:/FIA/"
+setwd(wdir)
+
+IVIDATA<-read.csv(paste(wdir,"AOI_FIA_Plotdata.csv",sep=""))
+
+```
+
+
+```{r}
+#####Landscape Breakdown######
+Uniquespecies<-unique(IVIDATA$SPCD)
+Tot_N_species<-length(Uniquespecies)        
+LandscapeDF<-NULL
+AllBA<-sum(IVIDATA$BA)
+for(i in Uniquespecies){
+
+Block<-IVIDATA[IVIDATA$SPCD==i,]
+SumIVI<-sum(Block$IVI)
+SumBA<-sum(Block$BA)
+PercentTotal<-SumBA/AllBA
+Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+}
+LandscapeDF<-data.frame(LandscapeDF)
+```
+
+
+```{r}
+
+
+###Top50
+LandscapeDFIVITops<-LandscapeDF[order(-LandscapeDF[,2]),]
+IVITop50<-LandscapeDFIVITops[1:50,]
+BATop50<-LandscapeDFBATops<-LandscapeDF[order(-LandscapeDF[,3]),]
+BATop50<-BATop50[1:50,]
+perc50<-LandscapeDF[order(-LandscapeDF[,2]),]
+perc50<-perc50[1:50,]
+perc40<-perc50[1:40,]
+perc30<-perc50[1:30,]
+perc20<-perc50[1:20,]
+perc15<-perc50[1:15,]
+perc10<-perc50[1:10,]
+
+
+Fifty_Species_IVI<-ggplot(data=IVITop50, aes(x=reorder(i,-SumIVI),fill=SumIVI, y=SumIVI)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Landscape Importance")+
+  labs(fill = "Total IVI")
+
+Fifty_Species_IVI
+
+
+Fifty_Species_BA_graph<-ggplot(data=BATop50, aes(x=reorder(i,-SumBA),fill=SumBA, y=SumBA)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Basal Area")+
+  labs(fill = "BA")
+
+Fifty_Species_BA_graph
+
+
+```
+
+
+Doing this analysis we found the top ten species by IVI are 
+
+1. Quercus prinus(832)
+2. Acer Rubrum (316)
+3. Liriodendron tulipifera (621)
+4. Pinus strobus (129)
+5. Oxydendrum arboreum (711)
+6. Quercus coccinea (806)
+7. Pinus virginiana (132)
+8. Quercus alba (802)
+9. Querccus rubra (833)
+10. Tsuga Canadenesis (261)
+11. Betula lenta (372)
+12. Nyssa sylvatice (693)
+13. Robinia pseudoacica (901)
+14. Carya glabra (403)
+15. Quercus veuntina(837)
+
+The ratings for basal area alone may switch some positions, but no major difference in which species were included 
+
+In total there were far more species than we could reasonably parameterize. So we needed to determine the number of species needed to look at the total landscape. We calculated the total basal area of all trees on the landscape and then looked at the different percentages represented by the top 10,15,20,30,40,50. 
+##### If you want to see the top 50 species or for a key to Species name see the appendix of this page. 
+
+```{r}
+
+#Fifty_Species_BA<-unique(BATop50$i)
+#print(paste("The Top 50 Species by Basal Area in Order Are",list(Fifty_Species_BA)))
+#Top50speciesbyIVI<-unique(IVITop50$i)
+#print(paste("The Top 50 Species by Basal Area in Order Are",list(IVITop50$i)))
+
+fifty<-cbind(round(sum(perc50$PercentTotal),digits=5),50)
+fourty<-cbind(round(sum(perc40$PercentTotal),digits=5),40)
+thirty<-cbind(round(sum(perc30$PercentTotal),digits=5),30)
+twenty<-cbind(round(sum(perc20$PercentTotal),digits=5),20)
+fifteen<-cbind(round(sum(perc15$PercentTotal),digits=5),15)
+ten<-cbind(round(sum(perc10$PercentTotal),digits=5),10)
+
+totalpercents<-as.data.frame(rbind(fifty,fourty,thirty,twenty,fifteen,ten))
+colnames(totalpercents)<-c("Percent","Species")
+
+Percentgraph<-ggplot(data=totalpercents, aes(x=factor(Species),fill=as.numeric(Percent), y=as.numeric(Percent),label=sprintf("%0.2f", round(Percent, digits = 2)))) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(Percent),vjust=1.0))+
+  scale_fill_gradient2(low='snow3', mid=LtoM(100), 
+                       high=MtoH(50), space='Lab')+
+  #geom_text(aes(label=Percent), vjust=-0.5, size=2.5)+
+ 
+  theme_minimal()+
+  theme(legend.position = "none" )+
+  xlab("Number of Species Included")+
+  ylab("Total Basal Area Included")+
+  
+  theme(panel.grid.major.x=element_blank())
+
+Percentgraph
+
+output<-cbind(IVITop50$i,IVITop50$SumIVI,BATop50$i,BATop50$PercentTotal)
+colnames(output)<-c("Species","Sum IVI","Species","% of total BA")
+write.csv(output,"SpeciesComp.csv")
+
+```
+
+With only 10 species we represent ~72 percent on the landscape, at 20 this moves to 89%, and at 50 we are above 99% of total Basal
+Area. We feel that if we represent 40 of these species, we account for most of the landscape. Our goal will be to start with 50 
+species and discard those that may not have sufficient parameters., the top twenty species, however, may have to be extensively
+parameterized due to their effect on the total landscape. 
+
+```{r}
+Oak<-c(832,802,833,837,812,835)
+Pine<-c(129,132,131,110,126,123)
+Maple<-c(316,318,315)
+Birch<-c(372,371,373)
+Alllabeled<-c(Oak,Pine,Maple,Birch)
+outputnames<-output[,3]
+Notlabeled<-outputnames[!outputnames %in% Alllabeled]
+
+reclass<-NULL
+for(i in (1:nrow(output))){
+  
+  bringin<-(output[i,])
+  #print(i)
+  if(bringin[1]>=300 & bringin[1]<=318){
+    class<-"Maple"
+  }else if(bringin[1]>=802 & bringin[1]<=837){
+    class<-"Oak"
+  }else if(bringin[1]>=110 & bringin[1]<=132){
+    class<-"Pine"
+  }else if(bringin[1]>=371 & bringin[1]<=373){
+    class<-"Birch"
+    }else{class<-"Other"}
+Species<-bringin[1]
+IVI<-as.numeric(bringin[2])
+row<-cbind(Species,IVI,class)
+reclass<-rbind(reclass,row)
+}
+
+a<-reclass[(reclass[,3]=="Oak"),]
+Oak<-sum(as.numeric(a[,2]))
+a<-reclass[(reclass[,3]=="Maple"),]
+Maple<-sum(as.numeric(a[,2]))
+a<-reclass[(reclass[,3]=="Pine"),]
+Pine<-sum(as.numeric(a[,2]))
+a<-reclass[(reclass[,3]=="Birch"),]
+Birch<-sum(as.numeric(a[,2]))
+a<-reclass[(reclass[,3]=="Other"),]
+Other<-sum(as.numeric(a[,2]))
+Total<-sum(c(Oak,Pine,Maple,Birch,Other))
+Oak2<-Oak/Total
+Maple2<-Maple/Total
+Pine2<-Pine/Total
+Birch2<-Birch/Total
+Other2<-Other/Total
+
+reclass2<-NULL
+Names<-c("Oak","Maple","Pine","Birch","Other")
+Numbers<-c(Oak,Maple,Pine,Birch,Other)
+Perc<-c(Oak2,Maple2,Pine2,Birch2,Other2)
+reclass2<-cbind(Names,Numbers,Perc)
+reclass2<-as.data.frame(reclass2)
+sumall<-(as.numeric(reclass2$Numbers))
+
+reclass2$perc<-(reclass2$Numbers)
+
+Piechart<-ggplot(reclass2, aes(x ="", y=Perc,fill=(Names)) ) + 
+  geom_bar(width = 1,stat="identity")+
+  theme_minimal()+
+  xlab("")+
+  ylab("")+
+
+  
+  theme(panel.grid.major.x=element_blank(),
+        panel.grid.major.y = element_blank(),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.line.y = element_blank(),
+       axis.ticks.y = element_blank(),
+      axis.text.y = element_blank())+
+  labs(fill = "")+
+coord_polar(theta = "y")+
+    ggtitle("      Species Composition By Genus")+
+  scale_fill_manual(values = c("Birch" = "#CC00CC",
+                               "Maple" = "#99FFCC",
+                               "Oak" = "#FF6666",
+                               "Other" = "#99CCFF",
+                               "Pine" = "#FF9933"))
+
+Piechart
+```
+Another measure to look at the landscape was to look at the composition by genus, Oaks are the most common unsurprisingly, followed by pines, maples, and birch. 
+
+The Nine ecoregions we determined
+ 
+     * Amphibolite Mountains
+     
+     * South Metasedimentary Mountains
+     
+     * High Mountains 
+     * Eastern Blue Ridge
+     
+     * Southern Sedimentary Ridges
+     
+     * Limestone Valleys and Coves
+     
+     * Southern Crystalline Ridges and Mountains
+     . 
+     * Broad Basins
+     
+     * New River Plateau 
+
+
+Next, we looked at each of the ecoregions to see what species may be locally dominant but not landscape dominant
+
+```{r}
+#####Ecoregion####
+#####_________####
+ 
+seperateEcoregions<-unique(IVIDATA$Ecoregion)
+Eco1<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[1]),]
+Eco2<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[2]),]
+Eco3<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[3]),]
+Eco4<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[4]),]
+Eco5<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[5]),]
+Eco6<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[6]),]
+Eco7<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[7]),]
+Eco8<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[8]),]
+Eco9<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[9]),]
+
+
+```
+
+```{r,message=FALSE,warning=FALSE,}
+library(rgdal)
+LED_raster<-readOGR(paste(wdir,"AOI.shp",sep=""),verbose = FALSE)
+
+Climateregions<-unique(LED_raster$US_L4NAME)
+itme<-LED_raster[LED_raster$US_L4NAME==as.character(Climateregions[1]),]
+##plot landscape
+
+```
+
+#### Amphibolite Mountains
+
+
+```{r}
+plot(LED_raster)
+plot(itme,col="red",add=TRUE)
+```
+
+The Amphibolite Mountains are mountainous terrain, with amphibolite substrate which provides a neutralizing capacity creating edaphic species combinations. 
+
+The most predominant species in the Amphibolie mountains is Tulip poplar(621), followed by red maple (621), chestnut oak (832), 
+black locust (901), red oak (833) and sugar maple (651). 
+
+
+```{r,warning=FALSE,message=FALSE}
+library(gridExtra)
+eco<-seperateEcoregions[1]
+
+name<-as.character(seperateEcoregions[eco])
+
+Eco1<-NULL  
+SumIVI<-NULL
+AllBA<-NULL
+LandscapeDF<-NULL  
+Landscaperow<-NULL  
+Eco1<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[eco]),]
+LandscapeDF<-NULL
+AllBA<-sum(Eco1$BA)
+ilist<-NULL
+for(i in Uniquespecies){
+  
+  Block<-Eco1[Eco1$SPCD==i,]
+  SumIVI<-sum(Block$IVI)
+  SumBA<-sum(Block$BA)
+  PercentTotal<-SumBA/AllBA
+  Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+  LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+  ilist<-c(i,ilist)
+}
+
+LandscapeDF<-data.frame(LandscapeDF)
+
+EcoLandscapeDFIVITops<-LandscapeDF[order(-LandscapeDF[,2]),]
+EcoIVITop50<-EcoLandscapeDFIVITops[1:50,]
+EcoBATop50<-LandscapeDFBATops<-LandscapeDF[order(-LandscapeDF[,3]),]
+EcoBATop50<-EcoBATop50[1:50,]
+
+Fifty_Species_IVI<-ggplot(data=EcoIVITop50, aes(x=reorder(i,-SumIVI),fill=SumIVI, y=SumIVI)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Landscape Importance")+
+  labs(fill = "Total IVI")+
+  ggtitle(name)
+
+print(Fifty_Species_IVI)
+
+
+Fifty_Species_BA_graph<-ggplot(data=EcoBATop50, aes(x=reorder(i,-SumBA),fill=SumBA, y=SumBA)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Basal Area")+
+  labs(fill = "BA")+
+
+    ggtitle(name)
+
+print(Fifty_Species_BA_graph)
+EcoIVITop50<-EcoLandscapeDFIVITops[1:20,]
+speciesname<-NULL
+
+
+EcoIVITop50$SpeciesName<-speciesname
+
+```
+
+#### Southern Metasedimentary Mountains
+
+The majority of the Blue Ridge province, shaley and less firtle soils. The dominant species throughout this area are chestnut 
+oak(832), red  maple (316) ,tulip poplar(621),Virginia pine (132),white pine(129), and sourwood (711) 
+
+
+```{r}
+##plot landscape
+LED_raster<-readOGR(paste(wdir,"AOI.shp",sep=""),verbose = FALSE)
+Climateregions<-unique(LED_raster$US_L4NAME)
+itme<-LED_raster[LED_raster$US_L4NAME==as.character(Climateregions[8]),]
+#print(Climateregions)
+plot(LED_raster)
+plot(itme,col="red",add=TRUE)
+```
+
+
+
+```{r}
+eco<-seperateEcoregions[2]
+
+name<-as.character(seperateEcoregions[eco])
+
+Eco1<-NULL  
+SumIVI<-NULL
+AllBA<-NULL
+LandscapeDF<-NULL  
+Landscaperow<-NULL  
+Eco1<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[eco]),]
+LandscapeDF<-NULL
+AllBA<-sum(Eco1$BA)
+for(i in Uniquespecies){
+  
+  Block<-Eco1[Eco1$SPCD==i,]
+  SumIVI<-sum(Block$IVI)
+  SumBA<-sum(Block$BA)
+  PercentTotal<-SumBA/AllBA
+  Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+  LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+  ilist<-c(i,ilist)
+}
+
+LandscapeDF<-data.frame(LandscapeDF)
+
+EcoLandscapeDFIVITops<-LandscapeDF[order(-LandscapeDF[,2]),]
+EcoIVITop50<-EcoLandscapeDFIVITops[1:50,]
+EcoBATop50<-LandscapeDFBATops<-LandscapeDF[order(-LandscapeDF[,3]),]
+EcoBATop50<-EcoBATop50[1:50,]
+
+
+
+
+
+
+Fifty_Species_IVI<-ggplot(data=EcoIVITop50, aes(x=reorder(i,-SumIVI),fill=SumIVI, y=SumIVI)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Landscape Importance")+
+  labs(fill = "Total IVI")+
+  ggtitle(name)
+
+print(Fifty_Species_IVI)
+
+
+Fifty_Species_BA_graph<-ggplot(data=EcoBATop50, aes(x=reorder(i,-SumBA),fill=SumBA, y=SumBA)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Basal Area")+
+  labs(fill = "BA")+
+
+    ggtitle(name)
+
+print(Fifty_Species_BA_graph)
+EcoIVITop50<-EcoLandscapeDFIVITops[1:20,]
+speciesname<-NULL
+
+
+EcoIVITop50$SpeciesName<-speciesname
+
+```
+#### High Mountains
+
+```{r}
+##plot landscape
+LED_raster<-readOGR(paste(wdir,"AOI.shp",sep=""),verbose = FALSE)
+Climateregions<-unique(LED_raster$US_L4NAME)
+itme<-LED_raster[LED_raster$US_L4NAME==as.character(Climateregions[4]),]
+plot(LED_raster)
+plot(itme,col="red",add=TRUE)
+```
+
+At the highest elevations of the Appalachians, spruce-fir forests and high elevation red oak forests are common. The most common
+species is red spruce(97) followed by yellow birch(371) American beech(531), red oak(833), red maple(316), sugar maple(318), and 
+eastern hemlock (261).
+
+
+```{r}
+
+eco<-seperateEcoregions[3]
+
+name<-as.character(seperateEcoregions[eco])
+Eco1<-NULL  
+SumIVI<-NULL
+AllBA<-NULL
+LandscapeDF<-NULL  
+Landscaperow<-NULL  
+Eco1<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[eco]),]
+LandscapeDF<-NULL
+AllBA<-sum(Eco1$BA)
+for(i in Uniquespecies){
+  
+  Block<-Eco1[Eco1$SPCD==i,]
+  SumIVI<-sum(Block$IVI)
+  SumBA<-sum(Block$BA)
+  PercentTotal<-SumBA/AllBA
+  Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+  LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+  ilist<-c(i,ilist)
+}
+
+LandscapeDF<-data.frame(LandscapeDF)
+
+EcoLandscapeDFIVITops<-LandscapeDF[order(-LandscapeDF[,2]),]
+EcoIVITop50<-EcoLandscapeDFIVITops[1:50,]
+EcoBATop50<-LandscapeDFBATops<-LandscapeDF[order(-LandscapeDF[,3]),]
+EcoBATop50<-EcoBATop50[1:50,]
+
+
+Fifty_Species_IVI<-ggplot(data=EcoIVITop50, aes(x=reorder(i,-SumIVI),fill=SumIVI, y=SumIVI)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Landscape Importance")+
+  labs(fill = "Total IVI")+
+  ggtitle(name)
+
+print(Fifty_Species_IVI)
+
+
+Fifty_Species_BA_graph<-ggplot(data=EcoBATop50, aes(x=reorder(i,-SumBA),fill=SumBA, y=SumBA)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Basal Area")+
+  labs(fill = "BA")+
+
+    ggtitle(name)
+
+print(Fifty_Species_BA_graph)
+
+EcoIVITop50<-EcoLandscapeDFIVITops[1:20,]
+speciesname<-NULL
+
+EcoIVITop50$SpeciesName<-speciesname
+
+
+
+```
+
+#### Eastern Blue Ridge Foothills
+
+
+```{r}
+LED_raster<-readOGR(paste(wdir,"AOI.shp",sep=""),verbose = FALSE)
+Climateregions<-unique(LED_raster$US_L4NAME)
+itme<-LED_raster[LED_raster$US_L4NAME==as.character(Climateregions[3]),]
+plot(LED_raster)
+plot(itme,col="red",add=TRUE)
+```
+
+The eastern foothills most dominant species is Yellow Poplar (621), followed by chestnut oak (832), red maple(316), Pinus virginiana(132), sourwood (711), White pine(129), white oak (802), black gum (693).
+
+
+```{r}
+
+eco<-seperateEcoregions[4]
+
+name<-as.character(seperateEcoregions[eco])
+
+Eco1<-NULL  
+SumIVI<-NULL
+AllBA<-NULL
+LandscapeDF<-NULL  
+Landscaperow<-NULL  
+Eco1<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[eco]),]
+LandscapeDF<-NULL
+AllBA<-sum(Eco1$BA)
+for(i in Uniquespecies){
+  
+  Block<-Eco1[Eco1$SPCD==i,]
+  SumIVI<-sum(Block$IVI)
+  SumBA<-sum(Block$BA)
+  PercentTotal<-SumBA/AllBA
+  Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+  LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+  ilist<-c(i,ilist)
+}
+
+LandscapeDF<-data.frame(LandscapeDF)
+
+EcoLandscapeDFIVITops<-LandscapeDF[order(-LandscapeDF[,2]),]
+EcoIVITop50<-EcoLandscapeDFIVITops[1:50,]
+EcoBATop50<-LandscapeDFBATops<-LandscapeDF[order(-LandscapeDF[,3]),]
+EcoBATop50<-EcoBATop50[1:50,]
+
+
+
+
+
+
+Fifty_Species_IVI<-ggplot(data=EcoIVITop50, aes(x=reorder(i,-SumIVI),fill=SumIVI, y=SumIVI)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Landscape Importance")+
+  labs(fill = "Total IVI")+
+  ggtitle(name)
+
+print(Fifty_Species_IVI)
+
+
+Fifty_Species_BA_graph<-ggplot(data=EcoBATop50, aes(x=reorder(i,-SumBA),fill=SumBA, y=SumBA)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Basal Area")+
+  labs(fill = "BA")+
+
+    ggtitle(name)
+
+print(Fifty_Species_BA_graph)
+EcoIVITop50<-EcoLandscapeDFIVITops[1:20,]
+speciesname<-NULL
+EcoIVITop50$SpeciesName<-speciesname
+
+
+
+```
+
+#### Southern Sedimentary Ridges
+
+```{r}
+LED_raster<-readOGR(paste(wdir,"AOI.shp",sep=""),verbose = FALSE)
+Climateregions<-unique(LED_raster$US_L4NAME)
+itme<-LED_raster[LED_raster$US_L4NAME==as.character(Climateregions[9]),]
+plot(LED_raster)
+plot(itme,col="red",add=TRUE)
+#Climateregions
+```
+
+
+The eastern foothills most dominant species is chestnut oak (832), followed by red maple(316), yellow poplar (621), 
+sourwood (711), white pine(129), Eastern hemlock (261) Pinus virginiana(132), red oak. 
+
+
+```{r}
+eco<-seperateEcoregions[5]
+
+
+name<-as.character(seperateEcoregions[eco])
+Eco1<-NULL  
+SumIVI<-NULL
+AllBA<-NULL
+LandscapeDF<-NULL  
+Landscaperow<-NULL  
+Eco1<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[eco]),]
+LandscapeDF<-NULL
+AllBA<-sum(Eco1$BA)
+for(i in Uniquespecies){
+  
+  Block<-Eco1[Eco1$SPCD==i,]
+  SumIVI<-sum(Block$IVI)
+  SumBA<-sum(Block$BA)
+  PercentTotal<-SumBA/AllBA
+  Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+  LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+  ilist<-c(i,ilist)
+}
+
+LandscapeDF<-data.frame(LandscapeDF)
+
+EcoLandscapeDFIVITops<-LandscapeDF[order(-LandscapeDF[,2]),]
+EcoIVITop50<-EcoLandscapeDFIVITops[1:50,]
+EcoBATop50<-LandscapeDFBATops<-LandscapeDF[order(-LandscapeDF[,3]),]
+EcoBATop50<-EcoBATop50[1:50,]
+
+
+
+
+
+
+Fifty_Species_IVI<-ggplot(data=EcoIVITop50, aes(x=reorder(i,-SumIVI),fill=SumIVI, y=SumIVI)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Landscape Importance")+
+  labs(fill = "Total IVI")+
+  ggtitle(name)
+
+print(Fifty_Species_IVI)
+
+
+Fifty_Species_BA_graph<-ggplot(data=EcoBATop50, aes(x=reorder(i,-SumBA),fill=SumBA, y=SumBA)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Basal Area")+
+  labs(fill = "BA")+
+
+    ggtitle(name)
+
+print(Fifty_Species_BA_graph)
+EcoIVITop50<-EcoLandscapeDFIVITops[1:20,]
+speciesname<-NULL
+
+EcoIVITop50$SpeciesName<-speciesname
+
+
+
+```
+
+#### LimeStone Valleys and Coves
+
+```{r,warning=FALSE, message=FALSE}
+
+LED_raster<-readOGR(paste(wdir,"AOI.shp",sep=""),verbose = FALSE)
+Climateregions<-unique(LED_raster$US_L4NAME)
+itme<-LED_raster[LED_raster$US_L4NAME==as.character(Climateregions[5]),]
+plot(LED_raster)
+
+plot(itme,col="red",add=TRUE)
+```
+
+The major species in Limestone valleys and coves, chestnut oak (832), tulip poplar(621), Sycamore (731), red maple (316), 
+scarlet oak (806), black oak (837), American basswood(951).
+
+
+```{r}
+eco<-seperateEcoregions[6]
+
+name<-as.character(seperateEcoregions[eco])
+Eco1<-NULL  
+SumIVI<-NULL
+AllBA<-NULL
+LandscapeDF<-NULL  
+Landscaperow<-NULL  
+Eco1<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[eco]),]
+LandscapeDF<-NULL
+AllBA<-sum(Eco1$BA)
+for(i in Uniquespecies){
+  
+  Block<-Eco1[Eco1$SPCD==i,]
+  SumIVI<-sum(Block$IVI)
+  SumBA<-sum(Block$BA)
+  PercentTotal<-SumBA/AllBA
+  Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+  LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+  ilist<-c(i,ilist)
+}
+
+LandscapeDF<-data.frame(LandscapeDF)
+
+EcoLandscapeDFIVITops<-LandscapeDF[order(-LandscapeDF[,2]),]
+EcoIVITop50<-EcoLandscapeDFIVITops[1:50,]
+EcoBATop50<-LandscapeDFBATops<-LandscapeDF[order(-LandscapeDF[,3]),]
+EcoBATop50<-EcoBATop50[1:50,]
+
+
+
+
+
+
+Fifty_Species_IVI<-ggplot(data=EcoIVITop50, aes(x=reorder(i,-SumIVI),fill=SumIVI, y=SumIVI)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Landscape Importance")+
+  labs(fill = "Total IVI")+
+  ggtitle(name)
+
+print(Fifty_Species_IVI)
+
+
+Fifty_Species_BA_graph<-ggplot(data=EcoBATop50, aes(x=reorder(i,-SumBA),fill=SumBA, y=SumBA)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Basal Area")+
+  labs(fill = "BA")+
+
+    ggtitle(name)
+
+print(Fifty_Species_BA_graph)
+EcoIVITop50<-EcoLandscapeDFIVITops[1:20,]
+speciesname<-NULL
+
+
+EcoIVITop50$SpeciesName<-speciesname
+
+
+```
+
+#### Southern Crystalline Ridges and Mountians
+
+
+```{r,message=FALSE}
+
+LED_raster<-readOGR(paste(wdir,"AOI.shp",sep=""),verbose = FALSE)
+Climateregions<-unique(LED_raster$US_L4NAME)
+itme<-LED_raster[LED_raster$US_L4NAME==as.character(Climateregions[7]),]
+plot(LED_raster)
+plot(itme,col="red",add=TRUE)
+```
+
+
+The major species are chestnut oak (832), tulip poplar(621), red maple(316), white pine(129), sourwood(711), and scarlet oak(806). 
+This ecoregion also picks up some of the piedmont's pines shortleaf pine and loblolly pine. 
+
+```{r}
+eco<-seperateEcoregions[7]
+
+name<-as.character(seperateEcoregions[eco])
+Eco1<-NULL  
+SumIVI<-NULL
+AllBA<-NULL
+LandscapeDF<-NULL  
+Landscaperow<-NULL  
+Eco1<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[eco]),]
+LandscapeDF<-NULL
+AllBA<-sum(Eco1$BA)
+for(i in Uniquespecies){
+  
+  Block<-Eco1[Eco1$SPCD==i,]
+  SumIVI<-sum(Block$IVI)
+  SumBA<-sum(Block$BA)
+  PercentTotal<-SumBA/AllBA
+  Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+  LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+  ilist<-c(i,ilist)
+}
+
+LandscapeDF<-data.frame(LandscapeDF)
+
+EcoLandscapeDFIVITops<-LandscapeDF[order(-LandscapeDF[,2]),]
+EcoIVITop50<-EcoLandscapeDFIVITops[1:50,]
+EcoBATop50<-LandscapeDFBATops<-LandscapeDF[order(-LandscapeDF[,3]),]
+EcoBATop50<-EcoBATop50[1:50,]
+
+
+
+
+
+
+Fifty_Species_IVI<-ggplot(data=EcoIVITop50, aes(x=reorder(i,-SumIVI),fill=SumIVI, y=SumIVI)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Landscape Importance")+
+  labs(fill = "Total IVI")+
+  ggtitle(name)
+
+print(Fifty_Species_IVI)
+
+
+Fifty_Species_BA_graph<-ggplot(data=EcoBATop50, aes(x=reorder(i,-SumBA),fill=SumBA, y=SumBA)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Basal Area")+
+  labs(fill = "BA")+
+
+    ggtitle(name)
+
+print(Fifty_Species_BA_graph)
+EcoIVITop50<-EcoLandscapeDFIVITops[1:20,]
+speciesname<-NULL
+
+
+EcoIVITop50$SpeciesName<-speciesname
+
+
+
+```
+#### Broad Basins
+
+
+```{r,message=FALSE}
+LED_raster<-readOGR(paste(wdir,"AOI.shp",sep=""),verbose = FALSE)
+Climateregions<-unique(LED_raster$US_L4NAME)
+
+itme<-LED_raster[LED_raster$US_L4NAME==as.character(Climateregions[2]),]
+plot(LED_raster)
+plot(itme,col="red",add=TRUE)
+```
+
+Broad basins most common species are Tulip poplar (621), red maple (316), eastern white pine (129), sourwood (711), 
+Virginia pine, white oak(802), southern red oak( 812), scarlet oak (806), and black oak (832).
+
+
+```{r}
+eco<-seperateEcoregions[8]
+
+name<-as.character(seperateEcoregions[eco])
+Eco1<-NULL  
+SumIVI<-NULL
+AllBA<-NULL
+LandscapeDF<-NULL  
+Landscaperow<-NULL  
+Eco1<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[eco]),]
+LandscapeDF<-NULL
+AllBA<-sum(Eco1$BA)
+for(i in Uniquespecies){
+  
+  Block<-Eco1[Eco1$SPCD==i,]
+  SumIVI<-sum(Block$IVI)
+  SumBA<-sum(Block$BA)
+  PercentTotal<-SumBA/AllBA
+  Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+  LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+  ilist<-c(i,ilist)
+}
+
+LandscapeDF<-data.frame(LandscapeDF)
+
+EcoLandscapeDFIVITops<-LandscapeDF[order(-LandscapeDF[,2]),]
+EcoIVITop50<-EcoLandscapeDFIVITops[1:50,]
+EcoBATop50<-LandscapeDFBATops<-LandscapeDF[order(-LandscapeDF[,3]),]
+EcoBATop50<-EcoBATop50[1:50,]
+
+
+
+
+
+
+Fifty_Species_IVI<-ggplot(data=EcoIVITop50, aes(x=reorder(i,-SumIVI),fill=SumIVI, y=SumIVI)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Landscape Importance")+
+  labs(fill = "Total IVI")+
+  ggtitle(name)
+
+print(Fifty_Species_IVI)
+
+
+Fifty_Species_BA_graph<-ggplot(data=EcoBATop50, aes(x=reorder(i,-SumBA),fill=SumBA, y=SumBA)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Basal Area")+
+  labs(fill = "BA")+
+
+    ggtitle(name)
+
+print(Fifty_Species_BA_graph)
+EcoIVITop50<-EcoLandscapeDFIVITops[1:20,]
+speciesname<-NULL
+
+
+  
+```
+
+
+#### New River Plateu
+
+```{r}
+LED_raster<-readOGR(paste(wdir,"AOI.shp",sep=""),verbose = FALSE)
+Climateregions<-unique(LED_raster$US_L4NAME)
+itme<-LED_raster[LED_raster$US_L4NAME==as.character(Climateregions[6]),]
+plot(LED_raster)
+
+plot(itme,col="red",add=TRUE)
+```
+
+The Northernmost part of the southern Appalachians. Eastern white pine is the most dominant followed by black birch(372), 
+red maple(316), black locust(901), tulip poplar(621), and scarlet oak (806).
+
+```{r}
+eco<-seperateEcoregions[9]
+
+name<-as.character(seperateEcoregions[eco])
+Eco1<-NULL  
+SumIVI<-NULL
+AllBA<-NULL
+LandscapeDF<-NULL  
+Landscaperow<-NULL  
+Eco1<-IVIDATA[(IVIDATA$Ecoregion==seperateEcoregions[eco]),]
+LandscapeDF<-NULL
+AllBA<-sum(Eco1$BA)
+for(i in Uniquespecies){
+  
+  Block<-Eco1[Eco1$SPCD==i,]
+  SumIVI<-sum(Block$IVI)
+  SumBA<-sum(Block$BA)
+  PercentTotal<-SumBA/AllBA
+  Landscaperow<-cbind(i,SumIVI,SumBA,PercentTotal)
+  LandscapeDF<-rbind(Landscaperow,LandscapeDF)
+  ilist<-c(i,ilist)
+}
+
+LandscapeDF<-data.frame(LandscapeDF)
+
+EcoLandscapeDFIVITops<-LandscapeDF[order(-LandscapeDF[,2]),]
+EcoIVITop50<-EcoLandscapeDFIVITops[1:50,]
+EcoBATop50<-LandscapeDFBATops<-LandscapeDF[order(-LandscapeDF[,3]),]
+EcoBATop50<-EcoBATop50[1:50,]
+
+
+
+
+
+
+Fifty_Species_IVI<-ggplot(data=EcoIVITop50, aes(x=reorder(i,-SumIVI),fill=SumIVI, y=SumIVI)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Landscape Importance")+
+  labs(fill = "Total IVI")+
+  ggtitle(name)
+
+print(Fifty_Species_IVI)
+
+
+Fifty_Species_BA_graph<-ggplot(data=EcoBATop50, aes(x=reorder(i,-SumBA),fill=SumBA, y=SumBA)) +
+  geom_bar(stat="identity")+
+  geom_label_repel(aes(label=(i),vjust=1.0))+
+  scale_fill_gradient2(low=LtoM2(100), mid=LtoM2(0), 
+                       high=MtoH2(80), space='Lab')+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.major.x=element_blank())+
+  xlab("")+
+  ylab("Total Basal Area")+
+  labs(fill = "BA")+
+
+    ggtitle(name)
+
+print(Fifty_Species_BA_graph)
+EcoIVITop50<-EcoLandscapeDFIVITops[1:20,]
+speciesname<-NULL
+
+
+EcoIVITop50$SpeciesName<-speciesname
+
+
+
+
+
+```
+
+#### Appendix
+
+
+##### Species Names and FS numbers
+
+
+```{r,warning=FALSE}
+library(knitr)
+```
+
+```{r}
+SPLUT<-read.csv(paste(wdir,"SpeciesLUT.csv",sep=""))
+SP_lit<-SPLUT[1:50,2:4]
+colnames(SP_lit)<-c( "Forest Service Number","Sum of IVI","Species Name")
+kable(SP_lit,caption="Species Names and FS numbers",align=c('c','c','c'))
+
+```
+
