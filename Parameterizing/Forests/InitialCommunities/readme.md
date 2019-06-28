@@ -202,6 +202,8 @@ We can also look at the above ground carbon for our most prevalent species and t
 
 Here we can also see the total green carbon on the landscape ![](IC_files/figure-markdown_github/unnamed-chunk-32-1.png)
 
+If you are interested in the code to create this see the R-Markdown file on this page. To return to the main page click [here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018)
+
 ##### Appendix
 
 1.  Individual species association by similarity index ![](IC_files/figure-markdown_github/unnamed-chunk-33-1.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-2.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-3.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-4.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-5.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-6.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-7.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-8.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-9.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-10.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-11.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-12.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-13.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-14.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-15.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-16.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-17.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-18.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-19.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-20.png)![](IC_files/figure-markdown_github/unnamed-chunk-33-21.png)
