@@ -1,0 +1,177 @@
+LandisData  "Biomass Harvest"
+
+
+>>----------------
+>> REQUIRED INPUTS
+>>-----------------
+Timestep		5
+
+ManagementAreas 	./Ownership_Resampled.tif
+>>1-Federal *
+>>2-State
+>>3-Local
+>>4- Family *
+>>5-Corporate*
+>> 6- Other Private
+>>7- Tribal
+>>8- Off
+
+Stands     		    ./Stands3.tif
+
+
+
+
+>> -------------------------
+>> HARVESTING PRESCRIPTIONS
+>> -------------------------
+
+>>---- PRESCRIPTION_1 ---------------------------------------
+Prescription MaxAgeClearcut
+    StandRanking 	MaxCohortAge
+    SiteSelection 	Complete
+    CohortsRemoved 	ClearCut
+
+>> Test
+Prescription PatchCutting
+    StandRanking	MaxCohortAge
+    MinimumAge  	60
+    SiteSelection 	Complete 
+	MinTimeSinceDamage	20
+    CohortsRemoved SpeciesList 
+	TsugCana	1-450(99%)
+	QuerPrin	1-300(99%)
+
+Prescription EconomicHarvest
+StandRanking  Economic
+>>	Species       Economic Rank	 MinimumAge
+		PinuStro         80               40
+		PinuTaed		 80				20
+		PinuEnch         60              20
+		QuerAlba         30              20
+		QuerCocc	     30              20
+		QuerFalc	     30              20
+		QuerRubr	     30              20
+		QuerStel	     30              20
+		QuerVelu	     30              20
+		AcerSacc         30				 40
+		CaryAlba         20				 40
+		CaryOvat	     20				 40	
+		CaryCodi	     20				 40
+		CaryGlab         20				 40
+		JuglNigr         10              30
+    MinimumAge 20 
+	SiteSelection PatchCutting  20% 100 
+	>>Priority PatchSize
+	CohortsRemoved ClearCut
+	
+Prescription CommercialThin
+>> Remove 50-60% of residual basal area, targeting species not desirable, remove intolerants intermediate trees are intolerant and will not respond to
+>>release, If a thinning is applied in fully stocked sapling stands, at least
+>>one-third to one-half of the basal area should be removed by thinning
+>>from below. Codominant trees should average at least 25 feet tall.
+>>The markers leave the best trees by removing all the undesirable or
+>> poor quality and nearly all of the intermediate stems. 
+
+>>10 years
+>>20-30 years
+>>40-45 years
+
+	StandRanking Random
+	>>Stand Qualifications
+	MaximumAge  65
+	MinimumTimeSinceLastHarvest   20
+	SiteSelection PatchCutting  20% 100 
+	CohortsRemoved	SpeciesList
+	>> Species	Selection
+        >> -------      ----------
+>>	    pinupond	20-65 (90%) 
+		AcerRubr	20-65 (90%) 
+		LiriTuli	20-65 (90%) 
+		PinuVirg	20-65 (90%) 	
+		BetuAlle	20-65 (90%) 
+		MagnMacr	20-65 (90%) 
+		AcerPens	20-65 (90%) 
+		AescBuck	20-65 (90%) 
+		AmelArbo	20-65 (90%) 
+		BetuLent	20-65 (90%) 
+		BetuNigr	20-65 (90%) 	
+		CornFlor	20-65 (90%) 
+		FaguGran	20-65 (90%) 
+		FraxAmer	20-65 (90%) 
+		FraxPenn	20-65 (90%) 	
+		HaleDipt	20-65 (90%) 
+		IlexOpac	20-65 (90%) 
+		JuglNigr	20-65 (90%) 
+		LiquStyr	20-65 (90%) 
+		MagnAcum	20-65 (90%) 
+		NyssSylv	20-65 (90%) 
+		OxydArbo    20-65 (90%) 
+		PlanOcid	20-65 (90%) 
+		PrunPenn	20-65 (90%) 
+		PrunSero	20-65 (90%) 
+		RobiPseu	20-65 (90%) 
+		SassAlid	20-65 (90%) 
+>>Prescription Shelt1erWood
+
+Prescription HWA
+	StandRanking Random
+	SiteSelection Complete
+    CohortsRemoved SpeciesList 
+	TsugCana	All
+	
+>> ----------------------------------
+>> HARVESTING IMPLEMENTATION 
+>> ---------------------------------
+
+    HarvestImplementations
+>>	Mgmt Area	Prescription		Harvest Area	BeginTime	EndTime
+>> 	---------   	------------   		------------   	---------- 	--------
+>>	1		PatchCutting	20%	0	   	50
+>>	2		PatchCutting	20%	0	   	50
+
+>> Federal	
+	1		HWA				10% 0 
+	1		CommercialThin   1% 0
+>>	State
+	2		HWA				10% 0 
+	2		EconomicHarvest  1%
+	2       CommercialThin   1%
+>> Local    	
+	3		HWA				10% 0 
+>> Family	
+	4		HWA				10% 0 
+	4 		EconomicHarvest  2% 0
+>>Corporate	
+	5		HWA				10% 0 
+	5		EconomicHarvest 10% 0
+	5		CommercialThin  10% 0
+>>Other Private	
+	6		HWA				10% 0 
+	6		EconomicHarvest	 2% 0
+>>Tribal
+	7		HWA				10% 0 
+	7       EconomicHarvest  2% 0
+>>Outside	
+	8		HWA				10% 0 
+	
+
+
+	
+	
+>>	1		MaxAgeClearcut			20%	0	   	50
+>>	2		MaxAgeClearcut			20%	0	    	50
+
+
+	
+>> ------------
+>> OUTPUTS
+>> ----------
+
+PrescriptionMaps    harvest/biomass-harvest-prescripts-{timestep}.img
+BiomassMaps         harvest/biomass-removed-{timestep}.img
+EventLog            harvest/biomass-harvest-event-log.csv
+SummaryLog	    harvest/biomass-harvest-summary-log.csv
+
+
+
+
