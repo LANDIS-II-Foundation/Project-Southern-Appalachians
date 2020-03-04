@@ -10,8 +10,8 @@ output: github_document
 
 
 knitr::opts_chunk$set(echo = FALSE)
-library(reticulate)
-use_condaenv("randpython")
+#library(reticulate)
+#use_condaenv("randpython")
 #import("geopandas")
 #import("pandas")
 #import("gdal")
@@ -46,14 +46,14 @@ Try data was queried by Species and by trait. In the even of multiple returns va
 
 ```{r , echo=FALSE}
 w_dir<-"C:/Users/zjrobbin/Desktop/FS_meeting/NECN_Biochem/"
-setwd(w_dir)
+#setwd(w_dir)
 ```
 
 Here is a example of some of the results obtained for Acer rubrum
 
 ```{r,warning=FALSE}
 library(knitr)
-w_dir<-"C:/Users/zjrobbin/Desktop/FS_meeting/NECN_Biochem/"
+w_dir<-'R:/fer/rschell/Robbins/Sapps/Model_Prep/Species Imput Files/NECN_Biochem/'
 Try<-read.csv(paste(w_dir,"Try_Proc.csv",sep=""))
 
 
@@ -61,7 +61,7 @@ Try<-read.csv(paste(w_dir,"Try_Proc.csv",sep=""))
 knitr::kable(Try[Try$sp=="Acer rubrum",][c(1:10),c(2:5)],align=c('c'))
 ```
 
-> TRY Data: Kattge, J., Bönisch, G., Günther, A., Wright, I., Zanne, A., Wirth, C., Reich, P.B. and the TRY Consortium (2012) TRY - Categorical Traits Dataset. Data from: TRY - a global database of plant traits. TRY File Archive https://www.try-db.org/TryWeb/Data.php#3
+> TRY Data: Kattge, J., B?nisch, G., G?nther, A., Wright, I., Zanne, A., Wirth, C., Reich, P.B. and the TRY Consortium (2012) TRY - Categorical Traits Dataset. Data from: TRY - a global database of plant traits. TRY File Archive https://www.try-db.org/TryWeb/Data.php#3
 
 
 
