@@ -1,0 +1,58 @@
+LandisData  Scenario
+
+
+Duration  100
+
+Species   species_SApps.txt
+
+
+Ecoregions      ./ecoregions_Sapps.txt
+
+EcoregionsMap   ./MR_FourEcoregions.tif
+
+
+CellLength  250 << meters, 100 x 100 m = 1 hectare
+
+
+
+
+>> NOTE:  This example assumes that you have downloaded and installed 
+>> the correpsonding extensions.  These extensions are currently packaged
+>> together as a package.
+
+
+>> Succession Extension     Initialization File
+
+>> --------------------     -------------------
+  
+"NECN Succession"    		 Sapps_NECN_LandScapeValues.txt
+
+
+
+
+>> Disturbance Extensions   Initialization File
+
+>> ----------------------   -------------------
+>>"Biomass Harvest"		biomass-harvest.txt
+>> "SCRAPPLE"              Sapps_scrapple_6_17.txt
+
+
+
+DisturbancesRandomOrder  yes  << optional parameter; default = no
+
+
+
+
+>> Other Extensions         Initialization File
+
+>> ----------------         -------------------
+
+>>   "Output Reclass"	    reclass.output.txt
+	
+"Output Biomass-by-Age"	    output-biomass.txt
+
+
+
+
+>>RandomNumberSeed  4,357  << optional parameter; default = the seed is
+                         << randomly generated using the current time

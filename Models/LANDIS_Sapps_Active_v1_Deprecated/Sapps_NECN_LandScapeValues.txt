@@ -1,0 +1,161 @@
+LandisData	"NECN Succession"
+
+Timestep  10
+
+SeedingAlgorithm  WardSeedDispersal
+
+InitialCommunities      "./IC_3_26.txt"
+InitialCommunitiesMap   "./MR_InitialCommunity_2_18.tif"
+ClimateConfigFile 	climate-generator-baseline.txt	
+
+SoilDepthMapName				MRDepth_top.tif
+SoilDrainMapName				MRDrain_Done.tif
+SoilBaseFlowMapName				MR_Stormflow.tif
+SoilStormFlowMapName			MR_Stormflow.tif
+SoilFieldCapacityMapName		MRFeildDone.tif
+SoilWiltingPointMapName			MRWiltDone.tif
+SoilPercentSandMapName			MRSand_cut.tif
+SoilPercentClayMapName			MRClay_Done.tif
+InitialSOM1CsurfMapName			MRSOM1surfCmap.tif
+InitialSOM1NsurfMapName			MRSOM1surfNmap.tif
+InitialSOM1CsoilMapName			MRSOM1soilCmap.tif
+InitialSOM1NsoilMapName			MRSOM1soilNmap.tif
+InitialSOM2CMapName				MRSOM2Cmap.tif
+InitialSOM2NMapName				MRSOM2Nmap.tif
+InitialSOM3CMapName				MRSOM3Cmap.tif
+InitialSOM3NMapName				MRSOM3Nmap.tif
+InitialDeadWoodSurfaceMapName	Deadwood_wood.tif
+InitialDeadCoarseRootsMapName	Deadwood_root.tif
+
+
+
+
+CalibrateMode 	no
+SmokeModelOutputs no
+WaterDecayFunction Ratio <<Linear or Ratio
+
+
+ProbabilityEstablishAdjust 	1.0
+InitialMineralN				3.5
+InitialFineFuels 			0.1  << a fraction 0-1.0 of dead wood.
+AtmosphericNSlope			0.0016<< Values from ashville
+AtmosphericNIntercept		0.2626 << .1626 from ashville +1.0 lichen correction ratio
+Latitude					36.0
+DenitrificationRate			0.0610
+DecayRateSurf				8.50 <<Tune this. 
+DecayRateSOM1				7.5
+DecayRateSOM2				0.0161 
+DecayRateSOM3				0.0000001
+
+
+MaximumLAI
+
+>> Shade	Max LAI
+>> Class	
+>> ----------	--------------------	
+	1	1 
+	2	2.5 
+	3	3.5 
+	4	6
+	5	8
+
+LightEstablishmentTable
+>> Spp Shade	Probability
+>> Class	   by Actual Shade
+>> ----------	--------------------	
+>>		0	1	2	3	4	5
+	1	1.0	0.1	0.0	0.0	0.0	0.0
+	2	1.0	1.0	0.1	0.05 0.0	0.0
+	3	1.0	1.0	1.0	0.1	0.05	0.0
+	4	1.0	1.0	1.0	1.0	0.1	0.05
+	5	0.1	0.5	1.0	1.0	1.0	1.0
+>>This is not an accurate file to use for final model runs. 
+>>Some species are just repeats of sassalid. 
+>>Major species are valid. 
+SpeciesParameters
+
+>> Species   Funct	N-fix?	GDD	GDD	Min	Max	    Leaf	    Epi-	Leaf	FRoot	Wood	CRoot	Leaf  FRoot Wood  CRoot Littr 	max	max
+>>	     	ional	Y/N	    Min	Max	Jan	Drought	Long	cormic	Lign%	Lign%	Lign%	Lign%	CN    CN    CN    CN    CN	 A    NPP AGB
+>> 	     	Type				          Temp			re-
+>>           								    		sprout
+
+PinuStro	3	N	1100	3165	-20	0.372	3	N	0.263	0.225	0.3104	0.204	40.7	43	398	84	55  300  27000
+AcerRubr	4		N		1260 6600 -18 .23 1 N .183 .334 0.125 .312 28.2 26 565 50 55 250 31000
+LiriTuli	2 	N   3000 	6000	-7 	.30	1.0	N	0.331	0.255	0.255	0.255	25    45    90    90    45	300 25000 
+QuerPrin	4	N	1910	4110	-7	0.285	1.0	N	0.251	0.23	0.23	0.23	24    48    500   333   55	400 35000
+TsugCana	3	N	1324	3800	-12	.18	3	N	.173	.225	.27	.204	50.5	43	458	84	98.3	250 27000
+PinuVirg	1	N	2660	3671	-3	.226	2	N .263 .225 .3104 .204 20.8 43 398 84 55 300	 15000
+PinuTaed    1	N	3165	5993	4	.36		3   N  .2   .2  .35 .35 26.1 53.44 716 170 100 400 15000
+FrasFirr    5   N   2663	2763	-7	.025	3	N	.252	.252	.312	.204	32.4	43	545	108	74	200 10000
+CaryGlab    2   N   1910 6960        -7 .2 1	N          .187 .24 .2 .251 26.741 25 294.118 49 43 350 10000
+BetuAlle    6	N	1100 2500 -18 .2 1 N 0.219 .27 .2018 .251 21 26 365 50 65 220 10000
+MagnMacr    6   N    2300 5993 -2 .16 1 N	.293 .23 .23 .23 24 48 500 333 55 100 10000
+PiceRube	2		N		1247 2563 -12 .309 3 N	0.249	0.258	0.4	  0.234	45.8	43	600	84	55	450 23000														    
+PinuEnch	2		N		2660 5076 -1 .385 2	N   .255     .2      .35    .35 52.08    50 346 170 100   450 21100
+PinuPung	2		N		1940 3100 -7 .307	1.25 Y	0.255	0.2	0.35	0.35	50    50    380   170   100	450 10000
+PinuRigi	2		N		1940 3100 -7 .307	1.25 Y	0.255	0.2	0.35	0.35	50    50    380   170   100	450 20000
+AcerPens	6		N		1600 4700 -18 .8 1 N .175 .334 .125 .312 51.1 26 512 50 55 300 11000
+AcerSacc	4		N		1600 4700 -18 .8 1 N .175 .334 .125 .312 51.1 26 512 50 55 300 27000
+AescBuck	4		N		600 3671 -1 .175 1  N .175 .334 0.125 .312 28.2 26 565 50 55 500  30000
+AmelArbo	5		N		1200 5993 -17 0.3 1	N 0.175	0.27 0.2 0.251	18.1 25	108	49	65	380	10000					
+BetuLent	5		N		1100 2500 -18 .2 1 N 0.219 .27 .2018 .251 21 26 365 50 65 220 28000	
+BetuNigr	5		N		1100 2500 -18 .2 1 N 0.219 .27 .2018 .251 21 26 365 50 65 220 12000						
+CaryCodi	5		N		1910 5076 -12 .3 1 	N .187 .24 .2 .251 26.741 25 294.118 49 43 450 35000
+CaryOvat	5		N		1670 5500 -7 .2 1 N .187 .27 .2 .251 26.6742 25 294.118 49 43 450 16000
+CaryAlba	5		N		1910 5500 -7 .2 1 N .187 .27 .2 .251 26.6742 25 294.118 49 43 450 29000
+CornFlor	5		N		1910 5993 -4 .25 1	N	.172 .255 .255 .255 25 45 90 90 45 250 7000
+FaguGran	5		N		1326 5537 -12 .28 1	N  .172 .255 .255 .255 25  45 90 90 45 250 24000
+FraxAmer	4		N		1398 5993 -12 .28 1	N	.114 .27 .2018 .251 22.9 26 189 50 65 380 36000
+FraxPenn	6		N		1050 5993 -23 .114 1	N	0.144 0.27  0.2018 .251 22.9 26 455 50 65 450 37000
+HaleDipt	6		N		1910 6960 -2 .3 1 N 	.336 .255 .255 .255 25 45 90 90 55 255 6000	
+IlexOpac	5		N		1910 6960 -2 .3 1 N 	.336 .255 .255 .255 25 45 90 90 55 255 6000 
+JuglNigr	5		N		1910 4571 -8 .3 1  N .187 .24 .2 .251 26.741 25 294.118 49 43 450 8000
+LiquStyr	5		N		2660 5993 -1 .3 1 N .331 .255 .255 0.255 25 45 90 90 45 300 	38000
+MagnAcum	4		N		2300 5993 -2 .16 1 N	.293 .23 .23 .23 24 48 500 333 55 225 24000
+NyssSylv	5		N		1910 6960 -2 .301 1	N	.172 .255 .255 .255 25 45 90 90 45 300 16000
+OxydArbo	5		N		1910 6960 -2 .3 1 N 	.336 .255 .255 .255 25 45 90 90 55 255 6000											
+PlanOcid	5		N		1926 5482 -7 .12 1 N	0.219 .27 .2018 .251 21 26 365 50 65 220 37000										
+PrunPenn	6		N		560 2500 -23 .16 1	N 	 0.175 0.27 0.2 0.251 18.1 25 108 49 65 380 7000
+PrunSero	4		N		2132 5993 -10 .3 1	N	 0.175 0.27 0.2 0.251 18.1 25 108 49 65 380 17000
+QuerAlba	5		N		1721 5537 -12 .33 1	N	.175	.27	.2	.251	18.1	25	108	49	65	380 37000
+QuerCocc	5		N		2037 4571 -7 .286 1 N .262 .23 .23 .23 24 48 500 333 55 380 55000
+QuerFalc	5		N		2660 5993 2 .723 1 	N	.293 .23 .23 .23 24 48 500 333 55 380 29000
+QuerRubr	4		N		1100 4571 -17 .225 1 N .249 .334 .225 .303 18.5 58 345 113 32 250  37000
+QuerStel	4		N		2660 5993 -10 .3 1 N	.175	.27	.2	.251	18.1 25	108	49	65	380  20000 
+QuerVelu	5		N		1810 5076 -10 .3 1	N	.336 .255 .255 .255 25 45 90 90 55 	225 26000
+RobiPseu	5		N		1910 6960 -2 .3 1 N 	.336 .255 .255 .255 25 45 90 90 55 255 6000	
+SassAlid	5		N		1910	6960	-2	0.3	1	N	0.336	0.255	0.255	0.255	25    45    90    90    55	225	7000
+TiliAmer	6		N		1400	3137	-17	0.2	1	N	0.17	0.334	0.2	0.31	17.3	26	417	50	35	280 6000	
+TiliAmhe	6		N		1400	3137	-17	0.2	1	N	0.17	0.334	0.2	0.31	17.3	26	417	50	35	280 6000
+
+
+>>Not parameterized
+
+FunctionalGroupParameters 
+>> 															Age	Leaf
+>> Name		Index	PPDF1	PPDF2	PPDF3	PPDF4	FCFRAC	BTOLAI	KLAI	MAXLAI	PPRPTS2	PPRPTS3	Wood	Monthly	Mort	Drop
+>> 			 											T-Mean	T-Max	T-shape	T-shape	leaf	DecayR	WoodMort Shape	Month	CRFrac										FRFrac
+
+Abies	1	17.0	25.0	5.0	10.0	0.3	-0.8	1500	12	1.0	.8	.1	0.002	10	9	0.2	0.2
+SConifer	2	23.0	35.0	2.005	6.0	0.48	-0.9	3000	14	1.0	.9	.1	0.006	15	7	0.2	0.2
+NConifer	3	17.0	25.0	1.005	6.0	0.48	-0.9	3000	14	1.0	.9	.1	0.006	15	7	0.2	0.2
+NHW	4	25.0	35.0	3.05	5.6	0.48	-0.9	750	7	1.0	.9	.1	0.002	10	9	0.1	0.1
+SHW	5	23.0	30.0	5.0	10.0	0.3	-0.9	            1500	10	1.0	.8	.1	0.002	10	9	0.1	0.1
+Swampy	6	20.0	32.0	3.6	5.0	0.3	-0.9	1500	12	1.0	.8	.1	0.002	10	9	0.1	0.1
+
+
+FireReductionParameters
+>>	Severity	WoodLitter	Litter	SOM
+>>	Fire		Reduct		Reduct	Reduction
+	1		0.0		0.5	0.5
+	2		0.0		0.75	0.5
+	3		0.0		1.0	0.5
+
+HarvestReductionParameters
+>>	Name		WoodLitter	Litter	SOM		CohortWood	CohortLeaf
+>>			Reduct		Reduct	Reduction	Removal		Removal
+	MaxAgeClearcut	0.5		0.15	0.2		0.8		0.15
+	PatchCutting	1.0		1.0	1.0		1.0		1.0
+	HWA             0.0     0.0     0.0    0.0    1.0
+
+   
