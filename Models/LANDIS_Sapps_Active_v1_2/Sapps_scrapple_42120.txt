@@ -1,6 +1,5 @@
 LandisData  "SCRAPPLE"
 
->> Note:  All inputs are provided as examples only.  They are not intended to serve as default values.
 >>     Parameter                      Value
 >> ----------------------------       -------
 
@@ -29,11 +28,11 @@ UphillSlopeAzimuthMap  Sapps_Aspect.tif
 >> These represent only the non-zero part of the ZIP  as described in the paper lines 136 and 139
 
 
-LightningIgnitionsB0   -1.633162   
-LightningIgnitionsB1   0.028505   << 0.110779
+LightningIgnitionsB0   -0.63756
+LightningIgnitionsB1   0.01621   << 0.110779
 
-AccidentalIgnitionsB0  1.907284  << -1.0183
-AccidentalIgnitionsB1  -.0058002   <<  0.6331 
+AccidentalIgnitionsB0  1.920136  << -1.0183
+AccidentalIgnitionsB1  -.021640   <<  0.6331 
 
 >> A generic parameter, determines the fine-fuel scale from 0-1.0
 
@@ -63,15 +62,15 @@ TargetRxSize 30 <<From Cleaves, Martinz and Haines 200 GT SRS-37 they average 48
 
 >>Line ~371-374
 
-MaximumSpreadAreaB0	-1.523
-MaximumSpreadAreaB1	1.910 <<-3 <<FWI
-MaximumSpreadAreaB2 5.916 <<-2.5  <<effective wind speed
+MaximumSpreadAreaB0	173.49698
+MaximumSpreadAreaB1	3.75961 <<-3 <<FWI
+MaximumSpreadAreaB2  0.00  << effective wind speed
 
 
-SpreadProbabilityB0 -2.5613977 << Intercept
-SpreadProbabilityB1 .0114896  <<FWI
-SpreadProbabilityB2 .0025942 << relativized fine fuels. 
-SpreadProbabilityB3 -0.150687 << effective wind speed. 
+SpreadProbabilityB0 -2.464560 << Intercept
+SpreadProbabilityB1 .022782  <<FWI
+SpreadProbabilityB2 .004343 << relativized fine fuels. 
+SpreadProbabilityB3 -0.023515 << effective wind speed. 
 
 
 

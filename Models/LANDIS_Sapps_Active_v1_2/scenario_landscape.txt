@@ -28,7 +28,7 @@ CellLength  250 << meters, 100 x 100 m = 1 hectare
 
 >> ----------------------   -------------------
 "Biomass Harvest"		biomass-harvest.txt
-"SCRAPPLE"              Sapps_scrapple_7_24.txt
+"SCRAPPLE"              Sapps_scrapple_42120.txt
 "Base BDA"		     base-BDA_SetUp_s1e1.txt
 
 

@@ -44,7 +44,7 @@ Latitude					36.0
 DenitrificationRate	         0.0610
 DecayRateSurf            9.9
 DecayRateSOM1           9.9
-DecayRateSOM2           .0150
+DecayRateSOM2           .0170
 DecayRateSOM3          0.0000001
 
 

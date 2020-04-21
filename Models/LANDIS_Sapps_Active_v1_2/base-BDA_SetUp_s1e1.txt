@@ -18,4 +18,4 @@ LogFile		bda/bda-log.csv
 >>-----------------
 >> REQUIRED INPUTS
 >>------------------
-BDAInputFiles	./base-BDA_Input_s1e1.txt
+BDAInputFiles	./base-BDA_Input_4_21.txt
