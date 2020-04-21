@@ -17,9 +17,9 @@ SoilWiltingPointMapName			MRWiltDone.tif
 SoilPercentSandMapName			MRSand_cut.tif
 SoilPercentClayMapName			MRClay_Done.tif
 InitialSOM1CsurfMapName			MRSOM1surfCmap.tif
-InitialSOM1NsurfMapName			MRSOM1surfNmap.tif
+InitialSOM1NsurfMapName			MRSOM1surfN_updated.tif
 InitialSOM1CsoilMapName			MRSOM1soilCmap.tif
-InitialSOM1NsoilMapName			MRSOM1soilNmap.tif
+InitialSOM1NsoilMapName			MRSOM1soilN_updated.tif
 InitialSOM2CMapName				MRSOM2Cmap.tif
 InitialSOM2NMapName				MRSOM2Nmap.tif
 InitialSOM3CMapName				MRSOM3Cmap.tif
@@ -44,7 +44,7 @@ Latitude					36.0
 DenitrificationRate	         0.0610
 DecayRateSurf            9.9
 DecayRateSOM1           9.9
-DecayRateSOM2          0.0075
+DecayRateSOM2           .0150
 DecayRateSOM3          0.0000001
 
 
