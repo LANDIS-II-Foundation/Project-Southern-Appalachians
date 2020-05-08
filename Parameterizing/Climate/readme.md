@@ -1,11 +1,3 @@
----
-title: "Climate Regions"
-output: 
-  html_document:
-    keep_md: true
-    
----
-
 
 ```r
 knitr::opts_chunk$set(echo=F,warning=F)
