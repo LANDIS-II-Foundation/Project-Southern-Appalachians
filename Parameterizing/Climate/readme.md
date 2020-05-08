@@ -56,7 +56,7 @@ Here is the mean growing season temperature for the area of intrest
 
 And the summed precipitation
 
-![](Climate_regions_notebook_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+![](figure-markdown_github/unnamed-chunk-5-1.png)<!-- -->
 
 Then we scaled the variables to be comparible 
 
@@ -69,7 +69,7 @@ We looked at the means and variances clustered within each ecoregion.
 
 Here is the clustering with 10 ecoregions 
 
-![](Climate_regions_notebook_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](figure-markdown_github/unnamed-chunk-8-1.png)<!-- -->
 
 And the distribution of the variables(Normalized)
 
