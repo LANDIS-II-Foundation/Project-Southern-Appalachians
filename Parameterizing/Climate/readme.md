@@ -52,7 +52,7 @@ for each month and summed precipitation and meaned temperature over the growing 
 
 Here is the mean growing season temperature for the area of intrest
 
-![](Climate_regions_notebook_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+![](figure-markdown_github/unnamed-chunk-4-1.png)<!-- -->
 
 And the summed precipitation
 
