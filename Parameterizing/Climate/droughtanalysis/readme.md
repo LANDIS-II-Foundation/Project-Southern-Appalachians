@@ -1,12 +1,4 @@
----
-title: "Climate Model PET"
-author: "Zjrobbin"
-date: "April 8, 2020"
-output: 
-  html_document:
-    keep_md: true
-    
----
+
 
 ```r
 knitr::opts_chunk$set(echo=F,warning = F)
