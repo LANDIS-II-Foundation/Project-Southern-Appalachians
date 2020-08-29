@@ -1,7 +1,7 @@
 Southern Appalachians LANDIS-II Project
 ================
 
-See Metadata:  URL HERE
+See Metadata:  https://docs.google.com/spreadsheets/d/1EqpDnLGoqqLyUvqjXNrfsuX1WjtJmo1AUHzET9dNq0Y/edit?usp=sharing
 
 ### Overveiw of research:
 
