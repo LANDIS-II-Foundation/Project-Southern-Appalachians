@@ -127,15 +127,15 @@ Prescription CommercialThin
 >> Federal	
 	1		CommercialThin   1% 0
 >>	State
-	2		EconomicHarvest  1%
-	2       CommercialThin   1%
+	2		EconomicHarvest  1% 0
+	2       CommercialThin   1% 0
 >> Local    	
 >> Family	
 	4 		EconomicHarvest  2% 0
 >>Corporate	
 	5		EconomicHarvest 10% 0
 	5		CommercialThin  10% 0
->>Other Private	
+>>Other Private
 	6		EconomicHarvest	 2% 0
 >>Tribal
 	7       EconomicHarvest  2% 0

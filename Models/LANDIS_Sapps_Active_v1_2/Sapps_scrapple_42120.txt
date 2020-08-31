@@ -48,7 +48,9 @@ MaximumRxTemperature 35.0	<< Optional
 >> MinimumRxRelativeHumidity 22.0	<< Optional
 
 MaximumRxFireIntensity 1
-NumberRxAnnualFires 112 << This is about 50,100 acres stated in the plans of Pisgah
+
+>> This math should be 103 fires * 195 Hectares = 20 085 hectares *2.47(ac/ha)= 50100
+NumberRxAnnualFires 103 << This is about 50,100 acres stated in the plans of Pisgah 
 
 >> Cherokee, Chattahoochee and nantahala national parks. 
 
@@ -56,7 +58,8 @@ NumberRxAnnualFires 112 << This is about 50,100 acres stated in the plans of Pis
 NumberRxDailyFires 1
 FirstDayRxFires 70
 LastDayRxFires 300
-TargetRxSize 30 <<From Cleaves, Martinz and Haines 200 GT SRS-37 they average 483 ac per burn
+>> In hectares
+TargetRxSize 195 <<From Cleaves, Martinz and Haines 200 GT SRS-37 they average 483 ac per burn was previously 30 to represent cells 
 
 >> RxZonesMap fire-zones.gis  << Optional
 

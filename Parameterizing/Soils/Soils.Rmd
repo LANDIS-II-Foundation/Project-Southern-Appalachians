@@ -336,7 +336,7 @@ library(RColorBrewer)
 ```{r, fig.height=10.0,fig.width=12.0,align="center",echo=FALSE}
 Ramp<-brewer.pal(9,"YlOrBr")
 
-RasterDir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18"
+RasterDir<-"Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18"
 maps=c('SOM1surfCmap','SOM1surfNmap','SOM1soilCmap','SOM1soilNmap','SOM2Cmap','SOM2Nmap','SOM3Cmap','SOM3Nmap')
 par(mfrow=c(2,2))
 for(map in maps){
@@ -387,7 +387,7 @@ library(raster)
 library(sf)
 library(utils)
 library(ggplot2)
-w_dir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/"
+w_dir<-"Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/"
 
 setwd(w_dir)
 ```
@@ -855,7 +855,7 @@ Some additional steps that were used to prepare the maps for LANDIS-II use.
 
 
 ```{r}
-w_dir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/"
+w_dir<-"Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/"
 ICTemplate<- raster(paste(w_dir,"Proc_InitialCommunities.img",sep=""))
 projection(ICTemplate)<-CRS("+init=EPSG:26917")
 ```
@@ -863,7 +863,7 @@ projection(ICTemplate)<-CRS("+init=EPSG:26917")
 ```{r}
 ##Pull in all files from the Input drive
 thefiles<-list.files(paste(w_dir,"Inputs/",sep=""),pattern = "\\.tif$")
-
+the
 ICTemplate<- raster(paste(w_dir,"Proc_InitialCommunities.img",sep=""))
 ```
 
@@ -937,8 +937,8 @@ ExampleRaster<-DummyEco
 ```{r}
 ###This lists files in the folder 
 IC<-as.data.frame(DummyEco)
-thefiles<-list.files(paste(w_dir,"Outputs/",sep=""),pattern = "\\.tif$")
-
+#thefiles<-list.files(paste(w_dir,"Outputs/",sep=""),pattern = "\\.tif$")
+thefiles<-c("ProcFeildDone.tif","ProcWiltDone.tif")
 ```
 
 
@@ -1024,35 +1024,62 @@ rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datat
 
 
 ```{r}
-Feild<-as.data.frame(raster(paste(w_dir,"Mean/MeanedandCleanedProcFeildDone.tif",sep="")))
-WP<-as.data.frame(raster(paste(w_dir,"Mean/MeanedandCleanedProcWiltDone.tif",sep="")))
+Feild<-raster(paste(w_dir,"Mean/MeanedandCleanedProcFeildDone.tif",sep=""))
+WP<-raster(paste(w_dir,"Mean/MeanedandCleanedProcWiltDone.tif",sep=""))
+#Depth<-as.data.frame(raster(paste(w_dir,"Mean/MeanedandCleanedProcDepth_top.tif",sep="")))
+#Ecoregion<-as.data.frame(raster(paste("C:/Users/zacha/Documents/GitHub/Project-Southern-Appalachians-2018/Models/LANDIS_Sapps_Active_v1_2/MR_FourEcoregions.tif")))
+#
+Feild[Feild>(-1999),]<-Feild[Feild>(-1999),]/100
+Feild[Feild[,1]>(-1999) & Feild[,1]<.05,]<-.05
+plot(Feild)
+WP[WP[,1]>(-1999),]<-WP[WP[,1]>(-1999),]/100
+WP[WP[,1]>(-1999) & WP[,1]<.05,]<-.05
 
-feildval<-Feild[Feild[,1]>(-1999),]
-maxfeildval<-max(feildval)
 
-scaler<-.74/maxfeildval
-Feild[Feild[,1]>(-1999),]<-Feild[Feild[,1]>(-1999),]*scaler
-Feild[,1][Feild[,1]<=0.5&Feild[,1]>(-1999)]<-0.5
-#unique(Feild[,1])
+#unique(Feild$MeanedandCleanedProcFeildDone[WP[,1]>(-1999)& Feild[,1]>(-1999)& WP$MeanedandCleanedProcWiltDone+.05>Feild$MeanedandCleanedProcFeildDone])
 
-WP[WP[,1]>(-1999),]<-WP[WP[,1]>(-1999),]*scaler
-WP[,1][WP[,1]<=0.1&Feild[,1]>(-1999)]<-0.1
-#unique(WP[,1])
+Feild$MeanedandCleanedProcFeildDone[WP[,1]>(-1999)& Feild[,1]>(-1999)]
+                                                                                                                                                                                    WP$MeanedandCleanedProcWiltDone+.05>Feild$MeanedandCleanedProcFeildDone]+.05)
+
+min(Feild$MeanedandCleanedProcFeildDone[Feild$MeanedandCleanedProcFeildDone>(-1999)])
+
+
+
+
+# (WP[WP[,1]>(-1999),])
+# unique(Feild)
+# #min(Feild[Feild[,1]>(-1999),])
+# min(Feild[Feild[,1]>(-1999),]-WP[WP[,1]>(-1999),])
+# min(WP[WP[,1]>(-1999),])
+# unique(Ecoregion$MR_FourEcoregions[Feild$MeanedandCleanedProcFeildDone<0.05])
+# 
+# unique(Ecoregion$MR_FourEcoregions[WP$MeanedandCleanedProcWiltDone<0.05])
+
+
+
+
 
 WP_Print<-as.vector(WP[,1])
-#print(WP[WP[,1]>(-1999),])
 FC_Print<-as.vector(Feild[,1])
 ExampleRaster<-raster(paste(w_dir,"Mean/MeanedandCleanedProcFeildDone.tif",sep=""))
 
 output_matrix<-matrix(WP_Print,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
-new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
-new_output_file_name<-paste(w_dir,"Mean/MeanedandCleanedProcWiltDone.tif",sep="")
-rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)#Th
+new_wilt_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+plot(new_output_raster,zlim=c(0,.2))
+new_output_file_name<-paste(w_dir,"Mean/MeanedandCleanedProcWiltDone2.tif",sep="")
+rast_IC_map<-writeRaster(new_wilt_raster, filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)#Th
 
 output_matrix<-matrix(FC_Print,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
-new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
-new_output_file_name<-paste(w_dir,"Mean/MeanedandCleanedProcFeildDone.tif",sep="")
+new_output_raster<-raster::raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+plot(new_output_raster,zlim=c(0,.5))
+new_output_file_name<-paste(w_dir,"Mean/MeanedandCleanedProcFeildDone2.tif",sep="")
 rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)#Th
+```
+
+
+```{r}
+library(RColorBrewer)
+
 ```
 
 
@@ -1116,7 +1143,7 @@ rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datat
 
 ```{r}
 thefiles<-list.files(paste(w_dir,"Mean/",sep=""),pattern = "\\.tif$")
-
+thefiles<-c("MeanedandCleanedProcFeildDone2.tif","MeanedandCleanedProcWiltDone2.tif")
 ```
 
 

@@ -1,11 +1,11 @@
 LandisData "Climate Config"				
 		
 ClimateTimeSeries			Daily_RandomYears
-ClimateFile					CNRM-CM5rcp85_LANDIS.csv
+ClimateFile					Apps_Hist_3_10_19_Runs.csv
 ClimateFileFormat			Daily_Temp-C_Precip-mmDay
 
 SpinUpClimateTimeSeries			Daily_RandomYears
-SpinUpClimateFile				CNRM-CM5rcp85_LANDIS.csv
+SpinUpClimateFile				Apps_Hist_3_10_19_Runs.csv
 SpinUpClimateFileFormat			Daily_Temp-C_Precip-mmDay
 
 UsingFireClimate			yes

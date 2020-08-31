@@ -6,9 +6,9 @@ Duration  50
 Species   species_SApps_updated7_5.txt
 
 
-Ecoregions      ./ecoregions_Sapps_11.txt
+Ecoregions      ./ecoregions_Sapps.txt
 
-EcoregionsMap   ./11_Ecoregions.tif
+EcoregionsMap   ./MR_FourEcoregions.tif
 
 
 CellLength  250 << meters, 100 x 100 m = 1 hectare

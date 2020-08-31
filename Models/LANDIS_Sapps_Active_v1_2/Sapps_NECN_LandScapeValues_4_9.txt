@@ -12,8 +12,8 @@ SoilDepthMapName				MRDepth_top.tif
 SoilDrainMapName				MRDrain_Done.tif
 SoilBaseFlowMapName				MR_Stormflow.tif
 SoilStormFlowMapName			MR_Stormflow.tif
-SoilFieldCapacityMapName		MRFeildDone.tif
-SoilWiltingPointMapName			MRWiltDone.tif
+SoilFieldCapacityMapName		MRFeildDone_83120.tif
+SoilWiltingPointMapName			MRWiltDone_83120.tif
 SoilPercentSandMapName			MRSand_cut.tif
 SoilPercentClayMapName			MRClay_Done.tif
 InitialSOM1CsurfMapName			MRSOM1surfCmap.tif

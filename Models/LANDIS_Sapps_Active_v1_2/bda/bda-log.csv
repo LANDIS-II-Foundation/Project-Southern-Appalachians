@@ -1,0 +1,6 @@
+Time,ROS,AgentName,CohortsKilled,DamagedSites,MeanSeverity,
+1, 3, HWA, 23901, 11925, 1.03, 
+2, 2, HWA, 14468, 7107, 1, 
+3, 3, HWA, 19855, 9861, 1.02, 
+4, 3, HWA, 17532, 8678, 1.02, 
+5, 2, HWA, 10305, 5022, 1, 
