@@ -1,60 +1,97 @@
-Climate Files
-================
-Zachary Robbins
-Updated June 28, 2019
 
-##### Climate Regions
+```r
+knitr::opts_chunk$set(echo=F,warning=F)
+library(raster)
+```
 
-Here are the climate regions we decided on based on [USGS isobioclimates](https://rmgsc.cr.usgs.gov/ecosystems/datadownload.shtml)
+```
+## Warning: package 'raster' was built under R version 3.5.1
+```
 
-High elevation
+```
+## Loading required package: sp
+```
 
-![](Climate_files/figure-markdown_github/unnamed-chunk-2-1.png)
+```
+## Warning: package 'sp' was built under R version 3.5.1
+```
 
-Mid-elevation montane
+```r
+library(RColorBrewer)
+library(plotrix)
+Uniques<-brewer.pal(11,"Spectral")
+Drive='C:/Users/zacha/Desktop/New_Normal/Folder/'
+setwd(Drive)
+```
 
-![](Climate_files/figure-markdown_github/unnamed-chunk-3-1.png)
+Here is how we selected the climate regions. 
 
-Northern montane
+Start by defining the growing season temperatur eand percipitaiton
+We got normals values from prism 
+http://www.prism.oregonstate.edu/normals/
 
-![](Climate_files/figure-markdown_github/unnamed-chunk-4-1.png)
+for each month and summed precipitation and meaned temperature over the growing season 
 
-Low elevation
+```
+## [1] "+proj=utm +zone=17 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+```
 
-![](Climate_files/figure-markdown_github/unnamed-chunk-5-1.png)
+```
+## [1] "INT4S"
+```
 
-##### Historic Climate
 
-This data is from the PRISM dataset for the years 1981 to Nov 2018. Because the geodata portal does not handle multi-polygons well, I made this script to take the raw .bil files from PRISM, match them with the climate regions maps and then calculate the mean std, var for each. This takes a while. There is one each for perciptiation, min and max temperature.
 
-<http://www.prism.oregonstate.edu/recent/>
+Here is the mean growing season temperature for the area of intrest
 
-These are then combined on top of one another and rearranged in the mean/mean/mean/std/std/std/var/var/var style of LANDIS-II climate inputs.
+![](figure-markdown_github/unnamed-chunk-4-1.png)<!-- -->
 
-Here are those climate files plotted
+And the summed precipitation
 
-###### The daily maximums for each ecoregion.
+![](figure-markdown_github/unnamed-chunk-5-1.png)<!-- -->
 
-![](Climate_files/figure-markdown_github/unnamed-chunk-8-1.png)
+Then we scaled the variables to be comparible 
 
-The daily minimums for each ecoregion.
 
-![](Climate_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
-Percipitation
+Then preformed a kmeans clustering algrothim for both varaibles. 
+We looked at the means and variances clustered within each ecoregion.
 
-![](Climate_files/figure-markdown_github/unnamed-chunk-10-1.png)
 
-##### Future climate projections
 
-Here we are using downscaled climate projections from GFDL-ESM2M thought this script could be used for any of the NetCDF climate files found at <https://climate.northwestknowledge.net/MACA/data_portal.php> From the MACA website:
+Here is the clustering with 10 ecoregions 
 
-Multivariate Adaptive Constructed Analogs (MACA) is a statistical method for downscaling Global Climate Models (GCMs) from their native coarse resolution to a higher spatial resolution that captures reflects observed patterns of daily near-surface meteorology and simulated changes in GCMs experiments. This method has been shown to be slightly preferable to direct daily interpolated bias correction in regions of complex terrain due to its use of a historical library of observations and multivariate approach.
+![](figure-markdown_github/unnamed-chunk-8-1.png)<!-- -->
 
-The files for this project can be can be downloaded directly by copying these links found [here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/blob/master/Parameterizing/Climate/Net_cdf_macav2livneh_Source.txt)
+And the distribution of the variables(Normalized)
 
-We processed a relative concentration pathway 4.5 and 8.5 for the years 2006-2099.
 
-Find out more information here <http://www.climatologylab.org/maca.html>
+```
+##    Ecoregion   MeanTemp     VarTemp       SETemp   Mean PPT     Var PPT
+## 1          1  1.3103981 0.005131894 0.0003020330  1.4191958 0.004410582
+## 2          2  1.4379188 0.003519878 0.0002401513  1.2727931 0.003745320
+## 3          3  1.1065404 0.010490298 0.0006361870  1.9184324 0.015722265
+## 4          4  1.0515696 0.004884796 0.0003805924  1.4846530 0.008871523
+## 5          5  1.2886175 0.006618654 0.0003819952  1.6652949 0.005772512
+## 6          6  1.1462063 0.002664160 0.0002158794  1.0327600 0.003848997
+## 7          7  1.2635254 0.004482124 0.0003611993  0.8412246 0.008478706
+## 8          8  1.0992791 0.004324114 0.0002536311  1.2401569 0.003763181
+## 9          9  1.5095142 0.003113193 0.0002027538  1.0940419 0.003454278
+## 10        10 -0.7753274 0.000000000 0.0000000000 -0.7689027 0.000000000
+## 11        11  1.3071280 0.002719790 0.0001938936  1.1497095 0.004187226
+##          SE PPT
+## 1  0.0002800035
+## 2  0.0002477226
+## 3  0.0007788403
+## 4  0.0005129039
+## 5  0.0003567430
+## 6  0.0002594806
+## 7  0.0004967865
+## 8  0.0002366091
+## 9  0.0002135722
+## 10 0.0000000000
+## 11 0.0002405797
+```
 
-![](Climate_files/figure-markdown_github/unnamed-chunk-13-1.png)![](Climate_files/figure-markdown_github/unnamed-chunk-13-2.png)![](Climate_files/figure-markdown_github/unnamed-chunk-13-3.png)![](Climate_files/figure-markdown_github/unnamed-chunk-13-4.png)
+We experimented with values from 5 to 20 ecoregions, to find the minimum number that minizied the variance while accounting for computational cost. 
+
