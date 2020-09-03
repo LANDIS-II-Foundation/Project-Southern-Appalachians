@@ -1,0 +1,7 @@
+LandisData  Ecoregions
+
+>>         Map
+>> Active  Code  Name   Description
+>> ------  ----  -----  -----------
+    	yes    2   eco2   "High_Elevation"  
+	  no     1 	 eco5	"Offmap"

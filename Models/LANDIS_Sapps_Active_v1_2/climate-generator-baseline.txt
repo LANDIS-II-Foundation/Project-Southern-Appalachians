@@ -1,15 +1,15 @@
 LandisData "Climate Config"				
 		
-ClimateTimeSeries			Daily_RandomYears
-ClimateFile					Apps_Hist_3_10_19_Runs.csv
+ClimateTimeSeries			Daily_SequencedYears
+ClimateFile					OneEcoHistoric.csv
 ClimateFileFormat			Daily_Temp-C_Precip-mmDay
 
-SpinUpClimateTimeSeries			Daily_RandomYears
-SpinUpClimateFile				Apps_Hist_3_10_19_Runs.csv
+SpinUpClimateTimeSeries			Daily_SequencedYears
+SpinUpClimateFile				OneEcoHistoric.csv
 SpinUpClimateFileFormat			Daily_Temp-C_Precip-mmDay
 
 UsingFireClimate			yes
 
-SpringStart				30
-WinterStart				320
+SpringStart				1
+WinterStart				365
 

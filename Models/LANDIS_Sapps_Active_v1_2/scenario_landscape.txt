@@ -1,14 +1,14 @@
 LandisData  Scenario
 
 
-Duration  50
+Duration  24
 
 Species   species_SApps_updated7_5.txt
 
 
-Ecoregions      ./ecoregions_Sapps.txt
+Ecoregions      ./ecoregions_Sapps_1.txt
 
-EcoregionsMap   ./MR_FourEcoregions.tif
+EcoregionsMap   ./OneEco.tif
 
 
 CellLength  250 << meters, 100 x 100 m = 1 hectare
@@ -27,8 +27,8 @@ CellLength  250 << meters, 100 x 100 m = 1 hectare
 >> Disturbance Extensions   Initialization File
 
 >> ----------------------   -------------------
-"Biomass Harvest"		biomass-harvest.txt
-"SCRAPPLE"              Sapps_scrapple_42120.txt
+"Biomass Harvest"	     biomass-harvest.txt
+"SCRAPPLE"                   Sapps_scrapple_testing.txt
 "Base BDA"		     base-BDA_SetUp_s1e1.txt
 
 

@@ -1029,19 +1029,29 @@ WP<-raster(paste(w_dir,"Mean/MeanedandCleanedProcWiltDone.tif",sep=""))
 #Depth<-as.data.frame(raster(paste(w_dir,"Mean/MeanedandCleanedProcDepth_top.tif",sep="")))
 #Ecoregion<-as.data.frame(raster(paste("C:/Users/zacha/Documents/GitHub/Project-Southern-Appalachians-2018/Models/LANDIS_Sapps_Active_v1_2/MR_FourEcoregions.tif")))
 #
-Feild[Feild>(-1999),]<-Feild[Feild>(-1999),]/100
-Feild[Feild[,1]>(-1999) & Feild[,1]<.05,]<-.05
+
 plot(Feild)
-WP[WP[,1]>(-1999),]<-WP[WP[,1]>(-1999),]/100
-WP[WP[,1]>(-1999) & WP[,1]<.05,]<-.05
+Feild[Feild>(-1999),]<-Feild[Feild>(-1999),]/100
+Feild[Feild>(-1999) & Feild<.05,]<-.05
 
 
+
+
+WP[WP>(-1999),]<-WP[WP>(-1999),]/100
+WP[WP>(-1999) & WP<.05,]<-.05
+
+plot(WP,zlim=c(0,.25),main="Wilting point")
+plot(Feild,zlim=c(0,.75),main="Feild Capacity")
+unique(Feild[Feild>(-1999) & Feild< (WP+.05)])
+Feild[Feild>(-1999) & Feild< (WP+.05)]<-WP[Feild>(-1999) & Feild<(WP+.05)]+.05
+plot(Feild-WP,zlim=c(-1,1))
+Dataframe<-as.data.frame(Feild-WP)
 #unique(Feild$MeanedandCleanedProcFeildDone[WP[,1]>(-1999)& Feild[,1]>(-1999)& WP$MeanedandCleanedProcWiltDone+.05>Feild$MeanedandCleanedProcFeildDone])
 
-Feild$MeanedandCleanedProcFeildDone[WP[,1]>(-1999)& Feild[,1]>(-1999)]
-                                                                                                                                                                                    WP$MeanedandCleanedProcWiltDone+.05>Feild$MeanedandCleanedProcFeildDone]+.05)
+#Feild$MeanedandCleanedProcFeildDone[WP[,1]>(-1999)& Feild[,1]>(-1999)]
+                                                                                                                                                                                    #WP$MeanedandCleanedProcWiltDone+.05>Feild$MeanedandCleanedProcFeildDone]+.05
 
-min(Feild$MeanedandCleanedProcFeildDone[Feild$MeanedandCleanedProcFeildDone>(-1999)])
+#min(Feild$MeanedandCleanedProcFeildDone[Feild$MeanedandCleanedProcFeildDone>(-1999)])
 
 
 
@@ -1063,17 +1073,18 @@ WP_Print<-as.vector(WP[,1])
 FC_Print<-as.vector(Feild[,1])
 ExampleRaster<-raster(paste(w_dir,"Mean/MeanedandCleanedProcFeildDone.tif",sep=""))
 
-output_matrix<-matrix(WP_Print,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
-new_wilt_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
-plot(new_output_raster,zlim=c(0,.2))
+#output_matrix<-matrix(WP_Print,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+#new_wilt_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+#plot(new_output_raster,zlim=c(0,.2))
 new_output_file_name<-paste(w_dir,"Mean/MeanedandCleanedProcWiltDone2.tif",sep="")
-rast_IC_map<-writeRaster(new_wilt_raster, filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)#Th
+rast_IC_map<-writeRaster(WP,filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)#Th
 
-output_matrix<-matrix(FC_Print,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
-new_output_raster<-raster::raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
-plot(new_output_raster,zlim=c(0,.5))
+#output_matrix<-matrix(FC_Print,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
+#new_output_raster<-raster::raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
+#plot(new_output_raster,zlim=c(0,.5)
+
 new_output_file_name<-paste(w_dir,"Mean/MeanedandCleanedProcFeildDone2.tif",sep="")
-rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)#Th
+rast_IC_map<-writeRaster(Feild,filename=new_output_file_name, datatype='FLT8S',overwrite=TRUE)#Th
 ```
 
 
