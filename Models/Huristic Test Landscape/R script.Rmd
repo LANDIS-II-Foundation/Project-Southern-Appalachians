@@ -1,0 +1,26 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Import Needed Maps
+
+```{r}
+library(raster)
+timesteps <- as.character(seq(from =1, to= 10))
+stepsindex <- seq(from=1, to=10)
+
+maps <- c("event-ID-","fire-intensity-","fire-spread-probability-","ignition-type-")
+mapsindex <- seq(from=1, to=4)
+
+directory <- "D:/Dynamic Suppression Testing/scrapple-fire/"
+
+for (i in mapsindex){
+  for (j in stepsindex){
+    map <- raster(paste(directory,maps[i],timesteps[j],".img", sep=""))
+    plot(map, main=paste(maps[i],timesteps[j]))
+    assign(x=paste(maps[i],timesteps[j]), value=map)
+  }
+}
+```
+
