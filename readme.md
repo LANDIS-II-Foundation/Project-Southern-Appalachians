@@ -1,7 +1,7 @@
 Southern Appalachians LANDIS-II Project
 ================
 
-See Metadata:  https://docs.google.com/spreadsheets/d/1EqpDnLGoqqLyUvqjXNrfsuX1WjtJmo1AUHzET9dNq0Y/edit?usp=sharing
+
 
 ### Overveiw of research:
 
@@ -33,6 +33,9 @@ Given these conditions, researchers and managers need an ability to forecast and
 
 -   Christopher Gerstle *North Carolina State University*
 
+-   Kate Jones *North Carolina State University*
+
+
 </center>
 
 ### See how we parameterized the model
@@ -57,8 +60,8 @@ Oak Ridge Institue for Science and Education
 
 <img src="images/ncstate-brick-4x1-red.png" width="1080" />
 
-Last updated 3/27/2019
-
+Last updated 9/11/202020
+See Metadata:  https://docs.google.com/spreadsheets/d/1EqpDnLGoqqLyUvqjXNrfsuX1WjtJmo1AUHzET9dNq0Y/edit?usp=sharing
 #### Citations
 
 Adams, J. (2000). Precious heritage: the status of biodiversity in the United States. Oxford University Press on Demand. 190 Ellison, A. M., Bank, M. S., Clinton, B. D., Colburn, E. A., Elliott, K., Ford, C. R., ... & Mohan, J. (2005). Loss of foundation species: consequences for the structure and dynamics of forested ecosystems. Frontiers in Ecology and the Environment, 3(9), 479-486.
