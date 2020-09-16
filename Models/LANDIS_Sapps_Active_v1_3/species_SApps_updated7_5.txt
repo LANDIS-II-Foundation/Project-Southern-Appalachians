@@ -46,6 +46,7 @@ LandisData	Species
 	SassAlid	150	10	2	2	30	3000	0.75	5	15	resprout
 	TiliAmer	250	30	5	1	50	300	0.7	10	100	resprout
 	TiliAmhe	250	30	5	1	50	300	0.7	10	100	resprout
+	>> CastDent	500	10	4	4	75	200	0.5	20	100	resprout
 	>>Conifers
 	TsugCana	450	30	5	1	100	540	0	0	0	none
 	PinuVirg	130	20	1	4	100	300	0	0	0	none
