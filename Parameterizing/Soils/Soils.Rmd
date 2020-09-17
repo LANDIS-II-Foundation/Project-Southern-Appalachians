@@ -3,21 +3,22 @@ title: "Southern Appalachians Soils"
 output: github_document
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
-To create the NECN soil inputs we combined SSURGO data, deadwood data from the US Forest Invettory and Analysis Program , baseflow and storm flow approximations from ( KATE), and data on soil carbon and nitrogen. This process can be seen at https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Soils. Maps for depth, drainage, flood frequency sand, and clay percentage, field capacity and wilting point were derived from the USGS gssurgo dataset, subset to the study extent. These soils maps were aggregated from there an original resolution of (10m) were aggregated to the study resolution of 250m. Total carbon was calculated using the CONUS level carbon maps scale to the resolution of the study area (West, 2014). The guidelines in the Century
+> Soils File 
+
+> To create the NECN soil inputs we combined SSURGO data, deadwood data from the US Forest Invettory and Analysis Program , baseflow and storm flow approximations from ( KATE), and data on soil carbon and nitrogen. This process can be seen at https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Soils. Maps for depth, drainage, flood frequency sand, and clay percentage, field capacity and wilting point were derived from the USGS gssurgo dataset, subset to the study extent. These soils maps were aggregated from there an original resolution of (10m) were aggregated to the study resolution of 250m. Total carbon was calculated using the CONUS level carbon maps scale to the resolution of the study area (West, 2014). The guidelines in the Century
 the manual was used to divide the SOM into the fast, slow, and passive pools and then calculate the
 total N in each pool (Parton 2013). Deadwood and roots were calculated by interpolating between FIA sites for dead wood and assuming dead roots made up 1/3 or dead wood values. 
+-ZR
 
 
-Citation:
-Parton, W. 2013. CENTURY Soil Organic Matter Model Environment. Technical
+* Parton, W. 2013. CENTURY Soil Organic Matter Model Environment. Technical
 Documentation. Agroecosystem Version 3.0. USDA-ARS, Forest Collins, CO. 
+* West, T.O. 2014. Soil Carbon Estimates in 20-cm Layers to 1-m Depth for the Conterminous US, 1970-1993. Data set. Available on-line [http://daac.ornl.gov] from Oak Ridge National Laboratory Distributed Active Archive Center, Oak Ridge, Tennessee, USA. http://dx.doi.org/10.3334/ORNLDAAC/1238
+* Soil Survey Staff, Natural Resources Conservation Service, United States Department of Agriculture. Soil Survey Geographic (SSURGO) Database for [TN,GA,NC,SC]. Available online. Accessed [10/17/2019].
 
-West, T.O. 2014. Soil Carbon Estimates in 20-cm Layers to 1-m Depth for the Conterminous US, 1970-1993. Data set. Available on-line [http://daac.ornl.gov] from Oak Ridge National Laboratory Distributed Active Archive Center, Oak Ridge, Tennessee, USA. http://dx.doi.org/10.3334/ORNLDAAC/1238
-
-Soil Survey Staff, Natural Resources Conservation Service, United States Department of Agriculture. Soil Survey Geographic (SSURGO) Database for [TN,GA,NC,SC]. Available online. Accessed [10/17/2019].
 
 
 
@@ -578,7 +579,7 @@ These are the resulting maps.
 ```{r, fig.height=10.0,fig.width=12.0,align="center"}
 Ramp<-brewer.pal(9,"YlOrBr")
 
-RasterDir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18"
+RasterDir<-"Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18"
 maps=c("WiltDone","Drain_Done","FeildDone","Soil_Depth_done","Clay_Done","Sand_cut")
 par(mfrow=c(2,2))
 for(map in maps){
@@ -598,7 +599,7 @@ import geopandas as gp
 ##import shapely.wkt as shap
 from shapely.geometry import Point
 
-InDir="R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/"
+InDir="Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/"
 ##########Functions
 ```
 
@@ -759,7 +760,7 @@ library(gstat)
 library(sp)
 library(raster)
 library(rgdal)
-w_dir<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/"
+w_dir<-"Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/"
 ```
 
 
@@ -826,13 +827,13 @@ rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datat
 ```{r, fig.height=10.0,fig.width=12.0,align="center"}
 Ramp<-brewer.pal(9,"YlOrBr")
 
-map<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/Final/Deadwood_wood.tif"
+map<-"Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/Final/Deadwood_wood.tif"
 
 par(mfrow=c(1,2))
 Im1<-raster(map)
 mv<-max(matrix(Im1))
 plot(Im1,zlim=c(0,mv),main="Deadwood Biomass",col=Ramp)
-map<-"R:/fer/rschell/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/Final/Deadwood_root.tif"
+map<-"Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/Final/Deadwood_root.tif"
 
 
 Im1<-raster(map)
@@ -864,7 +865,7 @@ projection(ICTemplate)<-CRS("+init=EPSG:26917")
 ```{r}
 ##Pull in all files from the Input drive
 thefiles<-list.files(paste(w_dir,"Inputs/",sep=""),pattern = "\\.tif$")
-the
+
 ICTemplate<- raster(paste(w_dir,"Proc_InitialCommunities.img",sep=""))
 ```
 
@@ -904,7 +905,7 @@ map<-paste(w_dir,"Inputs/",file,sep="")
 Im1<-raster(map)
 mv<-max(matrix(Im1))
 
-plot(Im1,zlim=c(0,mv),main="Soil Before",col=Ramp)
+#plot(Im1,zlim=c(0,mv),main="Soil Before",col=Ramp)
 
 map<-paste(w_dir,"Outputs/Proc",file,sep="")
 Im1<-raster(map)
@@ -1031,7 +1032,7 @@ WP<-raster(paste(w_dir,"Mean/MeanedandCleanedProcWiltDone.tif",sep=""))
 #Ecoregion<-as.data.frame(raster(paste("C:/Users/zacha/Documents/GitHub/Project-Southern-Appalachians-2018/Models/LANDIS_Sapps_Active_v1_2/MR_FourEcoregions.tif")))
 #
 
-plot(Feild)
+#plot(Feild)
 Feild[Feild>(-1999),]<-Feild[Feild>(-1999),]/100
 Feild[Feild>(-1999) & Feild<.05,]<-.05
 
@@ -1041,8 +1042,8 @@ Feild[Feild>(-1999) & Feild<.05,]<-.05
 WP[WP>(-1999),]<-WP[WP>(-1999),]/100
 WP[WP>(-1999) & WP<.05,]<-.05
 
-plot(WP,zlim=c(0,.25),main="Wilting point")
-plot(Feild,zlim=c(0,.75),main="Feild Capacity")
+#plot(WP,zlim=c(0,.25),main="Wilting point")
+#plot(Feild,zlim=c(0,.75),main="Feild Capacity")
 unique(Feild[Feild>(-1999) & Feild< (WP+.05)])
 Feild[Feild>(-1999) & Feild< (WP+.05)]<-WP[Feild>(-1999) & Feild<(WP+.05)]+.05
 plot(Feild-WP,zlim=c(-1,1))
