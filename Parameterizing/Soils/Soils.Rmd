@@ -6,12 +6,18 @@ output: github_document
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-Here is a where background on the LANDIS_II Soil model will go
+To create the NECN soil inputs we combined SSURGO data, deadwood data from the US Forest Invettory and Analysis Program , baseflow and storm flow approximations from ( KATE), and data on soil carbon and nitrogen. This process can be seen at https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Soils. Maps for depth, drainage, flood frequency sand, and clay percentage, field capacity and wilting point were derived from the USGS gssurgo dataset, subset to the study extent. These soils maps were aggregated from there an original resolution of (10m) were aggregated to the study resolution of 250m. Total carbon was calculated using the CONUS level carbon maps scale to the resolution of the study area (West, 2014). The guidelines in the Century
+the manual was used to divide the SOM into the fast, slow, and passive pools and then calculate the
+total N in each pool (Parton 2013). Deadwood and roots were calculated by interpolating between FIA sites for dead wood and assuming dead roots made up 1/3 or dead wood values. 
 
 
+Citation:
+Parton, W. 2013. CENTURY Soil Organic Matter Model Environment. Technical
+Documentation. Agroecosystem Version 3.0. USDA-ARS, Forest Collins, CO. 
 
+West, T.O. 2014. Soil Carbon Estimates in 20-cm Layers to 1-m Depth for the Conterminous US, 1970-1993. Data set. Available on-line [http://daac.ornl.gov] from Oak Ridge National Laboratory Distributed Active Archive Center, Oak Ridge, Tennessee, USA. http://dx.doi.org/10.3334/ORNLDAAC/1238
 
-
+Soil Survey Staff, Natural Resources Conservation Service, United States Department of Agriculture. Soil Survey Geographic (SSURGO) Database for [TN,GA,NC,SC]. Available online. Accessed [10/17/2019].
 
 
 
@@ -69,18 +75,13 @@ Source: West, T.O. 2014. Soil Carbon Estimates in 20-cm Layers to 1-m Depth for 
 
 
 
-```{r python stuff,message=FALSE,warning=FALSE,include=FALSE}
+```{r python stuff,message=FALSE,warning=FALSE,include=FALSE,eval=FALSE}
 
 knitr::opts_chunk$set(echo=FALSE)
 
 library(reticulate)
 use_condaenv("basic")
-#import("scipy")
-#import("geopandas")
-#import("pandas")
-#import("gdal")
-#import("rasterio")
-#import("numpy")
+
 
 virtualenv_list()
 ```

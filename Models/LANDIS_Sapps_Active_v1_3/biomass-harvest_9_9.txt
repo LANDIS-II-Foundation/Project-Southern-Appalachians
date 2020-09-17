@@ -26,20 +26,20 @@ Stands     		    ./Stands3.tif
 >> -------------------------
 
 >>---- PRESCRIPTION_1 ---------------------------------------
-Prescription MaxAgeClearcut
-    StandRanking 	MaxCohortAge
-    SiteSelection 	Complete
-    CohortsRemoved 	ClearCut
+>>Prescription MaxAgeClearcut
+>>    StandRanking 	MaxCohortAge
+>>    SiteSelection 	Complete
+>>    CohortsRemoved 	ClearCut
 
 >> Test
-Prescription PatchCutting
-    StandRanking	MaxCohortAge
-    MinimumAge  	60
-    SiteSelection 	Complete 
-	MinTimeSinceDamage	20
-    CohortsRemoved SpeciesList 
-	TsugCana	1-450(99%)
-	QuerPrin	1-300(99%)
+>> Prescription PatchCutting
+>>    StandRanking	MaxCohortAge
+>>    MinimumAge  	60
+>>    SiteSelection 	Complete 
+>>	MinTimeSinceDamage	20
+>>    CohortsRemoved SpeciesList 
+>>	TsugCana	1-450(99%)
+>>	QuerPrin	1-300(99%)
 
 Prescription EconomicHarvest
 StandRanking  Economic
@@ -62,9 +62,26 @@ StandRanking  Economic
     MinimumAge 20 
 	SiteSelection PatchCutting  20% 100 
 	>>Priority PatchSize
-	CohortsRemoved ClearCut
+	CohortsRemoved	SpeciesList
+	>> Species	Selection
+        >> -------      ----------
+		PinuStro         40-80 (50%)
+		PinuTaed         20-80 (50%)		 
+		PinuEnch         20-80 (50%)
+		QuerAlba         20-80 (50%)
+		QuerCocc	 20-80 (50%)
+		QuerFalc	 20-80 (50%)
+		QuerRubr	 20-80 (50%)
+		QuerStel	 20-80 (50%)
+		QuerVelu	 20-80 (50%)              
+		AcerSacc         40-80 (50%)		 
+		CaryAlba         40-80 (50%)	 
+		CaryOvat	 40-80 (50%)
+		CaryCodi	 40-80 (50%)
+		CaryGlab         40-80 (50%)		 
+		JuglNigr         30-80 (50%)            
 	
-Prescription CommercialThin
+>>Prescription CommercialThin
 >> Remove 50-60% of residual basal area, targeting species not desirable, remove intolerants intermediate trees are intolerant and will not respond to
 >>release, If a thinning is applied in fully stocked sapling stands, at least
 >>one-third to one-half of the basal area should be removed by thinning
@@ -76,40 +93,40 @@ Prescription CommercialThin
 >>20-30 years
 >>40-45 years
 
-	StandRanking Random
+>>	StandRanking Random
 	>>Stand Qualifications
-	MaximumAge  65
-	MinimumTimeSinceLastHarvest   20
-	SiteSelection PatchCutting  20% 100 
-	CohortsRemoved	SpeciesList
+>>	MaximumAge  65
+>>	MinimumTimeSinceLastHarvest   20
+>>	SiteSelection PatchCutting  20% 100 
+>>	CohortsRemoved	SpeciesList
 	>> Species	Selection
         >> -------      ----------
-		AcerRubr	20-65 (90%) 
-		LiriTuli	20-65 (90%) 
-		PinuVirg	20-65 (90%) 	
-		BetuAlle	20-65 (90%) 
-		MagnMacr	20-65 (90%) 
-		AcerPens	20-65 (90%) 
-		AescBuck	20-65 (90%) 
-		AmelArbo	20-65 (90%) 
-		BetuLent	20-65 (90%) 
-		BetuNigr	20-65 (90%) 	
-		CornFlor	20-65 (90%) 
-		FaguGran	20-65 (90%) 
-		FraxAmer	20-65 (90%) 
-		FraxPenn	20-65 (90%) 	
-		HaleDipt	20-65 (90%) 
-		IlexOpac	20-65 (90%) 
-		JuglNigr	20-65 (90%) 
-		LiquStyr	20-65 (90%) 
-		MagnAcum	20-65 (90%) 
-		NyssSylv	20-65 (90%) 
-		OxydArbo        20-65 (90%) 
-		PlanOcid	20-65 (90%) 
-		PrunPenn	20-65 (90%) 
-		PrunSero	20-65 (90%) 
-		RobiPseu	20-65 (90%) 
-		SassAlid	20-65 (90%) 
+>>		AcerRubr	20-65 (90%) 
+>>		LiriTuli	20-65 (90%) 
+>>		PinuVirg	20-65 (90%) 	
+>>		BetuAlle	20-65 (90%) 
+>>		MagnMacr	20-65 (90%) 
+>>		AcerPens	20-65 (90%) 
+>>		AescBuck	20-65 (90%) 
+>>		AmelArbo	20-65 (90%) 
+>>		BetuLent	20-65 (90%) 
+>>		BetuNigr	20-65 (90%) 	
+>>		CornFlor	20-65 (90%) 
+>>		FaguGran	20-65 (90%) 
+>>		FraxAmer	20-65 (90%) 
+>>		FraxPenn	20-65 (90%) 	
+>>		HaleDipt	20-65 (90%) 
+>>		IlexOpac	20-65 (90%) 
+>>		JuglNigr	20-65 (90%) 
+>>		LiquStyr	20-65 (90%) 
+>>		MagnAcum	20-65 (90%) 
+>>		NyssSylv	20-65 (90%) 
+>>		OxydArbo        20-65 (90%) 
+>>		PlanOcid	20-65 (90%) 
+>>		PrunPenn	20-65 (90%) 
+>>		PrunSero	20-65 (90%) 
+>>		RobiPseu	20-65 (90%) 
+>>		SassAlid	20-65 (90%) 
 >>Prescription Shelt1erWood
 
 
@@ -122,16 +139,13 @@ Prescription CommercialThin
 >> 	---------   	------------   		------------   	---------- 	--------
 
 >> Federal	
-	1		CommercialThin   1% 0
->>	State
+>> State
 	2		EconomicHarvest  .4% 0
-	2                CommercialThin   1% 0
 >> Local    	
 >> Family	
 	4 		EconomicHarvest  .5% 0
 >>Corporate	
 	5		EconomicHarvest 1.42% 0
-	5		CommercialThin  10% 0
 >>Other Private
 	6		EconomicHarvest	 .25% 0
 >>Tribal
