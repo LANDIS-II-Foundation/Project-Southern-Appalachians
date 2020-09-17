@@ -6,15 +6,22 @@ output:
     
 ---
 
-#### To appendix. 
+> Climate
 
-Climate regions were selected by clustering together the growing season normals for temperature and precipitaiton. 30 yr normal values for mean
-temperature and precipitaiton were gatheredfrom Prism(http://www.prism.oregonstate.edu/normals/), these were summed over the growing season. 
+> Climate regions were selected by clustering together the growing season normals for temperature and precipitaiton. 30 yr normal values for mean
+temperature and precipitaiton were gatheredfrom Prism (http://www.prism.oregonstate.edu/normals/), these were summed over the growing season. 
 We then preformed k-means clustering based on these values, with clusters ranging between 5 and 20. These were analyzed to see how much variance each one
 encapsulated. We ultimately decided on 10 ecoregions. 
-
 Climate models were downloaded from the MACA portls using the NKN Thredd Server, and the mean value for each day accessed for each of the twelve ecoregions. The variables used were precipitation, temperature(minimum), temperature(maximum),minimum relative humidity, maximum relative humidity,eastward wind speed, and northward wind speed. 
 
+Citations
+
+* Daly, C., & Bryant, K. (2013). The PRISM climate and weather system—an introduction. Corvallis, OR: PRISM climate group.
+
+* Abatzoglou J.T. and Brown T.J. A comparison of statistical 
+downscaling methods suited for wildfire applications, International 
+Journal of Climatology (2012), 32, 
+772-780https://climate.northwestknowledge.net/MACA/
 
 
 
@@ -35,8 +42,8 @@ library(raster)
 library(RColorBrewer)
 library(plotrix)
 Uniques<-brewer.pal(11,"Spectral")
-Drive='C:/Users/zacha/Desktop/New_Normal/Folder/'
-setwd(Drive)
+Drive='Z:/Robbins/Sapps/Model_Prep/New_Normal/Folder/'
+#setwd(Drive)
 
 ```
 
