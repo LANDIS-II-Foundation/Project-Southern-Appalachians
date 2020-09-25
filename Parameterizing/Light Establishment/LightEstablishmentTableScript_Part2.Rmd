@@ -1,0 +1,121 @@
+---
+title: "LAI and Seedling Probability Analysis - Added"
+author: "Christopher Gerstle"
+date: "August 5, 2020"
+output: html_document
+---
+
+```{r}
+directory <- "D:/LAI Reparam/"
+SAPPS.PLOT.TOTAL.LEAFAREA <- read.csv(paste(directory, "SAPPS.PLOT.TOTAL.LEAFAREA.csv",sep=""), header=T, sep=",")
+
+Model.Species <- read.csv(paste(directory,"ModelSpeciesCodes.csv", sep=""),header=T, sep=",")
+Model.Species$LongCom.char <- as.character(Model.Species$LongCom)
+Model.Species.index <- seq(from=1, to=length(Model.Species$SPCD))
+
+library(spatstat)
+species <- c()
+weighted.LAI.mean <- c()
+weighted.LAI.var <- c()
+weighted.LAI.SD <- c()
+weighted.LAI.log.mean <- c()
+weighted.LAI.log.var <- c()
+weighted.LAI.log.SD <- c()
+number <- c()
+
+Table.NoOutliers <- SAPPS.PLOT.TOTAL.LEAFAREA[SAPPS.PLOT.TOTAL.LEAFAREA$PLOT.LAI<20,]
+Table.NoOutliers$PLOT.LAI.LOG <- log(Table.NoOutliers$PLOT.LAI)
+
+for (i in Model.Species.index){
+  SP.needed <- Model.Species$LongCom.char[i]
+  PLOT.LAI <- Table.NoOutliers$PLOT.LAI
+  PLOT.LAI.LOG <- Table.NoOutliers$PLOT.LAI.LOG
+  PLOT.SEEDLINGS <- Table.NoOutliers[,SP.needed]
+  PLOT.SEEDLINGS.TOTAL <- sum(PLOT.SEEDLINGS)
+  weights <- PLOT.SEEDLINGS/PLOT.SEEDLINGS.TOTAL
+  Weighted.LAI.mean <- weighted.mean(x = PLOT.LAI, w = weights)
+  Weighted.LAI.var <- weighted.var(x=PLOT.LAI, w=weights)
+  Weighted.LAI.log.mean <- weighted.mean(x = PLOT.LAI.LOG, w = weights)
+  Weighted.LAI.log.var <- weighted.var(x=PLOT.LAI.LOG, w=weights)
+  species[i] <- SP.needed
+  weighted.LAI.mean[i] <- Weighted.LAI.mean
+  weighted.LAI.var[i] <- Weighted.LAI.var
+  weighted.LAI.SD[i] <- sqrt(Weighted.LAI.var)
+  weighted.LAI.log.mean[i] <- Weighted.LAI.log.mean
+  weighted.LAI.log.var[i] <- Weighted.LAI.log.var
+  weighted.LAI.log.SD[i] <- sqrt(Weighted.LAI.log.var)
+  number[i] <- PLOT.SEEDLINGS.TOTAL
+}
+
+
+
+weighted.mean.LAI.table <- data.frame(species, weighted.LAI.mean, weighted.LAI.var, weighted.LAI.SD, weighted.LAI.log.mean, weighted.LAI.log.var, weighted.LAI.log.SD, number)
+
+plot(weighted.mean.LAI.table$weighted.LAI.mean, weighted.mean.LAI.table$weighted.LAI.SD, xlab="Mean LAI",ylab="SD LAI", xlim=c(0,12), ylim=c(1.5,5.0))
+text(weighted.mean.LAI.table$weighted.LAI.mean, weighted.mean.LAI.table$weighted.LAI.SD, labels=weighted.mean.LAI.table$species, cex=0.25, font=2, pos=1)
+
+grid <- seq(0,20,.1)
+plot(grid,dlnorm(grid,-0.08963041,1.3770076),type="l",xlab="LAI",ylab="f(x)", col="blue")
+lines(grid,dlnorm(grid,0.74996573, 1.2593130
+), col="chocolate")
+lines(grid,dlnorm(grid,1.39746695, 0.7658884), col="purple")
+lines(grid,dlnorm(grid,1.85213425, 0.6039562), col="black")
+lines(grid,dlnorm(grid,2.22362511, 0.5181068), col="red")
+legend("topright", legend=c("Loblolly Pine", "virginia pine","white oak","sugar maple","Striped Maple"), col=c("blue","chocolate","purple","black","red"), lty=1)
+
+```
+
+```{r}
+cdfcolumns <- c("species","class.0","class.1","class.2","class.3","class.4","class.5")
+species.column <- c()
+shade.0 <- c()
+shade.1 <- c()
+shade.2 <- c()
+shade.3 <- c()
+shade.4 <- c()
+shade.5 <- c()
+
+index <- seq(from=1, to=length(weighted.mean.LAI.table$species))
+
+for (i in index){
+    species <- weighted.mean.LAI.table$species[i]
+    log.sd <- weighted.mean.LAI.table$weighted.LAI.log.SD[i]
+    log.mean <- weighted.mean.LAI.table$weighted.LAI.log.mean[i]
+    species.column[i] <- species
+    shade.0[i] <- plnorm(q = 2.0, meanlog=log.mean, sdlog =  log.sd)
+    shade.1[i] <- plnorm(q = 4.0, meanlog=log.mean, sdlog =  log.sd) - plnorm(q = 2.0, meanlog=log.mean, sdlog =  log.sd)
+    shade.2[i] <- plnorm(q = 6.0, meanlog=log.mean, sdlog =  log.sd) - plnorm(q = 4.0, meanlog=log.mean, sdlog =  log.sd)
+    shade.3[i] <- plnorm(q = 8.0, meanlog=log.mean, sdlog =  log.sd) - plnorm(q = 6.0, meanlog=log.mean, sdlog =  log.sd)
+    shade.4[i] <- plnorm(q = 10.0, meanlog=log.mean, sdlog =  log.sd) - plnorm(q = 8.0, meanlog=log.mean, sdlog =  log.sd)
+    shade.5[i] <- 1 - plnorm(q = 10.0, meanlog=log.mean, sdlog =  log.sd)
+}
+
+cdf.table <- data.frame(species.column, shade.0, shade.1, shade.2, shade.3, shade.4, shade.5)
+colnames(cdf.table) <- cdfcolumns
+
+species.rep <- c("loblolly_pine","virginia_pine","white_oak","sugar_maple","striped_maple")
+
+
+
+for (i in index){
+  species <- species.rep[i]
+  neededrow <- cdf.table[cdf.table$species %in% species,]
+  probabilities <- c()
+  probabilities[1] <- neededrow$class.0[1]
+  probabilities[2] <- neededrow$class.1[1]
+  probabilities[3] <- neededrow$class.2[1]
+  probabilities[4] <- neededrow$class.3[1]
+  probabilities[5] <- neededrow$class.4[1]
+  probabilities[6] <- neededrow$class.5[1]
+  assign(x=paste(species,".cdfs",sep=""), value=probabilities)
+}
+
+bargraph.data <- data.frame(loblolly_pine.cdfs, virginia_pine.cdfs, white_oak.cdfs,sugar_maple.cdfs, striped_maple.cdfs)
+
+shadeclasses <- c("0","1","2","3","4","5")
+row.names(bargraph.data) <- shadeclasses
+bargraph.colors <- c("blue","chocolate","purple","black","red")
+bargraph.legend <- c("Loblolly Pine","Virginia Pine","White Oak","Sugar Maple","Striped Maple")
+barplot(t(as.matrix(bargraph.data)), main="Probability Densities under LAI Ranges",xlab="Shade Class", col= bargraph.colors, legend = bargraph.legend, beside=T, ylim=c(0,1.2))
+```
+
