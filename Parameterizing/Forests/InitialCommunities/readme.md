@@ -5,7 +5,7 @@ March 25, 2019
 
 
 
-> Initial Communities consist of the biomass and age for each species in each grid cell. To accomplish this we synthesized basal area imputation maps (Wilson et al., 2013) with individual forest stand census’s (FIA). Basal area as a total and for each individual species was associated with an individual plot using the a Sorenson’s association, more information on this association testing can be found at https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Forests/InitialCommunities. Individual sites were used to calculate the total biomass and age of each species. Age was calculated using the method by Carmean Hann, and Jacobs (1989) to associate height and site index with age. 
+> The Initial Communities consist of a map and text file of the  the biomass and age for each species in each grid cell.  To accomplish this we synthesized basal area imputation maps (Wilson et al., 2013) with individual forest stand census’s (FIA). Basal area as a total and for each individual species was associated with an individual plot using the a Sorenson’s association, more information on this association testing can be found at https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Forests/InitialCommunities. Individual sites were used to calculate the total biomass and age of each species. Age was calculated using the method by Carmean Hann, and Jacobs (1989) to associate height and site index with age. 
 
 
 
