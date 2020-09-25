@@ -1,0 +1,670 @@
+---
+title: "Generating Baseflow & Stormflow Rasters"
+author: "kj"
+date: "9/23/2020"
+output:
+  html_document:
+    toc: true
+    number_sections: true
+---
+This Rmd explains the data sources and processing to create these rasters for NECN.<br>
+
+# Data Sources 
+## Baseflow Data Sources:<br>
+
+1. An existing baseflow raster
+  + Downloaded here: https://water.usgs.gov/GIS/metadata/usgswrd/XML/bfi48grd.xml
+    + This dataset was simply downloaded and resampled. We did not have an existing baseflow raster.
+
+## Stormflow Data Sources:<br>
+
+1) SSURGO Soils Data 
+  + Downloaded NC, TN, SC, GA here: https://websoilsurvey.sc.egov.usda.gov/App/WebSoilSurvey.aspx
+    + Under "US General Soils Map - STATSGO2" selected states
+  
+2) NLCD Data
+  + Downloaded here: https://www.mrlc.gov/data
+    + Selected 2016 NLCD CONUS
+  
+3) Slope Data
+  + Downloaded here: https://dwtkns.com/srtm/
+    + Selected the 2 90m res tiles that overlap southern Apps AOI
+  
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+
+# Baseflow
+
+```{r}
+library(tidyverse)
+library(raster)
+library(rgdal)
+library(gdalUtils)
+library(gdalUtilities)
+
+
+wd<-"C:\\Users\\thebrain\\Dropbox\\DEAL_lab\\S_Apps_Project\\NECN\\bfi48grd\\bfi48grd\\arctar00000\\bfi48grd"
+#open the downloaded baseflow raster
+dpath<-paste0(wd)#,"\\bfi48grd\\bfi48grd")
+#retrieving driver for adf format
+x <- new("GDALReadOnlyDataset", dpath)
+getDriver(x)
+getDriverLongName(getDriver(x))
+xx<-asSGDF_GROD(x)
+#assign to baseflow object
+baseflow <- raster(xx)
+
+
+#read in ecoreg map to set map criteria (hardcoded this path, but it can be any S.Apps map - just use it
+#as template for extent/res)
+ecoreg <- raster("C:\\Users\\thebrain\\Dropbox\\DEAL_lab\\S_Apps_Project\\Project-Southern-Appalachians-2018\\Models\\LANDIS_Sapps_Active_v1_3\\MR_FourEcoregions.tif")
+
+#creating bounding box around ecoreg raster
+e <- extent(ecoreg)
+
+# coerce to a SpatialPolygons object
+to_crop_to <- as(e, 'SpatialPolygons')  
+
+#declare it's crs (same as ecoreg raster that it was created from)
+crs(to_crop_to)<-crs(ecoreg)
+
+
+#reading this in because cropping makes for much smaller raster handling
+#since reprojecting baseflow raster is time consuming, 
+#set cropping extent polygon to projection of baseflow
+to_crop<-spTransform(to_crop_to,crs(baseflow))
+
+#crop baseflow to a app raster map extents 
+bf_shrink <- crop(baseflow, to_crop)
+
+#now, project the cropped baseflow raster to s.app map project (using ecoreg raster)
+baseflow_utm <- projectRaster(bf_shrink,crs=crs(ecoreg),res=res(ecoreg)[1])
+
+#reasmple for correct resolution, extent
+baseflow_resamp<-resample(baseflow_utm, ecoreg, method="bilinear")
+
+baseflow_resamp
+#summary yields there are no missing values (min&max not NA's)
+
+
+fun <- function(x) { x /100 }
+baseflow_01 <- calc(baseflow_resamp, fun)
+
+#check extent and res match ecoregion map
+extent(baseflow_01)== extent(ecoreg)
+res(baseflow_01) == res(ecoreg)
+
+#write it out
+#writeRaster(baseflow_01,"Baseflow.tif",overwrite=T)
+
+```
+
+# Runoff Coefficient
+
+## Raw Slope Data
+```{r eval= FALSE}
+
+wd<-"C:\\Users\\thebrain\\Dropbox\\DEAL_lab\\S_Apps_Project\\NECN"
+
+
+#read in the DEM data (donwloaded in two tiles)
+dem_south<-raster(paste0(wd,"\\creating_runoff_coefficient\\90mresDEM\\srtm_20_06\\srtm_20_06.tif"))
+dem_north<-raster(paste0(wd,"\\creating_runoff_coefficient\\90mresDEM\\srtm_20_05\\srtm_20_05.tif"))
+
+#merge the dems
+dem<-merge(dem_north,dem_south)
+
+
+#project data to match ecoreg raster (read in above for baseflow - used as template throughout)
+dem_utm <- projectRaster(dem,crs=crs(ecoreg),res=res(ecoreg)[1])
+
+#get extent, res, etc. correct
+dem_resamp<-resample(dem_utm, ecoreg, method="bilinear")
+
+#create outpath
+out_path<-paste0(wd,"\\creating_runoff_coefficient\\dem_utm_resamp.tif")
+#write it out cause it takes awhile
+writeRaster(dem_resamp,out_path,overwrite=TRUE)
+```
+
+### Converting to Percent Slope
+Read in the resampled DEM raster from previous chunk to do operations.
+
+```{r}
+
+#path ro previously created raster
+out_path<-paste0(wd,"\\creating_runoff_coefficient\\dem_utm_resamp.tif")
+
+#read back in 
+dem_forslopecalc<-raster(out_path)
+
+#convert this raster to slope
+slope_degrees<-terrain(dem_forslopecalc, opt= "slope",unit="degrees", neighbors=8)
+
+#function for converting degrees to percent slope
+perc_slope<-function(x){
+   tan(x*pi/180)
+}
+
+#use raster calc to create percentage slope raster using function above
+slope_percent<-calc(slope_degrees, fun=perc_slope)
+
+#write out the percent slope raster
+#writeRaster(slope_percent,"perc_slope.tif")
+
+```
+
+## Raw NLCD Data
+
+```{r, eval=FALSE}
+
+wd<-"C:\\Users\\thebrain\\Dropbox\\DEAL_lab\\S_Apps_Project\\NECN\\creating_runoff_coefficent"
+
+#read in NLCD 
+nlcd <- raster("NLCD_2016_Land_Cover_L48_20190424\\NLCD_2016_Land_Cover_L48_20190424.img")
+
+#create the template extent from standard ecoregion raster
+e <- extent(ecoreg)
+
+#coerce e to a SpatialPolygons object
+to_crop_to <- as(e, 'SpatialPolygons') 
+
+#set the crs the same as ecoreg
+crs(to_crop_to)<-crs(ecoreg)
+
+#project it to match nlcd projection because quicker to project e, crop/resample, then project back
+to_crop<-spTransform(to_crop_to,crs(nlcd))
+
+#crop dem to sapp aoi to make smaller for projecting/resampling raster
+nlcd_shrink <- crop(nlcd, to_crop)
+
+#now project data back to match ecoreg, using ngb method because it is categorical
+nlcd_utm <- projectRaster(nlcd_shrink,crs=crs(ecoreg),res=res(ecoreg)[1],method='ngb')
+
+#and finally, making a smaller nlcd at the correct extent/res for ecoregion
+nlcd_resamp <- resample(nlcd_utm,ecoreg,method="ngb")
+
+#create outpath
+out_path<-paste0(wd,"\\creating_runoff_coefficient\\nlcd_resampled.tif")
+
+#write it out cause it takes awhile
+writeRaster(nlcd_resamp,out_path,overwrite=TRUE)
+
+```
+
+
+### Converting to 3 Forest Classes
+
+There are pixels within our AOI maps that are not designated as forest in 2016 NLCD. WIth LANDIS's assumptions of a forested landscape, we want to convert all landcover within the AOI to forest. Since there are different runoff coefficient implications across types of forest, below I try to assure that each pixel, if not already forested, gets assigned the forest type closest to it. If two forest types are equidistant, the pixel gets assigned to the dominant forest class in the map. 
+
+This process works by setting forest types to NA's, then doing different distance calculations on a per cell basis to each forest type, then stacking those 3 distance rasters and choosing the raster (reflects forest type) with the shortest distance. 
+
+```{r,eval=FALSE}
+
+#reclassifying deciduous forest (everywhere there's a 41, make it NA)
+decid <- reclassify(nlcd_forreclass, cbind(41, NA))
+#reclassifying deciduous forest (everywhere there's a 42, make it NA)
+ever <- reclassify(nlcd_forreclass, cbind(42, NA))
+#reclassifying deciduous forest (everywhere there's a 43, make it NA)
+mix <- reclassify(nlcd_forreclass, cbind(43, NA))
+
+#distance to decid forest NA's 
+decid_dist <- distance(decid) #this takes considerable time
+writeRaster(decid_dist,paste0(wd,"\\creating_runoff_coefficient\\decid_dist.tif")) #so writing it out
+#distance to evergreen forest NA's 
+ever_dist <- distance(ever) #this takes considerable time
+writeRaster(ever_dist,paste0(wd,"\\creating_runoff_coefficient\\ever_dist.tif")) #so writing it out
+#distance to mixed forest NA's 
+mix_dist<- distance(mix)
+writeRaster(mix_dist,paste0(wd,"\\creating_runoff_coefficient\\mix_dist.tif"))
+
+```
+
+
+```{r}
+
+#since above chunk turned to eval=F, reading in the created nlcd raster
+nlcd_forreclass<-raster(out_path)
+
+
+#reading in distance rasters created in above chunk (eval=FALSE)
+#distance to decidious forest NA cells
+decid_dist<-raster(paste0(wd,"\\creating_runoff_coefficient\\decid_dist.tif"))
+#distance to evergreen forest NA cells
+ever_dist<-raster(paste0(wd,"\\creating_runoff_coefficient\\ever_dist.tif"))
+#distance to mixed forest NA cells
+mix_dist<-raster(paste0(wd,"\\creating_runoff_coefficient\\mix_dist.tif"))
+
+#stack up the distance rasters
+s <- stack(decid_dist,mix_dist,ever_dist)
+#name them to keep things straight
+names(s) <- c("decid_dist","mix_dist","ever_dist")
+
+#find the minimum distance (from raster stack) to a given cell
+x<-which.min(s)
+# x_master<-x
+# copy<-x
+
+#where the first raster is the minimum dist, assign class 43 (deciduous forest)
+r1 <- reclassify(x, cbind(1, 43))
+#where the second raster is the minimum dist, assign class 41 (mixed forest)
+#bump by 100 for easier deciphering in the final reclass
+r2<- reclassify(r1 , cbind(2, 141))
+
+#create a reclassification matrix based on the original nlcd valuesd
+#0-40.5 = 0
+#44-100 = 0
+mat<-c(0,40.5,0,43.5,100,0)
+rclmat <- matrix(mat, ncol=3, byrow=TRUE)
+rec_nlcd<-reclassify(nlcd_resamp,rclmat)
+
+
+#change only non-forest values from the original nlcd
+rec_nlcd<-reclassify(nlcd_forreclass,rclmat)
+
+#stack of the forest type reclassified raster, and the reclassified original nlcd
+stack_to_sum<-stack(r2,rec_nlcd)
+#sum them up
+rs1<-calc(stack_to_sum, sum)
+
+#based on the output values and knowing we only want the 3 forest types, reclassify based on the possible combinations
+mat<-c(84,41,85,42,86,43,141,41,182,41,183,42,184,43)
+rclmat <- matrix(mat, ncol=2, byrow=TRUE)
+hopeful<-reclassify(rs1,rclmat)
+
+plot(hopeful,col=c("forest green","dark green","light green"))
+
+out_path<-paste0(wd,"\\creating_runoff_coefficient\\nlcd_forestfilled.tif")
+writeRaster(hopeful,out_path)
+
+```
+
+## Soils Data
+Similar to code developed in Soils.Rmd to handle SSURGO data, but wrote this such that entire workflow is within this RMD. Source of data referenced at top of RMD. 
+
+### Reading in TN, GA, SC, & NC soils shapefiles and tables
+
+This code chunk creates a shapefile where every MUKEY polygon has one of the 12 dominant soil textures assigned to it. 
+
+```{r, eval=FALSE}
+
+#make a list of all the states you want to read in and join data for
+states<-c("NC","TN","GA","SC")
+
+#create empty list to receive list of datasets within loop
+merged<-list()
+
+#iterate through the number of states in the states list above
+for (i in 1:length(states)){
+  #checking loop iteration
+print(i)
+  #get the state in string format to build the file paths below
+state<-states[i]
+
+#go get the states shapefile
+shp<-shapefile(paste0("wss_gsmsoil_",state,"_[2016-10-13]\\wss_gsmsoil_",state,"_[2016-10-13]\\spatial\\gsmsoilmu_a_",state,".shp"))
+
+#got get the states tables, in this case, want the :
+
+#table and their fields of interest for join
+#1)component = mukey
+#2)chorizon = cokey
+#3)chtexturegrp = chkey
+#4)chtexture = chtgkey
+
+#state<-"GA" #used this to test the loop
+
+component<-paste0("wss_gsmsoil_",state,"_[2016-10-13]\\wss_gsmsoil_",state,"_[2016-10-13]\\tabular\\comp.txt")
+cokey<-paste0("wss_gsmsoil_",state,"_[2016-10-13]\\wss_gsmsoil_",state,"_[2016-10-13]\\tabular\\chorizon.txt")
+chkey<-paste0("wss_gsmsoil_",state,"_[2016-10-13]\\wss_gsmsoil_",state,"_[2016-10-13]\\tabular\\chtexgrp.txt")
+
+#could be hte chtext table
+chtgkey<-paste0("wss_gsmsoil_",state,"_[2016-10-13]\\wss_gsmsoil_",state,"_[2016-10-13]\\tabular\\chtextur.txt")
+
+### testing
+#used this to look at a specific state table out of a loop
+# testing_tab<-"wss_gsmsoil_NC_[2016-10-13]\\wss_gsmsoil_NC_[2016-10-13]\\tabular\\chorizon.txt"
+# tab_test<-as.data.frame(read.table(testing_tab,sep="|",header=FALSE))
+#####Reading in soils tables, will merge once everything is read in 
+### finished testing
+
+###Read in the component table
+#get the table information from the text file
+tab_mukey<-as.data.frame(read.table(component,sep="|",header=FALSE))
+tab_cokey<-as.data.frame(read.table(cokey,sep="|",header=FALSE))
+tab_chkey<-as.data.frame(read.table(chkey,sep="|",header=FALSE))
+tab_chtgkey<-as.data.frame(read.table(chtgkey,sep="|",header=FALSE))
+
+#the table data is messy and doesnt read in with column headers, but
+# i know i want the MUKEY (based the format) and the columns that specify A,B,C,D
+tab_mukey<-tab_mukey[,c(length(tab_mukey)-1,length(tab_mukey))]
+tab_cokey<-tab_cokey[,c(length(tab_cokey)-1,length(tab_cokey))]
+tab_chkey<-tab_chkey[,c(length(tab_chkey)-1,length(tab_chkey))]
+tab_chtgkey<-tab_chtgkey[,c(1,length(tab_chtgkey)-1,length(tab_chtgkey))]
+
+
+#set the column names to join to the spatial data by
+
+#set mukey 
+names(tab_mukey)<-c("MUKEY","COKEY")
+#set cokey
+names(tab_cokey)<-c("COKEY","CHKEY")
+#names(tab_cokey)[length(names(tab_cokey))-1]<-"MUKEY"
+#set chkey
+names(tab_chkey)<-c("CHKEY","CHTGKEY")
+#names(tab_chkey)[length(names(tab_chkey))-2]<-"soil_text"
+#names(tab_cokey)[length(names(tab_cokey))-1]<-"COKEY"
+names(tab_chtgkey)<-c("soil_text","CHTGKEY","CHKEY")
+
+
+#### MERGING SOILS TABLE WITH SHAPEFILE DATA
+#merge the 3 tables first
+muk_cok<-merge(tab_mukey,tab_cokey,"COKEY")
+muk_cok_chkey<-merge(muk_cok,tab_chkey,"CHKEY")
+muk_cok_ch_chtg<-merge(muk_cok_chkey,tab_chtgkey,"CHTGKEY")
+
+
+#then merge single table with shapefile
+#assign the new output spatial data to a list variable
+merged[i]<-merge(shp,muk_cok_ch_chtg,key="MUKEY",duplicateGeoms=TRUE)
+
+}
+
+
+#merge shapefiles in list, to create one master shapefile
+all_states1<-rbind(merged[[1]],merged[[2]],merged[[3]],merged[[4]])
+
+#create copy so no need to remake shapefile as I iterated on this process
+all_states<-all_states1
+
+#clean up the soil textures, removing na's and blanks
+all_states<-all_states[!is.na(all_states$soil_text),]
+all_states<-all_states[all_states$soil_text!="",]
+
+
+#soil type lookup table, want only the main descriptors
+textures_toedit<-unique(all_states$soil_text)
+
+#have to change some of the terminology to map to the appropriate, existing soil texture name
+all_states$soil_text[all_states$soil_text=="Fine sandy loam"]<-"Sandy loam"
+all_states$soil_text[all_states$soil_text=="Very fine sandy loam"]<-"Sandy loam"
+all_states$soil_text[all_states$soil_text=="Coarse sandy loam"]<-"Sandy loam"
+all_states$soil_text[all_states$soil_text=="Loamy coarse sand"]<-"Loamy sand"
+all_states$soil_text[all_states$soil_text=="Loamy fine sand"]<-"Loamy sand"
+all_states$soil_text[all_states$soil_text=="Coarse sand"]<-"Sand"
+all_states$soil_text[all_states$soil_text=="Fine sand"]<-"Sand"
+
+#make sure textures are in ascending order of runoff!
+#make sure all textures are mapped to one of the representative 12 textures 
+textures_toedit<-unique(all_states$soil_text)
+
+#assign them values (integers to rasterize)
+soil_drain_value<-c(9,11,12,8,3,10,7,4,5,1,2,6)
+
+#now, replace everywhere in the dataframe where the 12 texture exist with numbers
+#create a table to merge (has soil text, and drain values to average)
+my_lookup<-as.data.frame(cbind(textures_toedit,as.numeric(soil_drain_value)))
+
+
+#name columns correctly so merge will work
+names(my_lookup)<-c("soil_text","drain_value_toavg")
+my_lookup$drain_value_toavg<-as.integer(my_lookup$drain_value_toavg)
+
+#my_lookup<-my_lookup[order(my_lookup$drain_value_toavg),]
+
+#want to select a single row for each MUKEY, then remove all other columns
+#this serves as the basis for the join
+just_mukey<-all_states[,"MUKEY"]
+all_states2<- aggregate(just_mukey, "MUKEY") #aggregate function is super useful for polygons!
+
+#selecting dominant soil texture per MUKEY polygon, since it is a many to one relationship
+all_states_bymuk <- 
+  
+  all_states@data %>%                    # take the data.frame "data"  # Using "data", filter out all rows with NAs in aa 
+  group_by(MUKEY,soil_text) %>%          # Then, with the filtered data, group it by "bb"
+  add_tally(sort=TRUE) %>%
+  group_by(MUKEY)%>%
+  slice(1)# Now summarise with unique elements per group
+
+#join!
+joined<-merge(all_states2,all_states_bymuk,by="MUKEY",duplicateGeoms=F)
+
+
+#NOW, need to rasterize the vector
+#reproject shapefile to match ecoreg raster
+all_states_proj3<- spTransform(joined,
+crs(ecoreg))
+
+#only want MUKEY id and soil_texture
+all_states_proj<-all_states_proj3[,c(1,8)]
+colnames(all_states_proj@data)<-c("MUKEY","soil_text")
+
+out_path<-paste0(wd,"\\creating_runoff_coefficient\\with_simple_text5.shp")
+
+#write out to shapefile for safe keeping
+shapefile(all_states_proj,out_path,overwrite=TRUE)
+
+```
+
+### Converting created soils shapefile to raster
+
+Now, for use in the runoff coefficient, we need to rasterize the shapefile. 
+
+```{r, eval=FALSE}
+
+require(sf)
+require(rgeos)
+require(rgdal)
+library(fasterize)
+
+#create empty raster
+r<-raster()
+#set the crs, extent, and resolution
+crs(r)<-crs(ecoreg)
+extent(r)<-extent(ecoreg)
+res(r)<-res(ecoreg)
+
+#read in shapefile created above
+all_states_proj<-shapefile(out_path)
+
+#reassignmnt to save backtracking objects while troubleshooting
+all_states_proj4<-all_states_proj
+
+
+#need to create factor levels to rasterize
+all_states_proj4$soil_fact<-factor(all_states_proj4$soil_text)
+levels(all_states_proj4$soil_fact) <- 1:11
+all_states_proj4$soil_int<-as.numeric(all_states_proj4$soil_fact)
+
+#convert to sf object to rasterize
+shp <- st_as_sf(all_states_proj4)
+
+# rasetrize and write
+r.fas <- fasterize(shp, r, field = "soil_int")
+
+out_path<-paste0(wd,"\\creating_runoff_coefficient\\fasterize_filename3.tif")
+writeRaster(r.fas, out_path, format="GTiff", overwrite=TRUE)
+
+
+
+# code below is just testing which of the soils values exist in our AOI, instead of the entire map
+# soil values were of use when creating lookup tables in the final step to assign runoff coefficient values
+
+
+#read in dissolved aoi for masking
+diss_aoi<-shapefile("C:\\Users\\thebrain\\Dropbox\\DEAL_lab\\S_Apps_Project\\diss_aoi\\buffered3.shp")
+#clip raster to AOI to determine what soils are in area, this will inform how many dimensions i need in the final table
+soils_inaoi<-raster::mask(r.fas,diss_aoi)
+
+table(getValues(soils_inaoi))
+
+#values 1,2,3,7,8,9,10,11 are left...
+#determine which original values these map back to
+
+#1 = Clay
+#2 = Clay loam
+#3 = Loam
+#7 = Sandy clay loam
+#8 = Sandy Loam
+#9 = Silt loam
+#10 = Silty clay
+#11 = Silty clay loam
+
+```
+
+# Creating Runoff Coeefficint Raster
+
+This code chunk stacks the rasters generated above (slope, nlcd, and soils), then assigns runoff coeffiecient values based on a lookup table. Lookup table from this pub: 
+
+Y. B. Liu and F. D. Smedt, “WetSpa Extension, A GIS-based Hydrologic Model for Flood Prediction and Watershed Management,” p. 126.
+
+
+```{r}
+
+#read in soils raster created above 
+soils<-raster(out_path)
+
+#make sure rasters are stacked: 
+#r1 = soil
+#r2 = nlcd
+#r3 = slope
+st<-stack(soils,hopeful,slope_percent)
+
+```
+
+The lookup table bases the runoff coefficient values on slope and soil type. From other literature, the general difference between forest type, all other conditions equal is ~0.02. Below are matrices create for each forest type, with soil type and slope, with an adjustment of + 0.2 for evergreen forest (more runoff) and -0.02 for deciduous forest (less runoff), all relative to mixed forest. 
+
+```{r}
+#the nlcd values should be just a tweak up or down 
+#in the overall raster calculation, since all forested
+#refer to the paper for reclassification methods
+
+#for the soils raster, these are the soils associated with values
+
+#1 = Clay
+#2 = Clay loam
+#3 = Loam
+#7 = Sandy clay loam
+#8 = Sandy Loam
+#9 = Silt loam
+#10 = Silty clay
+#11 = Silty clay loam
+
+#need to adjust matrice indexing below so only loop through the above soil types
+
+#hence making 3 different matrices for forest cover type
+mixed_forest_0.5<-c(0.03,0.07,0.10,0.13,0.17,0.20,0.23,0.27,0.30,0.33,0.37,0.40)
+mixed_forest_0.5to5<-mixed_forest_0.5+0.04
+mixed_forest_5to10<-mixed_forest_0.5to5+0.06
+mixed_forest_10to25<-mixed_forest_5to10+0.12
+mixed_forest_25andup<-mixed_forest_10to25+0.14
+
+mixed_forest_mat<-matrix(c(mixed_forest_0.5,mixed_forest_0.5to5,mixed_forest_5to10,mixed_forest_10to25,mixed_forest_25andup),nrow=5,ncol=12)
+
+decid_forest_0.5<-mixed_forest_0.5 - 0.02
+decid_forest_0.5to5<-mixed_forest_0.5to5 - 0.02
+decid_forest_5to10<-mixed_forest_5to10 - 0.02
+decid_forest_10to25<-mixed_forest_10to25 - 0.02
+decid_forest_25andup<-mixed_forest_25andup - 0.02
+
+decid_forest_mat<-matrix(c(decid_forest_0.5,decid_forest_0.5to5,decid_forest_5to10,decid_forest_10to25,decid_forest_25andup),nrow=5,ncol=12)
+
+ever_forest_0.5<-mixed_forest_0.5 + 0.02
+ever_forest_0.5to5<-mixed_forest_0.5to5 + 0.02
+ever_forest_5to10<-mixed_forest_5to10 + 0.02
+ever_forest_10to25<-mixed_forest_10to25 + 0.02
+ever_forest_25andup<-mixed_forest_25andup + 0.02
+
+ever_forest_mat<-matrix(c(ever_forest_0.5,ever_forest_0.5to5,ever_forest_5to10,ever_forest_10to25,ever_forest_25andup),nrow=5,ncol=12)
+
+```
+
+Once the matrices are created, the final raster is generated by looping through these forest type matrices and assigning values to each cell. 
+
+```{r}
+
+### now for conditionals to create final raster
+final<-raster()
+extent(final)<-extent(ecoreg)
+res(final)<-res(ecoreg)
+crs(final)<-crs(ecoreg)
+
+r1=st[[1]]
+r2=st[[2]]
+r3=st[[3]]
+
+forest_vals<-c(41,42,43)
+forest_mat<-list(mixed_forest_mat,decid_forest_mat,ever_forest_mat)
+
+for (i in 1:length(forest_vals)){
+  
+  for_val<-forest_vals[i]
+  for_mat<-forest_mat[[i]]
+  
+###clay (column 12 in matrix) & value 1 in soil raster, mixed forest value 42 nlcd
+final[r1== 1 & r2==for_val & r3<0.5] <- for_mat[1,12]
+final[r1== 1 & r2==for_val & (0.5<=r3 & r3<5)] <- for_mat[2,12]
+final[r1== 1 & r2==for_val & (5<=r3 & r3<10) ] <- for_mat[3,12]
+final[r1== 1 & r2==for_val & (10<=r3 & r3<25)] <- for_mat[4,12]
+final[r1== 1 & r2==for_val & (25<=r3 & r3<100)] <- for_mat[5,12]
+
+###clay loam (column 8 in matrix) & value 2 in soil raster, mixed forest value 42 nlcd
+final[r1==2  & r2==for_val & r3<0.5] <- for_mat[1,8]
+final[r1==2  & r2==for_val & (0.5<=r3 & r3<5)] <- for_mat[2,8]
+final[r1==2   & r2==for_val & (5<=r3 & r3<10) ] <- for_mat[3,8]
+final[r1==2   & r2==for_val & (10<=r3 & r3<25)] <- for_mat[4,8]
+final[r1==2  & r2==for_val & (25<=r3 & r3<100)] <- for_mat[5,8]
+
+###loam (column 4 in matrix) & value 3 in soil raster, mixed forest value 42 nlcd
+final[r1==3  &  r2==for_val & r3<0.5] <- for_mat[1,4]
+final[r1==3 &  r2==for_val & (0.5<=r3 & r3<5)] <- for_mat[2,4]
+final[r1==3  &  r2==for_val & (5<=r3 & r3<10)] <- for_mat[3,4]
+final[r1==3 &  r2==for_val & (10<=r3 & r3<25)] <- for_mat[4,4]
+final[r1==3 &  r2==for_val & (25<=r3 & r3<100)] <- for_mat[5,4]
+
+###sandy loam (column 3 in matrix) & value 8 in soil raster, mixed forest value 42 nlcd
+final[r1==8  &  r2==for_val & r3<0.5] <- for_mat[1,3]
+final[r1==8  &  r2==for_val & (0.5<=r3 & r3<5)] <- for_mat[2,3]
+final[r1==8  &  r2==for_val & (5<=r3 & r3<10)] <- for_mat[3,3]
+final[r1==8  &  r2==for_val & (10<=r3 & r3<25)] <- for_mat[4,3]
+final[r1==8  &  r2==for_val & (25<=r3 & r3<100)] <- for_mat[5,3]
+
+###sandy loam (column 3 in matrix) & value 8 in soil raster, mixed forest value 42 nlcd
+final[r1==8  &  r2==for_val & r3<0.5] <- for_mat[1,3]
+final[r1==8  &  r2==for_val & (0.5<=r3 & r3<5)] <- for_mat[2,3]
+final[r1==8  &  r2==for_val & (5<=r3 & r3<10)] <- for_mat[3,3]
+final[r1==8  &  r2==for_val & (10<=r3 & r3<25)] <- for_mat[4,3]
+final[r1==8  &  r2==for_val & (25<=r3 & r3<100)] <- for_mat[5,3]
+
+###silt loam (column 5 in matrix) & value 9 in soil raster, mixed forest value 42 nlcd
+final[r1==9 &  r2==for_val & r3<0.5] <- for_mat[1,11]
+final[r1==9  &  r2==for_val & (0.5<=r3 & r3<5)] <- for_mat[2,5]
+final[r1==9 &  r2==for_val & (5<=r3 & r3<10) ] <- for_mat[3,5]
+final[r1==9  &  r2==for_val & (10<=r3 & r3<25)] <- for_mat[4,5]
+final[r1==9  &  r2==for_val & (25<=r3 & r3<100)] <- for_mat[5,5]
+
+###silty clay (column 11 in matrix) & value 10 in soil raster, mixed forest value 42 nlcd
+final[r1==10  &  r2==for_val & r3<0.5] <- for_mat[1,11]
+final[r1==10 &  r2==for_val & (0.5<=r3 & r3<5)] <- for_mat[2,11]
+final[r1==10  &  r2==for_val & (5<=r3 & r3<10) ] <- for_mat[3,11]
+final[r1==10 &  r2==for_val & (10<=r3 & r3<25)] <- for_mat[4,11]
+final[r1==10  &  r2==for_val & (25<=r3 & r3<100)] <- for_mat[5,11]
+
+###Silty clay loam (column 9 in matrix) & value 11 in soil raster, mixed forest value 42 nlcd
+final[r1==11 &  r2==for_val & r3<0.5] <- for_mat[1,9]
+final[r1==11 &  r2==for_val & (0.5<=r3 & r3<5)] <- for_mat[2,9]
+final[r1==11 &  r2==for_val & (5<=r3 & r3<10)] <- for_mat[3,9]
+final[r1==11 &  r2==for_val & (10<=r3 & r3<25)] <- for_mat[4,9]
+final[r1==11&  r2==for_val & (25<=r3 & r3<100)] <- for_mat[5,9]
+}
+
+plot(final)
+
+out_path<-paste0(wd, "\\creating_runoff_coefficient\\Stormflow.tif")
+writeRaster(final,out_path)
+
+```
