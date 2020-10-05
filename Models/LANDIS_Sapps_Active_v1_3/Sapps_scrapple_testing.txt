@@ -5,7 +5,7 @@ LandisData  "SCRAPPLE"
 
 Timestep                            1
 >>This is just the number one 
-AccidentalIgnitionsMap  ./One_even.tif << CG needs updated map. 
+AccidentalIgnitionsMap  ./HA_ignitions.tif << CG needs updated map. 
 LightningIgnitionsMap   ./VHRAC_Lightning.tif
 
 >>Rx Ignitions
