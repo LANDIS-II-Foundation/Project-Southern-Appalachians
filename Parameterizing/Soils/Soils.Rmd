@@ -766,7 +766,7 @@ w_dir<-"Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/"
 
 ```{r}
 
-Altered<-raster(paste(w_dir,"Deadwood/Warp.tif",sep=""))
+Altered<-raster(paste("C:/Users/zacha/Documents/GitHub/Project-Southern-Appalachians-2018/Parameterizing/Soils/DeadWood_TotalCarbon.tif",sep=""))
 #print(thefiles)
 ICTemplate<- raster(paste(w_dir,"Cleaning/Proc_InitialCommunities.img",sep=""))
 

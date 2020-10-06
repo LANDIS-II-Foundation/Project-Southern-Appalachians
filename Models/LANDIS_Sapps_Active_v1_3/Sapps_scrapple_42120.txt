@@ -86,9 +86,9 @@ LadderFuelSpeciesList
 SuppressionMaxWindSpeed 100
 SuppressionTable  << Currently must be entered in this exact order
 >>Type		FWI1	FWI2	Lo	Md	High-Effectiveness
-Accidental	20	40	10	10	0
-Lightning	20	40	10	10	0
-Rx		    0	0	0	0	0
+Accidental	20	40	5	65	95
+Lightning	20	40	5	65	95
+Rx		    0	0	5	65	95
 
 DeadWoodTable
 

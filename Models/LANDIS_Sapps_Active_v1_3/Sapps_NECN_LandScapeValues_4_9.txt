@@ -10,8 +10,8 @@ ClimateConfigFile 	climate-generator-baseline.txt
 
 SoilDepthMapName			Depth_91120.tif
 SoilDrainMapName			Drain_50119.tif
-SoilBaseFlowMapName			Baseflow.tif
-SoilStormFlowMapName			Stormflow.tif
+SoilBaseFlowMapName			MR_Stormflow.tif
+SoilStormFlowMapName			MR_Stormflow.tif
 SoilFieldCapacityMapName		FeildCap_83120.tif
 SoilWiltingPointMapName			WiltPoint83120.tif
 SoilPercentSandMapName			Sand_42919.tif
@@ -24,8 +24,8 @@ InitialSOM2CMapName			SOM2Cmap_50119.tif
 InitialSOM2NMapName			SOM2Nmap_50119.tif
 InitialSOM3CMapName			SOM3Cmap_50119.tif
 InitialSOM3NMapName			SOM3Nmap_50119.tif
-InitialDeadWoodSurfaceMapName	Deadwood_wood_41919.tif
-InitialDeadCoarseRootsMapName	Deadwood_root_41919.tif
+InitialDeadWoodSurfaceMapName	Deadwood_woodv_1_2.tif
+InitialDeadCoarseRootsMapName	Deadwood_rootv_1_2.tif
 
 
 
@@ -41,12 +41,11 @@ InitialFineFuels 			0.1  << a fraction 0-1.0 of dead wood.
 AtmosphericNSlope			0.0016 << Values from ashville
 AtmosphericNIntercept		0.2626 << .1626 from ashville +1.0 lichen correction ratio
 Latitude					36.0
-DenitrificationRate	         0.0610
-DecayRateSurf            9.9
-DecayRateSOM1           9.9
-DecayRateSOM2           .0170
-DecayRateSOM3          0.0000001
-
+DenitrificationRate	0.061
+DecayRateSurf	9.8187
+DecayRateSOM1	5.2687
+DecayRateSOM2	0.0082
+DecayRateSOM3	8.510014003020457e-08
 
 MaximumLAI
 

@@ -95,7 +95,7 @@ StandRanking  Economic
 		QuerStel	 100             60
 		QuerVelu	 100             60
     MinimumAge 60 
-	SiteSelection CompleteStand
+	SiteSelection Complete
 	>>Priority PatchSize
 	CohortsRemoved	SpeciesList
 	>> Species	Selection
@@ -154,7 +154,7 @@ StandRanking  Economic
 		QuerStel	 10             60
 		QuerVelu	 10             60
     MinimumAge 50 
-	SiteSelection CompleteStand
+	SiteSelection Complete
 	>>Priority PatchSize
 	CohortsRemoved	SpeciesList
 	>> Species	Selection
@@ -212,16 +212,16 @@ StandRanking  Economic
 
 >> Federal	
 >> State
-	2		EconomicHarvest  .4% 0
+	2		SelectiveOakHarvest  .4% 0
 >> Local    	
 >> Family	
-	4 		EconomicHarvest  .5% 0
+	4 		SelectiveOakHarvest  .5% 0
 >>Corporate	
-	5		EconomicHarvest 1.42% 0
+	5		SelectiveOakHarvest 1.42% 0
 >>Other Private
-	6		EconomicHarvest	 .25% 0
+	6		SelectiveOakHarvest	 .25% 0
 >>Tribal
-	7                EconomicHarvest  .2% 0
+	7               SelectiveOakHarvest .2% 0
 >>Outside	
 
 
