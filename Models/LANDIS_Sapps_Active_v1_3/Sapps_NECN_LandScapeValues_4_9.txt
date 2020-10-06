@@ -10,8 +10,8 @@ ClimateConfigFile 	climate-generator-baseline.txt
 
 SoilDepthMapName			Depth_91120.tif
 SoilDrainMapName			Drain_50119.tif
-SoilBaseFlowMapName			MR_Stormflow.tif
-SoilStormFlowMapName			MR_Stormflow.tif
+SoilBaseFlowMapName			Baseflow.tif
+SoilStormFlowMapName			Stormflow_100620.tif
 SoilFieldCapacityMapName		FeildCap_83120.tif
 SoilWiltingPointMapName			WiltPoint83120.tif
 SoilPercentSandMapName			Sand_42919.tif
