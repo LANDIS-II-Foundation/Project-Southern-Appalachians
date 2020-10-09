@@ -71,18 +71,26 @@ res(rast)<-1000 #choose to rasterize at 1km  scale because you get higher igniti
 #rasterize the ignition count to the raster we created just above
 ha_surf<-rasterize(fires_inextent,rast,fun="count")
 
-
+#get rid of NAs
 ha_surf[is.na(ha_surf)]<-0
-# ha_norm[is.na(ha_norm)]<-0
-# ha_scale[is.na(ha_scale)]<-0
 
-agg1000_then250scale<-resample(ha_surf,aoi)
+#disaggregate the data without interpolation
+agg1000_thendis250<-disaggregate(ha_surf, fact=4)
 
-ha_scale<-rescale0to1(agg1000_then250scale)
+#scale the data from 0 to 1
+ha_scale<-rescale0to1(agg1000_thendis250)
 
-ha_scale[ha_scale==0]<-0.05
+#can't have 0 values, so want to just barely assign the mimnimum value
+ha_scale[ha_scale==0]<-0.01
 
-writeRaster(ha_scale,"agg1000_then250_test4.tif",overwrite=T)
+#resample to get to correct study area raster specs
+test<-resample(ha_out,aoi,method="bilinear")
+
+#round it and multiple by 100
+ha_out<-round(test,3)*100 #multiple by 100 because it's a relative weight
+
+#write it out
+writeRaster(ha_out,"HA_ign.tif",overwrite=T)
 
 
 
