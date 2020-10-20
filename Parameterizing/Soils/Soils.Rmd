@@ -813,26 +813,27 @@ output_matrix<-matrix(root$Input,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaste
 
 new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
 
-new_output_file_name<-paste(w_dir,"Cleaning/Final/Deadwood_root.tif",sep="")
+new_output_file_name<-paste("C:/Users/zacha/Documents/GitHub/Project-Southern-Appalachians-2018/Parameterizing/Soils/Deadwood_rootv_1_2.tif",sep="")
 rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)#Th
 
 output_matrix<-matrix(wood$Input,nrow=nrow(ExampleRaster),ncol=ncol(ExampleRaster),byrow=T) #fir
 new_output_raster<-raster(output_matrix,xmn=xmin(ExampleRaster),ymn=ymin(ExampleRaster),xmx=xmax(ExampleRaster),ymx=ymax(ExampleRaster), crs=proj)
 
-new_output_file_name<-paste(w_dir,"Cleaning/Final/Deadwood_wood.tif",sep="")
+new_output_file_name<-paste("C:/Users/zacha/Documents/GitHub/Project-Southern-Appalachians-2018/Parameterizing/Soils/Deadwood_woodv_1_2.tif",sep="")
 rast_IC_map<-writeRaster(new_output_raster, filename=new_output_file_name, datatype='FLT4S',overwrite=TRUE)#Th
 ```
 
 
 ```{r, fig.height=10.0,fig.width=12.0,align="center"}
+library(RColorBrewer)
 Ramp<-brewer.pal(9,"YlOrBr")
 
 map<-"Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/Final/Deadwood_wood.tif"
 
-par(mfrow=c(1,2))
+par(mfrow=c(1,1))
 Im1<-raster(map)
 mv<-max(matrix(Im1))
-plot(Im1,zlim=c(0,mv),main="Deadwood Biomass",col=Ramp)
+plot(Im1,zlim=c(1000,mv),main="Deadwood Biomass",col=Ramp)
 map<-"Z:/Robbins/Sapps/Model_Prep/Sapps_maps_2_18/Cleaning/Final/Deadwood_root.tif"
 
 

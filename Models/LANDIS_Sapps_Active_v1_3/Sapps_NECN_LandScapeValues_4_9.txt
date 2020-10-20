@@ -16,10 +16,10 @@ SoilFieldCapacityMapName		FeildCap_83120.tif
 SoilWiltingPointMapName			WiltPoint83120.tif
 SoilPercentSandMapName			Sand_42919.tif
 SoilPercentClayMapName			Clay_42919.tif
-InitialSOM1CsurfMapName			SOM1soilNmap_v1_1.tif
+InitialSOM1CsurfMapName			SOM1surfcmap_v1_1.tif
 InitialSOM1NsurfMapName			SOM1surfNmap_v1_1.tif
 InitialSOM1CsoilMapName			SOM1soilCmap_50119.tif
-InitialSOM1NsoilMapName			SOM2Nmap_v1_1.tif
+InitialSOM1NsoilMapName			SOM1soilNmap_v1_1.tif
 InitialSOM2CMapName			SOM2Cmap_50119.tif
 InitialSOM2NMapName			SOM2Nmap_50119.tif
 InitialSOM3CMapName			SOM3Cmap_50119.tif
@@ -139,12 +139,12 @@ FunctionalGroupParameters
 >> Name		Index	PPDF1	PPDF2	PPDF3	PPDF4	FCFRAC	BTOLAI	KLAI	MAXLAI	PPRPTS2	PPRPTS3	Wood	Monthly	Mort	Drop
 >> 			 		T-Mean	T-Max	T-shape	T-shape	leaf	DecayR	WoodMort Shape	Month	CRFrac										FRFrac
 
-Abies	1	17.0	20.0	4.0	6.0	0.2	-0.8	800	9	1.0	.3	.1	0.002	10	9	0.1	0.1
+Abies		1	17.0	20.0	4.0	6.0	0.2	-0.8	800	9	1.0	.3	.1	0.002	10	9	0.1	0.1
 SConifer	2	23.0	35.0	2.005	6.0	0.48	-0.9	3000	14	1.0	.9	.1	0.006	15	7	0.2	0.2
 Nconifer	3	16.0	25.0	4.0	9.0	0.48	0.3	2000	10	1	0.5	.1	0.002	15	7	0.2	0.2
-NHW	4	16.0	27.0	4.5	9.6	0.48	-0.9	750	6.5	1.0	.6	.1	0.002	10	9	0.1	0.1
+NHW		4	16.0	27.0	4.5	9.6	0.48	-0.9	750	6.5	1.0	.6	.1	0.002	10	9	0.1	0.1
 SHW		5	22.7	30.5	5.0	10.0	0.3	-0.9	1350	10.5	.9	.9	.1	0.002	10	9	0.1	0.1
-Swampy	6	17.0	25.0	3.2	5.0	0.3	-0.9	1000	8	0.9	0.4	.1	0.002	10	9	0.1	0.1
+Swampy		6	17.0	25.0	3.2	5.0	0.3	-0.9	1000	8	0.9	0.4	.1	0.002	10	9	0.1	0.1
 
 
 FireReductionParameters
