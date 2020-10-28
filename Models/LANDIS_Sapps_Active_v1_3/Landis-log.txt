@@ -1,0 +1,48 @@
+2020-10-28 09:09:54,839 - LANDIS-II 7.0 (7)
+2020-10-28 09:09:54,850 - 
+2020-10-28 09:09:54,931 - Loading scenario from file "scenario_landscape.txt" ...
+2020-10-28 09:09:55,011 - Initialized random number generator with seed = 3,452,799,056
+2020-10-28 09:09:55,011 - Loading species data from file "species_SApps_updated7_5.txt" ...
+2020-10-28 09:09:55,038 - Loading ecoregions from file "./ecoregions_Sapps_11.txt" ...
+2020-10-28 09:09:55,056 - Initializing landscape from ecoregions map "./11_Ecoregions.tif" ...
+2020-10-28 09:09:55,072 - Cell length = 250 m, cell area = 6.25 ha
+2020-10-28 09:09:55,074 - Map dimensions: 1,050 rows by 1,334 columns = 1,400,700 cells
+2020-10-28 09:09:55,296 - Sites: 454,548 active (32.5%), 946,152 inactive (67.5%)
+2020-10-28 09:09:55,633 - Loading NECN Succession extension ...
+2020-10-28 09:09:55,724 -    Registering Data:  Succession.LeafBiomassCohorts.
+2020-10-28 09:09:55,725 -    Registering Data:  Succession.AgeCohorts.
+2020-10-28 09:09:55,725 -    Registering Data:  Succession.BiomassCohorts.
+2020-10-28 09:09:55,725 -    Registering Data:  Succession.FineFuels.
+2020-10-28 09:09:55,725 -    Registering Data:  Succession.SmolderConsumption.
+2020-10-28 09:09:55,725 -    Registering Data:  Succession.FlamingConsumption.
+2020-10-28 09:09:55,726 -    Registering Data:  Succession.CWD.
+2020-10-28 09:09:59,282 -    Begin parsing NECN SPECIES table.
+2020-10-28 09:09:59,288 -    Begin parsing FUNCTIONAL GROUP table.
+2020-10-28 09:09:59,292 -    Begin reading FIRE REDUCTION parameters.
+2020-10-28 09:09:59,293 -    Begin reading HARVEST REDUCTION parameters.
+2020-10-28 09:09:59,299 - Initializing NECN Succession ...
+2020-10-28 09:09:59,351 -   Read in data from Depth_91120.tif
+2020-10-28 09:09:59,691 -   Read in data from Drain_50119.tif
+2020-10-28 09:10:00,022 -   Read in data from Baseflow.tif
+2020-10-28 09:10:00,378 -   Read in data from Stormflow_1020.tif
+2020-10-28 09:10:00,702 -   Read in data from FeildCap_83120.tif
+2020-10-28 09:10:01,018 -   Read in data from WiltPoint83120.tif
+2020-10-28 09:10:01,367 -   Read in data from Sand_42919.tif
+2020-10-28 09:10:01,680 -   Read in data from Clay_42919.tif
+2020-10-28 09:10:02,000 -   Read in data from SOM1surfcmap_v1_1.tif
+2020-10-28 09:10:02,357 -   Read in data from SOM1surfNmap_v1_1.tif
+2020-10-28 09:10:02,709 -   Read in data from SOM1soilCmap_50119.tif
+2020-10-28 09:10:03,083 -   Read in data from SOM1soilNmap_v1_1.tif
+2020-10-28 09:10:03,432 -   Read in data from SOM2Cmap_50119.tif
+2020-10-28 09:10:03,920 -   Read in data from SOM2Nmap_50119.tif
+2020-10-28 09:10:04,459 -   Read in data from SOM3Cmap_50119.tif
+2020-10-28 09:10:04,839 -   Read in data from SOM3Nmap_50119.tif
+2020-10-28 09:10:05,200 -   Read in data from Deadwood_woodv_1_2.tif
+2020-10-28 09:10:05,747 -   Read in data from Deadwood_rootv_1_2.tif
+2020-10-28 09:10:06,323 -    Loading weather data ...
+2020-10-28 09:13:34,114 -    Registering Data:  TimeOfLastSuccession.
+2020-10-28 09:13:34,116 -    Registering Data:  Shade.
+2020-10-28 09:13:34,118 -    Creating Dispersal Neighborhood List.
+2020-10-28 09:13:34,119 -    Dispersal:  NeighborRadius=5125, CellLength=250, numCellRadius=20
+2020-10-28 09:13:34,702 -    Loading initial communities from file "./IC_3_26.txt" ...
+2020-10-28 09:13:34,839 -    Reading initial communities map "./MR_InitialCommunity_2_18.tif" ...
