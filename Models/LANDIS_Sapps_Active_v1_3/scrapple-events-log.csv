@@ -1,5 +1,0 @@
-EventID,SimulationYear,InitRow,InitColumn,InitialFireWeatherIndex,InitialDayOfYear,MaximumSpreadArea,IgnitionType,NumberOfDays,TotalSitesBurned,CohortsKilled,MeanWindSpeed,MeanEffectiveWindSpeed,MeanWindDirection,MeanSuppressionEffectiveness,MeanFWI,MeanSpreadProbability,MeanSeverity,TotalBiomassMortality,NumberCellsSeverity1,NumberCellsSeverity2,NumberCellsSeverity3,PercentsCellsIntensityFactor1,PercentsCellsIntensityFactor2,PercentsCellsIntensityFactor3,
-1, 1, 330, 772, 11.2289570273737, 81, 215, Accidental, 1, 1, 9, 32.77197, 31.7471328360624, 35.867094, NaN, 11.23, NaN, 1, 1676, 1, 0, 0, 0, 0, 0, 
-2, 1, 328, 772, 11.2289570273737, 81, 215, Accidental, 1, 1, 0, 32.77197, 31.0703035283103, 35.867094, NaN, 11.23, NaN, 1, 0, 1, 0, 0, 0, 0, 0, 
-3, 1, 330, 770, 11.2289570273737, 81, 215, Accidental, 1, 1, 1, 32.77197, 33.1510720697933, 35.867094, NaN, 11.23, NaN, 1, 548, 1, 0, 0, 0, 0, 0, 
-4, 1, 328, 770, 11.2289570273737, 81, 215, Accidental, 1, 2, 12, 32.77197, 30.8372538697548, 35.867094, 0, 11.23, 0.0491095277593021, 1, 3892, 2, 0, 0, 0, 0, 0, 
