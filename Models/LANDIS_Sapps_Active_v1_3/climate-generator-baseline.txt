@@ -1,11 +1,11 @@
 LandisData "Climate Config"				
 		
 ClimateTimeSeries			Daily_SequencedYears
-ClimateFile				LANDIS_Historic11_Gridmet.csv
+ClimateFile				OneEcoHistoric.csv
 ClimateFileFormat			Daily_Temp-C_Precip-mmDay
 
 SpinUpClimateTimeSeries			Daily_SequencedYears
-SpinUpClimateFile			LANDIS_Historic11_Gridmet.csv
+SpinUpClimateFile			OneEcoHistoric.csv
 SpinUpClimateFileFormat			Daily_Temp-C_Precip-mmDay
 
 UsingFireClimate			yes
