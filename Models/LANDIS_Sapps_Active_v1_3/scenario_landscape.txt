@@ -6,7 +6,7 @@ Duration  50
 Species   species_SApps_updated7_5.txt
 
 
-Ecoregions      ./ecoregions_Sapps_1.txt
+Ecoregions      ./ecoregions_Sapps_11.txt
 
 EcoregionsMap   ./OneEco.tif
 
