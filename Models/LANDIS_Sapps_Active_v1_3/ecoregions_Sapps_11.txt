@@ -3,14 +3,22 @@ LandisData  Ecoregions
 >>         Map
 >> Active  Code  Name   Description
 >> ------  ----  -----  -----------
-	  yes    11  eco11   "ten"
-	  yes    10  eco10   "nine"  
-	  yes    9   eco9   "eight"
-	  yes    8   eco8   "seven"
-	  yes    7   eco6   "six"
-	  yes    6   eco5   "five"  
-      	  yes    5   eco4   "four"
-	  yes    4   eco3   "three"
-	  yes    3   eco2   "two"
-	  yes    2   eco1   "ones"  
-	  no     1   eco7	"Offmap"
+  	yes    2   eco1   "ones" 
+	yes    3   eco2   "two" 
+ 	yes    4   eco3   "three"
+	yes    5   eco4   "four"
+	yes    6   eco5   "five"  
+        yes    7   eco6   "six"
+	yes    8   eco8   "seven"
+ 	yes    9   eco9   "eight"
+	yes    10  eco10   "nine"  		  
+	yes    11  eco11   "ten"
+	no     1   eco7	"Offmap"
+	  
+	 
+	  
+	
+	  
+	  
+	
+	  
