@@ -16,8 +16,8 @@ RxIgnitionsMap         ./Ignitions_NFS.tif
 
 
 
-AccidentalSuppressionMap	./zerosuppression.tif 
-LightningSuppressionMap		./zerosuppression.tif
+AccidentalSuppressionMap	./Suppressionv1_1.tif 
+LightningSuppressionMap		./Suppressionv1_1.tif
 
 RxSuppressionMap		    ./zerosuppression.tif
 
