@@ -47,6 +47,9 @@ DecayRateSOM1				5.4
 DecayRateSOM2				0.017
 DecayRateSOM3				0.0000001
 
+StormFlowOverride	0.50431427708827
+WaterLossFactor1Override	0.374366547679529
+WaterLossFactor2Override	0.630063182208687
 
 MaximumLAI
 
