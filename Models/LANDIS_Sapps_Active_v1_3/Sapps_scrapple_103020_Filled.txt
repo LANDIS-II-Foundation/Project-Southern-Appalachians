@@ -28,7 +28,7 @@ UphillSlopeAzimuthMap  Sapps_Aspect.tif
 >> These represent only the non-zero part of the ZIP  as described in the paper lines 136 and 139
 
 
-LightningIgnitionsB0   -0.63756
+LightningIgnitionsB0   -1.23756
 LightningIgnitionsB1   0.01621   << 0.110779
 
 AccidentalIgnitionsB0  1.920136  << -1.0183
@@ -74,7 +74,7 @@ SpreadProbabilityB3 -0.023515 << effective wind speed.
 
 
 
-IntensityFactor:FineFuelPercent  0.1
+IntensityFactor:FineFuelPercent  0.5
 IntensityFactor:LadderFuelMaxAge 40
 IntensityFactor:LadderFuelBiomass 20
 
