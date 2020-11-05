@@ -1,7 +1,7 @@
 LandisData  Scenario
 
 
-Duration  50
+Duration  30
 
 Species   species_SApps_updated7_5.txt
 
