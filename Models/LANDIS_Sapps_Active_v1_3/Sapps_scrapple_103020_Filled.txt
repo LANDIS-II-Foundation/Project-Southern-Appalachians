@@ -36,8 +36,7 @@ AccidentalIgnitionsB1  -.021640   <<  0.6331
 
 >> A generic parameter, determines the fine-fuel scale from 0-1.0
 
-MaximumFineFuels 500.0 
-
+MaximumFineFuels 3000.0 << 400 75 too low
 
 >> Prescribed Fire Parameters
 
@@ -74,7 +73,7 @@ SpreadProbabilityB3 -0.023515 << effective wind speed.
 
 
 
-IntensityFactor:FineFuelPercent  1.0
+IntensityFactor:FineFuelPercent  .95
 IntensityFactor:LadderFuelMaxAge 40
 IntensityFactor:LadderFuelBiomass 20
 
