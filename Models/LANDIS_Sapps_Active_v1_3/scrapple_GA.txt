@@ -1,0 +1,107 @@
+LandisData  "SCRAPPLE"
+
+>>     Parameter                      Value
+>> ----------------------------       -------
+
+Timestep                            1
+
+Species_CSV_File	SCRPPLE_Spp_Table.csv
+
+AccidentalIgnitionsMap  ./HA_ignitions_v1_1.tif 
+LightningIgnitionsMap   ./VHRAC_Lightning.tif
+
+>>Rx Ignitions
+RxIgnitionsMap         ./Ignitions_NFS.tif 
+
+>> DynamicRxIgnitionMaps 
+>> 130           ./zerosuppression.tif
+
+
+
+AccidentalSuppressionMap	./zerosuppression.tif 
+LightningSuppressionMap		./zerosuppression.tif 
+
+RxSuppressionMap		    ./zerosuppression.tif
+
+GroundSlopeMap Sapps_Slope.tif
+UphillSlopeAzimuthMap  Sapps_Aspect.tif
+ClayMap Clay100.tif
+>>Updated on 7/24 w new fits params
+>> These represent only the non-zero part of the ZIP  as described in the paper lines 136 and 139
+
+
+
+LightningIgnitionsB0   2.02999
+LightningIgnitionsB1   -0.21642   << 0.110779
+
+AccidentalIgnitionsB0 -0.94748 << -1.0183
+AccidentalIgnitionsB1   0.01392    <<  0.6331 
+
+IgnitionDistribution ZeroInflatedPoisson
+LightningIgnitionsBinomialB0   10.24538
+LightningIgnitionsBinomialB1   -0.40606  
+AccidentalIgnitionsBinomialB0  2.6605450
+AccidentalIgnitionsBinomialB1 -0.0002711
+
+
+>> A generic parameter, determines the fine-fuel scale from 0-1.0
+
+MaximumFineFuels 3000.0 << 400 75 too low
+
+>> Prescribed Fire Parameters
+
+MaximumRxWindSpeed 100.0
+>>MaximumRxFireWeatherIndex 80.0  << Optional
+MinimumRxFireWeatherIndex 15.0   << Optional
+MaximumRxTemperature 35.0	<< Optional
+>> MinimumRxRelativeHumidity 22.0	<< Optional
+
+MaximumRxFireIntensity 1
+NumberRxAnnualFires 0 << This is about 50,100 acres stated in the plans of Pisgah
+
+>> Cherokee, Chattahoochee and nantahala national parks. 
+
+
+NumberRxDailyFires 1
+FirstDayRxFires 70
+LastDayRxFires 300
+TargetRxSize 30 <<From Cleaves, Martinz and Haines 200 GT SRS-37 they average 483 ac per burn
+
+>> RxZonesMap fire-zones.gis  << Optional
+
+>>Line ~371-374
+
+MaximumSpreadAreaB0	64.81
+MaximumSpreadAreaB1	12.47  <<-3 <<FWI
+MaximumSpreadAreaB2  0.00  << effective wind speed
+
+
+SpreadProbabilityB0 -0.909164 << Intercept
+SpreadProbabilityB1 0.008909  <<FWI
+SpreadProbabilityB2 .0000 << relativized fine fuels. 
+SpreadProbabilityB3 00000 << effective wind speed. 
+
+
+SiteMortalityB0  0.0147128975  << Intercept
+SiteMortalityB1  0.0001934199  << The parameter fit for site level clay % in Soil.
+SiteMortalityB2 -0.0000108665  << The parameter fit for site level previous years annual ET. 
+SiteMortalityB3 -0.0004681531  << The parameter fit for site level Effective Windspeed. 
+SiteMortalityB4 -0.0000008418  << The parameter fit for site level Climatic Water Deficit (PET-AET). 
+SiteMortalityB5 0.00000  << The parameter fit for fine fuels (including ladder fuels). 
+
+CohortMortalityB0 -0.7035595 << Intercept
+CohortMortalityB1 -0.9908583  << The parameter fit for the relationship between bark thickness and cohort mortality.
+CohortMortalityB2  0.0094919 << The parameter fit for the relationship between site mortality and cohort mortality. 
+
+
+LadderFuelSpeciesList 
+
+SuppressionMaxWindSpeed 100
+SuppressionTable  << Currently must be entered in this exact order
+>>Type		FWI1	FWI2	Lo	Md	High-Effectiveness
+Accidental	20	40	10	10	0
+Lightning	20	40	10	10	0
+Rx		    0	0	0	0	0
+
+DeadWoodTable
+
