@@ -8,7 +8,7 @@ Species   species_SApps_updated7_5.txt
 
 Ecoregions      ./ecoregions_Sapps_11.txt
 
-EcoregionsMap   ./Georgia_Ecos.tif
+EcoregionsMap   ./11_Ecoregions.tif
 
 
 CellLength  250 << meters, 100 x 100 m = 1 hectare
@@ -28,7 +28,7 @@ CellLength  250 << meters, 100 x 100 m = 1 hectare
 
 >> ----------------------   -------------------
 "Biomass Harvest"	     biomass-harvest_9_9.txt
- "SCRAPPLE"                   scrapple_GA.txt
+ "SCRAPPLE"                  Sapps_scrapple_V1_3.txt
 "Base BDA"		     base-BDA_SetUp_s1e1.txt
 
 

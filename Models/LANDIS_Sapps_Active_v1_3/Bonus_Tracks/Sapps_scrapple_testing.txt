@@ -1,0 +1,523 @@
+LandisData  "SCRAPPLE"
+
+>>     Parameter                      Value
+>> ----------------------------       -------
+
+Timestep                            1
+>>This is just the number one 
+AccidentalIgnitionsMap  ./HA_ignitions_v1_1.tif << CG needs updated map. 
+LightningIgnitionsMap   ./VHRAC_Lightning.tif
+
+>>Rx Ignitions
+RxIgnitionsMap         ./Ignitions_NFS.tif 
+
+>> DynamicRxIgnitionMaps 
+>> 130           ./zerosuppression.tif
+
+
+
+AccidentalSuppressionMap	./zerosuppression.tif 
+LightningSuppressionMap		./zerosuppression.tif
+
+RxSuppressionMap		    ./zerosuppression.tif
+
+GroundSlopeMap Sapps_Slope.tif
+UphillSlopeAzimuthMap  Sapps_Aspect.tif
+
+>>Updated on 7/24 w new fits params
+>> These represent only the non-zero part of the ZIP  as described in the paper lines 136 and 139
+
+
+LightningIgnitionsB0   -0.63756
+LightningIgnitionsB1   0.01621   << 0.110779
+
+AccidentalIgnitionsB0  1.920136  << -1.0183
+AccidentalIgnitionsB1  -.021640   <<  0.6331 
+
+>> A generic parameter, determines the fine-fuel scale from 0-1.0
+
+MaximumFineFuels 100.0 
+
+
+>> Prescribed Fire Parameters
+
+MaximumRxWindSpeed 100.0
+>>MaximumRxFireWeatherIndex 80.0  << Optional
+MinimumRxFireWeatherIndex 15.0   << Optional
+MaximumRxTemperature 35.0	<< Optional
+>> MinimumRxRelativeHumidity 22.0	<< Optional
+
+MaximumRxFireIntensity 1
+NumberRxAnnualFires 112 << This is about 50,100 acres stated in the plans of Pisgah
+
+>> Cherokee, Chattahoochee and nantahala national parks. 
+
+
+NumberRxDailyFires 1
+FirstDayRxFires 70
+LastDayRxFires 300
+TargetRxSize 30 <<From Cleaves, Martinz and Haines 200 GT SRS-37 they average 483 ac per burn
+
+>> RxZonesMap fire-zones.gis  << Optional
+
+>>Line ~371-374
+
+MaximumSpreadAreaB0	173.49698
+MaximumSpreadAreaB1	3.75961 <<-3 <<FWI
+MaximumSpreadAreaB2  0.00  << effective wind speed
+
+
+SpreadProbabilityB0 -2.464560 << Intercept
+SpreadProbabilityB1 .022782  <<FWI
+SpreadProbabilityB2 .004343 << relativized fine fuels. 
+SpreadProbabilityB3 -0.023515 << effective wind speed. 
+
+
+
+IntensityFactor:FineFuelPercent  0.1
+IntensityFactor:LadderFuelMaxAge 40
+IntensityFactor:LadderFuelBiomass 20
+
+LadderFuelSpeciesList 
+
+SuppressionMaxWindSpeed 100
+SuppressionTable  << Currently must be entered in this exact order
+>>Type		FWI1	FWI2	Lo	Md	High-Effectiveness
+Accidental	20	40	10	10	0
+Lightning	20	40	10	10	0
+Rx		    0	0	0	0	0
+
+DeadWoodTable
+
+
+
+
+FireIntensityClass_1_DamageTable
+>> Format = species [maxAge Pmortality] ... [repeating]  Any missing data is 0.0
+PinuEnch 0 40 0.55
+PinuEnch 40 80 0.15
+PinuEnch 80 250 0.05
+PiceRube 0 40 0.6
+PiceRube 40 80 0.3
+PiceRube 80 350 0.1
+FrasFirr 0 40 0.6
+FrasFirr 40 80 0.2
+FrasFirr 80 300 0.1
+PinuPung 0 40 0.45
+PinuPung 40 80 0.1
+PinuPung 80 250 0.05
+PinuRigi 0 40 0.45
+PinuRigi 40 80 0.1
+PinuRigi 80 200 0.05
+PinuStro 0 40 0.6
+PinuStro 40 80 0.15
+PinuStro 80 350 0.05
+PinuTaed 0 40 0.6
+PinuTaed 40 80 0.15
+PinuTaed 80 200 0.05
+PinuVirg 0 40 0.55
+PinuVirg 40 80 0.15
+PinuVirg 80 130 0.05
+TsugCana 0 40 0.93 << From FEIS page for Tsuga Canadensis
+TsugCana 40 80 0.75 << From FEIS page for Tsuga Canadensis
+TsugCana 80 450 0.6 << From FEIS page for Tsuga Canadensis
+AcerSacc 0 40 0.6
+AcerSacc 40 80 0.2
+AcerSacc 80 350 0.1
+AcerRubr 0 40 0.6
+AcerRubr 40 80 0.2
+AcerRubr 80 150 0.1
+AescBuck 0 40 0.6
+AescBuck 40 80 0.2
+AescBuck 80 200 0.1
+AmelArbo 0 40 0.6
+AmelArbo 40 80 0.3
+AmelArbo 80 100 0.1
+AcerPens 0 40 0.6
+AcerPens 40 80 0.2
+AcerPens 80 150 0.1
+BetuAlle 0 40 0.6
+BetuAlle 40 80 0.3
+BetuAlle 80 300 0.1
+BetuLent 0 40 0.6
+BetuLent 40 80 0.3
+BetuLent 80 230 0.1
+BetuNigr 0 40 0.6
+BetuNigr 40 80 0.3
+BetuNigr 80 100 0.1
+CaryCodi 0 40 0.6
+CaryCodi 40 80 0.3
+CaryCodi 80 300 0.1
+CaryGlab 0 40 0.6
+CaryGlab 40 80 0.3
+CaryGlab 80 300 0.1
+TiliAmhe 0 40 0.6
+TiliAmhe 40 80 0.2
+TiliAmhe 80 250 0.1
+TiliAmer 0 40 0.6
+TiliAmer 40 80 0.2
+TiliAmer 80 250 0.1
+SassAlid 0 40 0.6
+SassAlid 40 80 0.3
+SassAlid 80 150 0.1
+RobiPseu 0 40 0.6
+RobiPseu 40 80 0.2
+RobiPseu 80 130 0.1
+QuerStel 0 40 0.45
+QuerStel 40 80 0.1
+QuerStel 80 330 0.05
+QuerVelu 0 40 0.6
+QuerVelu 40 80 0.15
+QuerVelu 80 250 0.05
+QuerPrin 0 40 0.55
+QuerPrin 40 80 0.15
+QuerPrin 80 300 0.05
+QuerRubr 0 40 0.6
+QuerRubr 40 80 0.15
+QuerRubr 80 350 0.05
+QuerFalc 0 40 0.6
+QuerFalc 40 80 0.15
+QuerFalc 80 200 0.05
+QuerCocc 0 40 0.6
+QuerCocc 40 80 0.15
+QuerCocc 80 300 0.05
+QuerAlba 0 40 0.55
+QuerAlba 40 80 0.15
+QuerAlba 80 400 0.05
+PlanOcid 0 40 0.6
+PlanOcid 40 80 0.15
+PlanOcid 80 400 0.05
+PrunPenn 0 40 0.6
+PrunSero 0 40 0.6
+PrunSero 40 80 0.2
+PrunSero 80 200 0.1
+OxydArbo 0 40 0.6
+OxydArbo 40 80 0.15
+OxydArbo 80 150 0.05
+NyssSylv 0 40 0.6
+NyssSylv 40 80 0.3
+NyssSylv 80 200 0.1
+MagnMacr 0 40 0.6
+MagnMacr 40 80 0.15
+MagnMacr 80 200 0.05
+MagnAcum 0 40 0.6
+MagnAcum 40 80 0.15
+MagnAcum 80 200 0.05
+LiquStyr 0 40 0.6
+LiquStyr 40 80 0.3
+LiquStyr 80 300 0.1
+LiriTuli 0 40 0.55
+LiriTuli 40 80 0.15
+LiriTuli 80 250 0.05
+IlexOpac 0 40 0.6
+IlexOpac 40 80 0.3
+IlexOpac 80 100 0.1
+HaleDipt 0 40 0.6
+HaleDipt 40 80 0.3
+HaleDipt 80 100 0.1
+JuglNigr 0 40 0.6
+JuglNigr 40 80 0.3
+JuglNigr 80 155 0.1
+FaguGran 0 40 0.6
+FaguGran 40 80 0.3
+FaguGran 80 300 0.1
+FraxAmer 0 40 0.6
+FraxAmer 40 80 0.2
+FraxAmer 80 280 0.1
+FraxPenn 0 40 0.6
+FraxPenn 40 80 0.3
+FraxPenn 80 125 0.1
+CornFlor 0 40 0.55
+CornFlor 40 80 0.15
+CornFlor 80 120 0.05
+CaryAlba 0 40 0.6
+CaryAlba 40 80 0.15
+CaryAlba 80 300 0.05
+
+
+FireIntensityClass_2_DamageTable
+>> Format = species [maxAge Pmortality] ... [repeating]  Any missing data is 0.0
+PinuEnch 0 40 0.7
+PinuEnch 40 80 0.3
+PinuEnch 80 250 0.2
+PiceRube 0 40 0.9
+PiceRube 40 80 0.75
+PiceRube 80 350 0.6
+FrasFirr 0 40 0.9
+FrasFirr 40 80 0.7
+FrasFirr 80 300 0.3
+PinuPung 0 40 0.6
+PinuPung 40 80 0.25
+PinuPung 80 250 0.15
+PinuRigi 0 40 0.6
+PinuRigi 40 80 0.25
+PinuRigi 80 200 0.15
+PinuStro 0 40 0.8
+PinuStro 40 80 0.4
+PinuStro 80 350 0.25
+PinuTaed 0 40 0.8
+PinuTaed 40 80 0.4
+PinuTaed 80 200 0.25
+PinuVirg 0 40 0.7
+PinuVirg 40 80 0.3
+PinuVirg 80 130 0.2
+TsugCana 0 40 0.96 << From FEIS page for Tsuga Canadensis
+TsugCana 40 80 0.85 << From FEIS page for Tsuga Canadensis
+TsugCana 80 450 0.7 << From FEIS page for Tsuga Canadensis
+AcerSacc 0 40 0.9
+AcerSacc 40 80 0.7
+AcerSacc 80 350 0.3
+AcerRubr 0 40 0.9
+AcerRubr 40 80 0.7
+AcerRubr 80 150 0.3
+AescBuck 0 40 0.9
+AescBuck 40 80 0.7
+AescBuck 80 200 0.3
+AmelArbo 0 40 0.9
+AmelArbo 40 80 0.75
+AmelArbo 80 100 0.6
+AcerPens 0 40 0.9
+AcerPens 40 80 0.7
+AcerPens 80 150 0.3
+BetuAlle 0 40 0.9
+BetuAlle 40 80 0.75
+BetuAlle 80 300 0.6
+BetuLent 0 40 0.9
+BetuLent 40 80 0.75
+BetuLent 80 230 0.6
+BetuNigr 0 40 0.9
+BetuNigr 40 80 0.75
+BetuNigr 80 100 0.6
+CaryCodi 0 40 0.9
+CaryCodi 40 80 0.75
+CaryCodi 80 300 0.6
+CaryGlab 0 40 0.9
+CaryGlab 40 80 0.75
+CaryGlab 80 300 0.6
+TiliAmhe 0 40 0.9
+TiliAmhe 40 80 0.7
+TiliAmhe 80 250 0.3
+TiliAmer 0 40 0.9
+TiliAmer 40 80 0.7
+TiliAmer 80 250 0.3
+SassAlid 0 40 0.9
+SassAlid 40 80 0.75
+SassAlid 80 150 0.6
+RobiPseu 0 40 0.9
+RobiPseu 40 80 0.7
+RobiPseu 80 130 0.3
+QuerStel 0 40 0.6
+QuerStel 40 80 0.25
+QuerStel 80 330 0.15
+QuerVelu 0 40 0.8
+QuerVelu 40 80 0.4
+QuerVelu 80 250 0.25
+QuerPrin 0 40 0.7
+QuerPrin 40 80 0.3
+QuerPrin 80 300 0.2
+QuerRubr 0 40 0.8
+QuerRubr 40 80 0.4
+QuerRubr 80 350 0.25
+QuerFalc 0 40 0.8
+QuerFalc 40 80 0.4
+QuerFalc 80 200 0.25
+QuerCocc 0 40 0.8
+QuerCocc 40 80 0.4
+QuerCocc 80 300 0.25
+QuerAlba 0 40 0.7
+QuerAlba 40 80 0.3
+QuerAlba 80 400 0.2
+PlanOcid 0 40 0.8
+PlanOcid 40 80 0.4
+PlanOcid 80 400 0.25
+PrunPenn 0 40 0.9
+PrunSero 0 40 0.9
+PrunSero 40 80 0.7
+PrunSero 80 200 0.3
+OxydArbo 0 40 0.8
+OxydArbo 40 80 0.4
+OxydArbo 80 150 0.25
+NyssSylv 0 40 0.9
+NyssSylv 40 80 0.75
+NyssSylv 80 200 0.6
+MagnMacr 0 40 0.8
+MagnMacr 40 80 0.4
+MagnMacr 80 200 0.25
+MagnAcum 0 40 0.8
+MagnAcum 40 80 0.4
+MagnAcum 80 200 0.25
+LiquStyr 0 40 0.9
+LiquStyr 40 80 0.75
+LiquStyr 80 300 0.6
+LiriTuli 0 40 0.7
+LiriTuli 40 80 0.3
+LiriTuli 80 250 0.2
+IlexOpac 0 40 0.9
+IlexOpac 40 80 0.75
+IlexOpac 80 100 0.6
+HaleDipt 0 40 0.9
+HaleDipt 40 80 0.75
+HaleDipt 80 100 0.6
+JuglNigr 0 40 0.9
+JuglNigr 40 80 0.75
+JuglNigr 80 155 0.6
+FaguGran 0 40 0.9
+FaguGran 40 80 0.75
+FaguGran 80 300 0.6
+FraxAmer 0 40 0.9
+FraxAmer 40 80 0.7
+FraxAmer 80 280 0.3
+FraxPenn 0 40 0.9
+FraxPenn 40 80 0.75
+FraxPenn 80 125 0.6
+CornFlor 0 40 0.7
+CornFlor 40 80 0.3
+CornFlor 80 120 0.2
+CaryAlba 0 40 0.8
+CaryAlba 40 80 0.4
+CaryAlba 80 300 0.25
+
+
+
+
+FireIntensityClass_3_DamageTable
+>> Format = species [maxAge Pmortality] ... [repeating]  Any missing data is 0.0
+PinuEnch 0 40 0.9
+PinuEnch 40 80 0.75
+PinuEnch 80 250 0.6
+PiceRube 0 40 0.99
+PiceRube 40 80 0.95
+PiceRube 80 350 0.9
+FrasFirr 0 40 0.9
+FrasFirr 40 80 0.75
+FrasFirr 80 300 0.6
+PinuPung 0 40 0.9
+PinuPung 40 80 0.8
+PinuPung 80 250 0.7
+PinuRigi 0 40 0.9
+PinuRigi 40 80 0.8
+PinuRigi 80 200 0.7
+PinuStro 0 40 0.99
+PinuStro 40 80 0.75
+PinuStro 80 350 0.8
+PinuTaed 0 40 0.99
+PinuTaed 40 80 0.75
+PinuTaed 80 200 0.8
+PinuVirg 0 40 0.9
+PinuVirg 40 80 0.75
+PinuVirg 80 130 0.6
+TsugCana 0 40 0.99
+TsugCana 40 80 0.9
+TsugCana 80 450 0.8
+AcerSacc 0 40 0.9
+AcerSacc 40 80 0.75
+AcerSacc 80 350 0.6
+AcerRubr 0 40 0.9
+AcerRubr 40 80 0.75
+AcerRubr 80 150 0.6
+AescBuck 0 40 0.9
+AescBuck 40 80 0.75
+AescBuck 80 200 0.6
+AmelArbo 0 40 0.99
+AmelArbo 40 80 0.95
+AmelArbo 80 100 0.9
+AcerPens 0 40 0.9
+AcerPens 40 80 0.75
+AcerPens 80 150 0.6
+BetuAlle 0 40 0.99
+BetuAlle 40 80 0.95
+BetuAlle 80 300 0.9
+BetuLent 0 40 0.99
+BetuLent 40 80 0.95
+BetuLent 80 230 0.9
+BetuNigr 0 40 0.99
+BetuNigr 40 80 0.95
+BetuNigr 80 100 0.9
+CaryCodi 0 40 0.99
+CaryCodi 40 80 0.95
+CaryCodi 80 300 0.9
+CaryGlab 0 40 0.99
+CaryGlab 40 80 0.95
+CaryGlab 80 300 0.9
+TiliAmhe 0 40 0.9
+TiliAmhe 40 80 0.75
+TiliAmhe 80 250 0.6
+TiliAmer 0 40 0.9
+TiliAmer 40 80 0.75
+TiliAmer 80 250 0.6
+SassAlid 0 40 0.99
+SassAlid 40 80 0.95
+SassAlid 80 150 0.9
+RobiPseu 0 40 0.9
+RobiPseu 40 80 0.75
+RobiPseu 80 130 0.6
+QuerStel 0 40 0.9
+QuerStel 40 80 0.8
+QuerStel 80 330 0.7
+QuerVelu 0 40 0.99
+QuerVelu 40 80 0.75
+QuerVelu 80 250 0.8
+QuerPrin 0 40 0.9
+QuerPrin 40 80 0.75
+QuerPrin 80 300 0.6
+QuerRubr 0 40 0.99
+QuerRubr 40 80 0.75
+QuerRubr 80 350 0.8
+QuerFalc 0 40 0.99
+QuerFalc 40 80 0.75
+QuerFalc 80 200 0.8
+QuerCocc 0 40 0.99
+QuerCocc 40 80 0.75
+QuerCocc 80 300 0.8
+QuerAlba 0 40 0.9
+QuerAlba 40 80 0.75
+QuerAlba 80 400 0.6
+PlanOcid 0 40 0.99
+PlanOcid 40 80 0.75
+PlanOcid 80 400 0.8
+PrunPenn 0 40 0.9
+PrunSero 0 40 0.9
+PrunSero 40 80 0.75
+PrunSero 80 200 0.6
+OxydArbo 0 40 0.99
+OxydArbo 40 80 0.75
+OxydArbo 80 150 0.8
+NyssSylv 0 40 0.99
+NyssSylv 40 80 0.95
+NyssSylv 80 200 0.9
+MagnMacr 0 40 0.99
+MagnMacr 40 80 0.75
+MagnMacr 80 200 0.8
+MagnAcum 0 40 0.99
+MagnAcum 40 80 0.75
+MagnAcum 80 200 0.8
+LiquStyr 0 40 0.99
+LiquStyr 40 80 0.95
+LiquStyr 80 300 0.9
+LiriTuli 0 40 0.9
+LiriTuli 40 80 0.75
+LiriTuli 80 250 0.6
+IlexOpac 0 40 0.99
+IlexOpac 40 80 0.95
+IlexOpac 80 100 0.9
+HaleDipt 0 40 0.99
+HaleDipt 40 80 0.95
+HaleDipt 80 100 0.9
+JuglNigr 0 40 0.99
+JuglNigr 40 80 0.95
+JuglNigr 80 155 0.9
+FaguGran 0 40 0.99
+FaguGran 40 80 0.95
+FaguGran 80 300 0.9
+FraxAmer 0 40 0.9
+FraxAmer 40 80 0.75
+FraxAmer 80 280 0.6
+FraxPenn 0 40 0.99
+FraxPenn 40 80 0.95
+FraxPenn 80 125 0.9
+CornFlor 0 40 0.9
+CornFlor 40 80 0.75
+CornFlor 80 120 0.6
+CaryAlba 0 40 0.99
+CaryAlba 40 80 0.75
+CaryAlba 80 300 0.8
