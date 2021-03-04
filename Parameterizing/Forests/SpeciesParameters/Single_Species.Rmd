@@ -473,9 +473,7 @@ known values of biomass and project them beyond a likely maximum.
 
 This file is a continuation of the sorter that went through each FIA plot for the states of North Carolina, Tennessee, South Carolina,
 and Georgia, and calculated the Basal area for the plot and each species within it. 
-```{r}
 
-```
 
 In this following loop, we will
 

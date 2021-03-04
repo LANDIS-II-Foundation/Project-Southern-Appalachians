@@ -1,0 +1,297 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r}
+library(grDevices)
+library(ggplot2)
+library(sf)
+library(ggplot2)
+library(vioplot)
+
+Drive<-'E:/DM_Runs_2_1/GA_Model_D_1/'
+
+Remotesensing<-read.csv(
+  paste0('C:/Users/zacha/Desktop/Sapps_DM_paper/All_250_2_8.csv'))
+EventLog<-read.csv(
+  paste0('E:/DM_Runs_222/GA_Model_D1/scrapple-events-log.csv'))
+AllStack<-stack(
+  paste0('E:/DM_Runs_222/GA_Model_D1/scrapple-fire/',
+                      list.files('E:/DM_Runs_222/GA_Model_D1/scrapple-fire/',pattern = ("^site-mortality-"))))
+All_df<-as.data.frame(AllStack)
+List<-unlist(All_df, use.names=FALSE)
+List<-List[List>0]
+RS_2<-na.omit(Remotesensing$RdNBR)
+RS_2<-RS_2[RS_2>0]
+```
+
+### DNBR/Site Severity
+
+```{r}
+print("Median Simulation")
+median(EventLog$MeanDNBR)
+print("Median Remote Sensing")
+median(na.omit(Remotesensing$RdNBR))
+
+print("Mean Simulation")
+mean(EventLog$MeanDNBR)
+print("Mean Remote Sensing")
+mean(na.omit(Remotesensing$RdNBR))
+```
+
+
+```{r,fig.width=10.0}
+List<-EventLog$MeanDNBR
+VioFrame<-data.frame(Model=c(rep("RemoteSensing",length(RS_2)),rep("ModelRun",length(List)))
+           ,Score=c(RS_2,List))
+
+p <- ggplot(VioFrame, aes(x=factor(Model), y=Score, fill=Model)) + 
+     
+     geom_violin()+ 
+     coord_flip() + 
+     scale_y_continuous(limits = c(0, 2000))+
+     geom_boxplot(width=0.1)+
+     scale_fill_brewer(palette="Dark2")+
+     labs(title="DNBR distribution",x="Source", y = "DNBR")+
+     theme_classic()+
+     theme(text = element_text(size=20),
+        axis.text.x = element_text(angle=45, hjust=1)) 
+     #stat_summary(fun.data=data_summary)
+p
+```
+
+
+
+### Resulting Mortality (Delayed Mortality).
+
+```{r}
+PercentKilled<-EventLog$CohortsKilled/EventLog$AvailableCohorts
+
+plot(PercentKilled~EventLog$MeanDNBR,pch=19,cex.lab=1.25,cex.axis=1.25,cex=2.0,col=adjustcolor("black",alpha.f = .2),ylim=c(0,1.0),
+     xlab="DNBR",ylab="Percent of Total Cohorts Killed")
+hist(PercentKilled,breaks=40,main="Distribution of mortality")
+```
+
+#### Ignition: 
+
+
+```{r,fig.height=10.0,fig.width=7.0}
+l_fire_dat<-read.csv("C:/Users/zacha/Desktop/Sapps_DM_paper/KS_All_FiresGA.csv")
+l_fire_dat<-l_fire_dat[c(-1)]
+l<-l_fire_dat[l_fire_dat$STAT_CAU_1=="Lightning",]%>%
+  subset(FIRE_SIZE>15.44)
+h<-l_fire_dat[!l_fire_dat$STAT_CAU_1=="Lightning",]%>%
+  subset(FIRE_SIZE>15.44)
+#<-table(l$FIRE_YEAR)
+
+barplot(as.data.frame(table(EventLog$SimulationYear))[,2],main="Total Fire Events",ylim=c(0,35))
+par(mfrow=c(2,2))
+barplot(as.data.frame(table(EventLog$SimulationYear[EventLog$IgnitionType==" Accidental"]))[,2],main="Accidental Fire Events Simulated",ylim=c(0,35))
+barplot(as.data.frame(table(h$FIRE_YEAR))[,2],main="Accidental Fire Events Recorded",ylim=c(0,35))
+barplot(as.data.frame(table(EventLog$SimulationYear[EventLog$IgnitionType==" Lightning"]))[,2],main="Lightning Fire Events Simulated",ylim=c(0,10))
+barplot(as.data.frame(table(l$FIRE_YEAR))[,2],main="Lightning Fire Events Recorde ",ylim=c(0,10))
+
+
+```
+
+```{r}
+print("Accidental Simulated 1992-2016")
+sum(as.data.frame(table(EventLog$SimulationYear[EventLog$IgnitionType==" Accidental"]))[,2])
+print("Accidental Recorded 1992-2016")
+sum(as.data.frame(table(h$FIRE_YEAR))[,2])
+print("Lightning Simulated 1992-2016")
+sum(as.data.frame(table(EventLog$SimulationYear[EventLog$IgnitionType==" Lightning"]))[,2])
+print("Lightning Recorded 1992-2016")
+sum(as.data.frame(table(l$FIRE_YEAR))[,2])
+```
+
+
+
+```{r}
+#display.brewer.all()
+Rd<-RColorBrewer::brewer.pal(7,"YlOrRd")
+Rd<-c("black",Rd)
+shape<-read_sf('C:/Users/zacha/Desktop/Sapps_Mortality/AOI_4269.shp')
+folder<-"C:/Users/zacha/Desktop/Sapps_DM_paper/Fire_Size/1_20_1/scrapple-fire/"
+sample_raster<-raster("C:/Users/zacha/Desktop/Sapps_DM_paper/GA_Model_ND1/Clay_42919.tif")
+
+IgnitionStack<-stack(paste0(folder,list.files(folder,pattern = "^ignition-type-")))
+crs(IgnitionStack)<-crs(sample_raster)
+extent(IgnitionStack)<-extent(sample_raster)
+shape_t<-st_transform(shape,crs=crs(IgnitionStack))
+IgnitionStack[IgnitionStack!=2]<-0
+Just2<-calc(IgnitionStack,sum)
+Just2<-Just2/2
+
+
+IgnitionStack<-stack(paste0(folder,list.files(folder,pattern = "^ignition-type-")))
+#plot(IgnitionStack)        
+crs(IgnitionStack)<-crs(sample_raster)
+extent(IgnitionStack)<-extent(sample_raster)
+IgnitionStack[IgnitionStack!=3]<-0
+Just3<-calc(IgnitionStack,sum)
+Just3<-Just3/3
+
+```
+
+```{r}
+plot(Just2,main="Accidental Ignition",xlim=c(153228,320000),
+     ylim=c(3779459,3880000),axes=F,box=F,col=Rd)
+plot(shape_t$geometry,add=T,border="white")
+plot(Just3,main="Lightning Ignition",xlim=c(153228,320000),
+     ylim=c(3779459,3880000),col=Rd,axes=F,box=F,)
+plot(shape_t$geometry,add=T,border="white")
+
+
+```
+
+
+
+
+### Area of fires 
+
+```{r,eval=F}
+
+
+w_dir<-"C:/Users/zacha/Desktop/Sapps_DM_paper/"
+CNF<-st_read("C:/Users/zacha/Desktop/Sapps_DM_paper/Georgia.shp")
+l_fire_dat <- read.csv(paste(w_dir,"Inputs/FiresInAppsLightning2.csv", sep=""))
+h_fire_dat <- read.csv(paste(w_dir, "Inputs/FiresInAppsHuman2.csv", sep=""))
+l_fire_dat<-rbind(l_fire_dat,h_fire_dat)
+colnames(l_fire_dat)
+#UTM11<-Plot_locations[Plot_locations$UTM.Zone==('11S'),]
+xy <-l_fire_dat[,c("LONGITUDE","LATITUDE")]
+
+Spati <- SpatialPointsDataFrame(coords = xy, data = l_fire_dat,
+                               proj4string = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))%>%
+  spTransform(projection(CNF))%>%
+  as("sf")
+Int<-st_intersection(Spati,CNF)
+l_fire_dat <- Int
+
+l_fire_dat<-l_fire_dat%>%
+  subset(FIRE_SIZE>15.44)
+write.csv(l_fire_dat,"KS_All_FiresGA.csv")
+
+```
+
+```{r,fig.width=10.0}
+l_fire_dat<-read.csv("C:/Users/zacha/Desktop/Sapps_DM_paper/KS_All_FiresGA.csv")
+l_fire_dat<-l_fire_dat[c(-1)]
+l_fire_dat<-l_fire_dat[c("FIRE_YEAR","FIRE_SIZE")]
+#colnames(l_fire_dat)
+MTBS_GA<-read_sf('C:/Users/zacha/Desktop/Sapps_Mortality/MTBS_GA.shp')
+Wild<-MTBS_GA%>%
+  subset(Fire_Type=="Wildfire"& Year==2016)%>%
+  as.data.frame()
+Wild<-Wild[c("Year","Acres")]
+colnames(Wild)<-c("FIRE_YEAR","FIRE_SIZE")
+l_fire_dat<-rbind(l_fire_dat,Wild)
+
+EventLog1<-read.csv(
+  paste0('E:/DM_Runs_222/GA_Model_D1/scrapple-events-log.csv'))
+EventLog2<-read.csv(
+  paste0('E:/DM_Runs_222/GA_Model_D2/scrapple-events-log.csv'))
+EventLog3<-read.csv(
+  paste0('E:/DM_Runs_222/GA_Model_D3/scrapple-events-log.csv'))
+
+EventLog<-rbind(EventLog1,EventLog2,EventLog3)
+#head(l_fire_dat)
+#l
+#colnames(Wild)
+#unique(MTBS_GA$Year)
+
+
+
+
+
+#colnames(l_fire_dat)<-colnames(h_fire_dat)
+# hist(l_fire_dat$FIRE_SIZE/2.47105,breaks=40,xlim=c(0,2000),xlab="Fire Size (HA)",
+#      main="KS database")
+# hist(EventLog$TotalSitesBurned*6.25,breaks=20,xlim=c(0,2000),xlab="Fire Size (HA)")
+# plot(l_fire_dat$FIRE_SIZE/2.47105,ylim=c(0,1500))
+# plot(EventLog$TotalSitesBurned*6.25,ylim=c(0,1500))
+
+
+VioFrame<-data.frame(
+          Model=c(rep("Recorded Fire Size",length(l_fire_dat$FIRE_SIZE)),
+                           #  rep("HigherSup",length(HigherSup$TotalSitesBurned)),
+                           #  rep("LowerSup",length(LowerSup$TotalSitesBurned)),
+                           #  rep("NoSup",length(NoSup$TotalSitesBurned)),
+                            # rep("NoSup_3000",length(NoSup_3000$TotalSitesBurned)),
+                            rep("LANDIS-II",length(EventLog$TotalSitesBurned))
+#                  rep("HSup/HighSp",length(HigherSup_HigherSpread$TotalSitesBurned))
+                  ),
+           Score=c(l_fire_dat$FIRE_SIZE/2.47105,
+ #                   HigherSup$TotalSitesBurned*6.25,
+  #                  LowerSup$TotalSitesBurned*6.25,
+   #                 NoSup$TotalSitesBurned*6.25,
+    #                NoSup_3000$TotalSitesBurned*6.25,
+                    EventLog$TotalSitesBurned*6.25
+     #               HigherSup_HigherSpread$TotalSitesBurned*6.25
+                    ))
+
+p <- ggplot(VioFrame, aes(x=Model, y=as.numeric(Score), fill=Model)) + # fill=name allow to automatically dedicate a color for each group
+     geom_violin()+ 
+     coord_flip() + 
+     geom_boxplot(width=0.1)+
+     scale_fill_brewer(palette="Dark2")+
+     labs(title="Fire Size Distribution, excluding fires < 500 ha",x="Source", y = "Fire Size (HA)")+
+     scale_y_continuous(limits = c(-1, 500))+
+     theme_classic()+
+     theme(text = element_text(size=22),
+        axis.text.x = element_text(angle=45, hjust=1)) 
+     #stat_summary(fun.data=data_summary)
+p
+
+
+
+
+q <- ggplot(VioFrame, aes(x=Model, y=as.numeric(Score), fill=Model)) + # fill=name allow to automatically dedicate a color for each group
+     geom_violin()+ 
+     coord_flip() + 
+     geom_boxplot(width=0.1)+
+     scale_fill_brewer(palette="Dark2")+
+     labs(title="Fire Size Distribution,including fires > 500 ha",x="", y = "Fire Size (HA)")+
+     #scale_y_continuous(limits = c(0, 10000))+
+     theme_classic()+
+     theme(text = element_text(size=22),
+        axis.text.x = element_text(angle=45, hjust=1)) 
+     #stat_summary(fun.data=data_summary)
+q
+
+
+
+#27000/2.471
+```
+
+
+
+```{r}
+ModelRuns<-cbind(sum(EventLog1$TotalSitesBurned)*6.25,sum(EventLog2$TotalSitesBurned)*6.25,sum(EventLog3$TotalSitesBurned)*6.25)
+
+bars<-c(mean(ModelRuns),sum(l_fire_dat$FIRE_SIZE)/2.54)                    
+error<-c(sd(ModelRuns),0)
+foo<-barplot(bars,names.arg=c("Landis-II","Karen Short+ MTBS"),main="Total Hectares Burned 1992-2016",ylab="Hectares",ylim=c(0,40000),cex.names=1.7,cex.lab=1.5,cex.axis=1.2)
+arrows(x0=foo,y0=bars+error,y1=bars-error,angle=90,code=3,length=0.1,lwd=3.0)
+
+
+
+```
+
+```{r}
+#("print")
+#max(ModelRuns)
+#sum(l_fire_dat$FIRE_SIZE)/2.54
+#sd(ModelRuns)
+#(33033.33-33822.39)/33822.39
+(35100-33822.39)/33822.39
+(31225-33822.39)/33822.39
+print("-7.6% - 3.8%")
+
+```
+
+
