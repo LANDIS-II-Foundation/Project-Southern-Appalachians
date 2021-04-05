@@ -1,6 +1,6 @@
 LandisData	"NECN Succession"
 
-Timestep  1
+Timestep  5
 
 SeedingAlgorithm  WardSeedDispersal
 
@@ -87,12 +87,12 @@ FireReductionParameters
 >>	Severity	WoodLitter	Litter	CohortWood	CohortLeaf	SOM
 >>	Fire		Reduct		Reduct	Reduct		Reduct		Reduction
 	1		0.2		0.5	0.1		0.75		0.5
-	2		0.2		0.5	0.1		0.75		0.5
-	3		0.3		0.75	0.15		1.0		0.5
-	4		0.3		0.75	0.15		1.0		0.5
+	2		0.3		0.75	0.15		1.0		0.5
+	3		0.4		1.0	0.2		1.0		0.5
+	4		0.4		1.0	0.2		1.0		0.5
 	5		0.4		1.0	0.2		1.0		0.5
-	6		0.4		1.0	0.2		1.0		0.5
-	7		0.4		1.0	0.2		1.0		0.5
+	6		0.2		0.5	0.1		0.75		0.5
+	7		0.3		0.75	0.15		1.0		0.5
 	8		0.4		1.0	0.2		1.0		0.5
 	9		0.4		1.0	0.2		1.0		0.5
 	10		0.4		1.0	0.2		1.0		0.5
