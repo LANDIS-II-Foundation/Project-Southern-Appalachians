@@ -160,10 +160,10 @@ cohorts (one age 0 and one age 10) both with densities of 1000 g/m2.
 For northern conifers the most prevelent species was Pinus strobus.
 
 ![Northern Conifer
-Biomass](C:/Users/zacha/Desktop/Functional%20Group%20Validating/Northern%20Conifer%20Biomass.png)
+Biomass](Functional%20Group%20Validating/Northern%20Conifer%20Biomass.png)
 
 ![Northern Conifer
-Biomass](C:/Users/zacha/Desktop/Functional%20Group%20Validating/Northern%20Conifer%20LAI.png)
+Biomass](Functional%20Group%20Validating/Northern%20Conifer%20LAI.png)
 
 Compared to white/red/jack pine values from He, L., Chen, J. M., Pan,
 Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary
@@ -171,7 +171,7 @@ productivity and forest stand age in US forests. Global Biogeochemical
 Cycles, 26(3).
 
 ![White Pine
-LAI](Functional%20Group%20Validating/PicsofTrees/White_Pine.png)
+LAI](Functional%20Group%20Validating/PicsofTrees/White_Pine.PNG)
 
 ### Southern Conifer
 
@@ -181,14 +181,14 @@ For southern conifers we compared published values from Pinus Taeda
 Biomass](Functional%20Group%20Validating/Southern%20Conifer%20Biomass.png)
 
 ![Pinus Taeda
-LAI](C:/Users/zacha/Desktop/Functional%20Group%20Validating/Southern%20Conifer%20LAI.png)
+LAI](Functional%20Group%20Validating/Southern%20Conifer%20LAI.png)
 Here are values from Loblolly/shortleaf pine stands from He, L., Chen,
 J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between
 net primary productivity and forest stand age in US forests. Global
 Biogeochemical Cycles, 26(3).
 
 ![Lobolloy
-LAI](Functional%20Group%20Validating/PicsofTrees/Loblloly_Shortleaf.png)
+LAI2](Functional%20Group%20Validating/PicsofTrees/Loblloly_Shortleaf.PNG)
 
 \#\#\#Southern Hardwoods For southern hardwoods we compared Tulip poplar
 (Liriodendron tulipifera).
@@ -205,7 +205,7 @@ chronosequence of mixed-species deciduous forests. Canadian Journal of
 Forest Research, 24(8), 1694-1703.
 
 ![Tupli poplar
-LAI](Functional%20Group%20Validating/PicsofTrees/Tulip_poplar.JPG)
+LAI2](Functional%20Group%20Validating/PicsofTrees/Tulip_poplar.JPG)
 
 ### Northern Hardwoods
 
@@ -222,7 +222,7 @@ Kattge, J. (2012). Relationships between net primary productivity and
 forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
 
 ![Chestnut Oak
-LAI](Functional%20Group%20Validating/PicsofTrees/Oak_Hickory.png)
+LAI](Functional%20Group%20Validating/PicsofTrees/Oak_Hickory.PNG)
 
 ### Hemlock
 
@@ -235,7 +235,7 @@ Biomass](Functional%20Group%20Validating/Hemlock%20Biomass.png)
 LAI](Functional%20Group%20Validating/Hemlock%20LAI.png)
 
 ![Hemlock
-LAI](Functional%20Group%20Validating/PicsofTrees/Hemlock.png)
+LAI](Functional%20Group%20Validating/PicsofTrees/Hemlock.PNG)
 
 ### Swampy
 
@@ -250,7 +250,7 @@ Birch](Functional%20Group%20Validating/Swampy_LAI.png)
 We compared this to Maple, Beech and Birch stands
 
 ![Beech
-LAI](Functional%20Group%20Validating/PicsofTrees/Maple_Beech_Birch.png)
+LAI](Functional%20Group%20Validating/PicsofTrees/Maple_Beech_Birch.PNG)
 
 ### Abies
 
@@ -269,7 +269,7 @@ R., & Kattge, J. (2012). Relationships between net primary productivity
 and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
 
 ![FF
-LAI](Functional%20Group%20Validating/PicsofTrees/Fir_Spruce.png)
+LAI](Functional%20Group%20Validating/PicsofTrees/Fir_Spruce.PNG)
 
 If you are interested in the code to create this see the R-Markdown file
 on this page. To return to the main page click
