@@ -188,7 +188,7 @@ net primary productivity and forest stand age in US forests. Global
 Biogeochemical Cycles, 26(3).
 
 ![Lobolloy
-LAI](Functional%20Group%20Validating/PicsofTrees/Loblloly_Shortleaf.png)
+LAI2](Functional%20Group%20Validating/PicsofTrees/Loblloly_Shortleaf.png)
 
 \#\#\#Southern Hardwoods For southern hardwoods we compared Tulip poplar
 (Liriodendron tulipifera).
@@ -205,7 +205,7 @@ chronosequence of mixed-species deciduous forests. Canadian Journal of
 Forest Research, 24(8), 1694-1703.
 
 ![Tupli poplar
-LAI](Functional%20Group%20Validating/PicsofTrees/Tulip_poplar.jpg)
+LAI2](Functional%20Group%20Validating/PicsofTrees/Tulip_poplar.jpg)
 
 ### Northern Hardwoods
 
