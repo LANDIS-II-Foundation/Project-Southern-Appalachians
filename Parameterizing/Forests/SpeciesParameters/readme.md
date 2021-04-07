@@ -235,7 +235,7 @@ Biomass](Functional%20Group%20Validating/Hemlock%20Biomass.png)
 LAI](Functional%20Group%20Validating/Hemlock%20LAI.png)
 
 ![Hemlock
-LAI](Functional%20Group%20Validating/PicsofTrees/Hemlock.png)
+LAI](Functional%20Group%20Validating/PicsofTrees/Hemlock.PNG)
 
 ### Swampy
 
@@ -250,7 +250,7 @@ Birch](Functional%20Group%20Validating/Swampy_LAI.png)
 We compared this to Maple, Beech and Birch stands
 
 ![Beech
-LAI](Functional%20Group%20Validating/PicsofTrees/Maple_Beech_Birch.png)
+LAI](Functional%20Group%20Validating/PicsofTrees/Maple_Beech_Birch.PNG)
 
 ### Abies
 
@@ -269,7 +269,7 @@ R., & Kattge, J. (2012). Relationships between net primary productivity
 and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
 
 ![FF
-LAI](Functional%20Group%20Validating/PicsofTrees/Fir_Spruce.png)
+LAI](Functional%20Group%20Validating/PicsofTrees/Fir_Spruce.PNG)
 
 If you are interested in the code to create this see the R-Markdown file
 on this page. To return to the main page click
