@@ -53,7 +53,7 @@ Here is a example of some of the results obtained for Acer rubrum
 
 ```{r,warning=FALSE}
 library(knitr)
-w_dir<-'R:/fer/rschell/Robbins/Sapps/Model_Prep/Species Imput Files/NECN_Biochem/'
+w_dir<-'Z:/Robbins/Sapps/Model_Prep/Species Imput Files/NECN_Biochem/'
 Try<-read.csv(paste(w_dir,"Try_Proc.csv",sep=""))
 
 
@@ -72,14 +72,7 @@ Values were also updated using records from:
 > Davis, S. C., Dragan, K. E., Buyarski, C. R., & Thomas, R. B. (2009). High foliar and soil nitrogen concentrations in Central Appalachian forests. Ecosystems, 12(1), 46-56.
 
 
-```{r,echo=FALSE,out.width="60%"}
-
-knitr::include_graphics("C:/Users/zjrobbin/Desktop/FS_meeting/FiguresMisc/Davis2009.PNG")
-
-
-```
-
-Values that were still missing were assessed as similar through genus then family and in one case by order. These decisions can be found in the document:
+Values that were still missing were assessed as similar through genus then family and in one case by order. These decisions can be found in the document [here](https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/blob/master/Parameterizing/Forests/SpeciesParameters/Species%20by%20Species%20parameters_Documentation.xlsx)
 
 
 #### GGDmin,GDDmax,Frost,D3,FRT
@@ -104,7 +97,7 @@ library(rgdal)
 library(sf)
 library(raster)
 library(maptools)
-w_dir<-"F:/Functional_Groups/"
+w_dir<-"Z:/Functional_Groups/"
 setwd(w_dir)
 clip_655 <- raster(paste(w_dir,"Inputs/s655.img",sep=""))
 proj<-projection(clip_655)
@@ -198,10 +191,11 @@ I then visually compared plots to see that these clusters made sense.
 
 For variables, I decided on mean temperature, minimum precipitation, minimum vapor pressure deficit, and maximum elevation. Using mean
 shifting here is what the clusters looked like. 
+
 ```{r,message=FALSE,warning=FALSE}
-library(MeanShift)
+#library(MeanShift)
 #Set up the work drive
-w_dir<-"C:/Users/zjrobbin/Desktop/FS_meeting/Functional_Groups/"
+w_dir<-"Z:/Robbins/Sapps/Model_Prep/Functional_Groups/"
 setwd(w_dir)
 ```
 
@@ -307,26 +301,22 @@ write.csv(MSOUTPUT,paste(Clade,"MS_Output.csv",sep=""))
 ```
 
 ```{r,out.width="40%"}
-File<-"Conifer1"
-knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+# File<-"Conifer1"
+# knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+# ```
+# ```{r,out.width="40%"}
+# File<-"Conifer2"
+# knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+# ```
+# ```{r,out.width="40%"}
+# File<-"Conifer3"
+# knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
 ```
-```{r,out.width="40%"}
-File<-"Conifer2"
-knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Conifer3"
-knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
-```
-
-Additionally, I plotted each group on a PCA scale so that they could be visualized in one plot. 
-Here the red lines represent the directions of the ordination and each conifer group is the colors
-on the right. 
 
 
 ```{r,out.width="40%"}
-File<-"ConiferPCA"
-knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+# File<-"ConiferPCA"
+# knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
 ```
 These three groups are labeled in future work.
 
@@ -334,7 +324,7 @@ Southern Pines: The Green group that has higher mean temp and higher min VPD.
 Northern Pines: The Red Group Colder temps, mid-elevation.
 Abies(Firs): The Blue group (one) High elevation and colder temps.
 
-Here is the same thing for the hardwoods:
+We did the same thing for the hardwoods:
 ```{r,include=FALSE,eval=FALSE}
 ###Hardwoods
 
@@ -433,26 +423,26 @@ specialists that either would have to be grouped as 2 big groups (which seemed c
 individual groups. 
 
 ```{r,out.width="40%"}
-File<-"Hardwoods1 at1.2"
-knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Hardwoods2 at1.2"
-knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Hardwoods3 at1.2"
-knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"HardwoodsPCA at1.2"
-knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+# File<-"Hardwoods1 at1.2"
+# knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+# ```
+# ```{r,out.width="40%"}
+# File<-"Hardwoods2 at1.2"
+# knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+# ```
+# ```{r,out.width="40%"}
+# File<-"Hardwoods3 at1.2"
+# knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
+# ```
+# ```{r,out.width="40%"}
+# File<-"HardwoodsPCA at1.2"
+# knitr::include_graphics(paste(w_dir,File,".jpg",sep=""))
 ```
 
-Here we see there are two major groups and then a lot of groups of outside groups. Looking to avoid parameterizing 8 functional groups, 
-I took the visual grouping of group 5 with group 2 and clustering the right upper corner of the PCA together to create 4 groups:
+ Looking to avoid parameterizing 8 functional groups, 
+I took the visual grouping of 3 groups and clustering the right upper corner of the PCA together to create 3 groups:
 
-This gave us the functional groups.:
+This gave us the functional groups:
 
 Northern hardwoods
 
@@ -460,7 +450,6 @@ Southern Hardwoods
 
 Riparians
 
-Halesia
 
 
 
@@ -546,273 +535,98 @@ colnames(df)<-c("Species","Linear Regression(gm-2) at 125% ","Maximum Measured(g
 Bringing in the values from the FIA analysis. I isolated out the top 25% of plots by above ground carbon per age, assuming this to be the ideal growth for each species. These were then plotted as box plots which the comparison of each run could be simulated against, as a calibration measure. 
 
 
+## Functional Groups 
 
+To fit the parameters around the functional group we compare the most prevalent species to the FIA record of biomass per site, and a published value for LAI. For each, we ran single-cell simulations using the mean landscape values for NECN inputs. Each stand was initialized with two cohorts (one age 0 and one age 10) both with densities of 1000 g/m2. 
 
-#### Functional Group Parameters
 
-Here we are parameterizing the growth curves of the LANDIS-II model against the box plots. Each line is a model run at a different point in the soil continuum from most sandy on the landscape to most clayey. 
+#### Northern Conifer
 
+For northern conifers the most prevelent species was Pinus strobus.
 
+![Northern Conifer Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Northern Conifer Biomass.png)
 
-```{r,out.width="40%"}
-w_dir<-"C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21"
-Species<-"QuerPrin"
 
-File<-"GrowthCurves"
-
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-
-Using the FIA data we additionally fit a Mitscherlich curve to the relationship between age and biomass of the top 25 % of stands.
-This was compared to the biomass in an ideal scenario LANDIS-II runs. 
+![Northern Conifer Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Northern Conifer LAI.png)
 
+Compared to  white/red/jack pine values from 
+He, L., Chen, J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary productivity and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
 
-```{r,out.width="40%"}
-File<-"QuerPrinAGB"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
+![White Pine LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/White_Pine.png)
 
-We also compare the leaf area index of each species as a simulated forest, against established values for forests.  
+### Southern Conifer
+For southern conifers we compared published values from Pinus Taeda
 
-The values we are using for this are from:
+![Pinus taeda Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Southern Conifer Biomass.png)
 
->He, L., Chen, J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary productivity and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
+![Pinus Taeda LAI](C:/Users/zacha/Desktop/Functional Group Validating/Southern Conifer LAI.png)
+Here are values from Loblolly/shortleaf pine stands from 
+He, L., Chen, J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary productivity and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
 
-On the left is a LANDIS output for chestnut oak and on the right are LAI values for a sampled oak/hickory forest.
+![Lobolloy LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Loblloly_Shortleaf.png)
 
-```{r,out.width="40%"}
-File<-"LAI"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Oak_Hickory"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
-```
-
-
-Here we looked at each of the major species in each functional group, as functional groups parameters in NECN are the major determinants of growth after the ideal growth ANPP parameter. If function group parameters seemed to work for the group but not an
-individual species, then ANPP was adjusted. 
-
-####Northern Hardwoods
-
-#####Quercus Prinus
-
-```{r,out.width="40%"}
-###Code example of running mechanism. 
-library(gridExtra)
-library(knitr)
-w_dir<-"C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21"
-Species<-"QuerPrin"
-
-File<-"GrowthCurves"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"QuerPrinAGB"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"LAI"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Oak_Hickory"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
-```
-
-##### Acer Rubra
-
-
-```{r,out.width="40%"}
-w_dir<-"C:/Users/zjrobbin/Desktop/Sapps_SC/SS_3_21"
-Species<-"AcerRubr"
-
-File<-"GrowthCurves"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"AcerRubrAGB"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"LAI"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Maple_Beech_Birch"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
-```
 
-#### Northern Conifers
-##### Pinus Strobus 
 
-```{r,out.width="40%"}
-Species<-"PinuStorm"
-File<-"GrowthCurves"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"PinuStormAGB"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"LAI"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"White_Pine"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
-
-```
-
-##### Tsuga Canadensis
-
-
-```{r,out.width="40%"}
-
-Species<-"Tsug Cand"
-
-File<-"GrowthCurves"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Tsug CandAGB"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"LAI"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Hemlock"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
-```
-
-#### Southern Conifers
-##### Pinus Virginiana
-
-```{r,out.width="40%"}
-Species<-"PinuVirg"
-File<-"GrowthCurves"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"PinuVirgAGB"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"LAI"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Longleaf_Slash"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
-```
-
-
-
-##### Pinus Taeda
-```{r,out.width="40%"}
-Species<-"PinuTaed"
-
-File<-"GrowthCurves"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"PinuTaedAGB"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"LAI"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="30%"}
-File<-"Loblolly_Shortleaf"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
-```
-
-
-
-
-
-
-#### Southern Hardwoods
-
-##### liriodendron tulipifera
-
-
-
-
-
-
-##### Carya Glabra
-
-```{r,out.width="40%"}
-Species<-"CaryGlab"
-
-File<-"GrowthCurves"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"CaryGlabAGB"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"LAI"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Oak_Hickory"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
-```
-
-#### Riparian 
-
-##### Betula Alleghaniensis
-
-```{r,out.width="40%"}
-
-Species<-"BetuAlle"
-
-File<-"GrowthCurves"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="30%"}
-File<-"BetuAlleAGB"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="30%"}
-File<-"LAI"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="30%"}
-File<-"Maple_Beech_Birch"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
-```
-
-#### Abies 
-##### Frasier Fir 
-
-```{r,out.width="40%"}
-
-
-Species<-"Frasfir"
-
-File<-"GrowthCurves"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"FrasFirAGB"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"LAI"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".jpeg",sep=""))
-```
-```{r,out.width="40%"}
-File<-"Fir_Spruce"
-knitr::include_graphics(paste(w_dir,"/",Species,"/",File,".png",sep=""))
-```
+###Southern Hardwoods
+For southern hardwoods we compared Tulip poplar (Liriodendron tulipifera).
+
+![Tulip poplar Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Southern Hardwoods Biomass.png)
+![Tulip poplar LAI](C:/Users/zacha/Desktop/Functional Group Validating/Southern Hardwoods LAI.png)
+
+Published values from Mixed Tulip-poplar/ Sweet gum forests
+
+Brown, M. J., & Parker, G. G. (1994). Canopy light transmittance in a chronosequence of mixed-species deciduous forests. Canadian Journal of Forest Research, 24(8), 1694-1703.
+
+![Tupli poplar LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Tulip_poplar.JPG)
+
+### Northern Hardwoods
+Chestnut oak (Quercus montana) was used to compare northern hardwoods
+
+![Chestnut Oak Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Northern Hardwood Biomass.png)
+
+![Chestnut Oak Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Northern Hardwood LAI.png)
+
+Published Chestnut Oak LAI 
+He, L., Chen, J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary productivity and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
+
+
+![Chestnut Oak LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Oak_Hickory.png)
+
+### Hemlock 
+
+Hemlock is its own functional group. 
+
+![Hemlock Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Hemlock Biomass.png)
+
+![Hemlock LAI](C:/Users/zacha/Desktop/Functional Group Validating/Hemlock LAI.png)
+
+![Hemlock LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Hemlock.png)
+
+### Swampy 
+For this functional group we used Betula Alleghaniensis
+
+![Yellow Birch](C:/Users/zacha/Desktop/Functional Group Validating/Swampy_Biomass.png)
+
+
+![Yellow Birch](C:/Users/zacha/Desktop/Functional Group Validating/Swampy_LAI.png)
+
+We compared this to Maple, Beech and Birch stands 
+
+![Beech LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Maple_Beech_Birch.png)
+
+### Abies 
+
+For this functional group we used Fraser Fir, unfortunately there were very few FIA plots to use as comparison, so we used the max biomass esablished in 
+prior LANDIS-II studies of the species.
+
+![Fraser fir](C:/Users/zacha/Desktop/Functional Group Validating/Abies_Biomass.png)
+
+![Fraser fir](C:/Users/zacha/Desktop/Functional Group Validating/Abies_LAI.png)
+
+Published Fir-Spruce stand LAI 
+He, L., Chen, J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary productivity and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
+
+![FF LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Fir_Spruce.png)
 
 
 If you are interested in the code to create this see the R-Markdown file on this page.

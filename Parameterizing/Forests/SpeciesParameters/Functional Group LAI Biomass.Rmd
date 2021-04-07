@@ -1,0 +1,104 @@
+---
+title: "Functional Group LAI and Biomass"
+author: "Zjrobbin"
+date: "4/6/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Functional Groups 
+
+To fit the parameters around the functional group we compare the most prevalent species to the FIA record of biomass per site, and a published value for LAI. For each, we ran single-cell simulations using the mean landscape values for NECN inputs. Each stand was initialized with two cohorts (one age 0 and one age 10) both with densities of 1000 g/m2. 
+
+
+#### Northern Conifer
+
+For northern conifers the most prevelent species was Pinus strobus.
+
+![Northern Conifer Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Northern Conifer Biomass.png)
+
+
+![Northern Conifer Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Northern Conifer LAI.png)
+
+Compared to  white/red/jack pine values from 
+He, L., Chen, J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary productivity and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
+
+![White Pine LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/White_Pine.png)
+
+### Southern Conifer
+For southern conifers we compared published values from Pinus Taeda
+
+![Pinus taeda Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Southern Conifer Biomass.png)
+
+![Pinus Taeda LAI](C:/Users/zacha/Desktop/Functional Group Validating/Southern Conifer LAI.png)
+Here are values from Loblolly/shortleaf pine stands from 
+He, L., Chen, J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary productivity and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
+
+![Lobolloy LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Loblloly_Shortleaf.png)
+
+
+
+###Southern Hardwoods
+For southern hardwoods we compared Tulip poplar (Liriodendron tulipifera).
+
+![Tulip poplar Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Southern Hardwoods Biomass.png)
+![Tulip poplar LAI](C:/Users/zacha/Desktop/Functional Group Validating/Southern Hardwoods LAI.png)
+
+Published values from Mixed Tulip-poplar/ Sweet gum forests
+
+Brown, M. J., & Parker, G. G. (1994). Canopy light transmittance in a chronosequence of mixed-species deciduous forests. Canadian Journal of Forest Research, 24(8), 1694-1703.
+
+![Tupli poplar LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Tulip_poplar.JPG)
+
+### Northern Hardwoods
+Chestnut oak (Quercus montana) was used to compare northern hardwoods
+
+![Chestnut Oak Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Northern Hardwood Biomass.png)
+
+![Chestnut Oak Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Northern Hardwood LAI.png)
+
+Published Chestnut Oak LAI 
+He, L., Chen, J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary productivity and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
+
+
+![Chestnut Oak LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Oak_Hickory.png)
+
+### Hemlock 
+
+Hemlock is its own functional group. 
+
+![Hemlock Biomass](C:/Users/zacha/Desktop/Functional Group Validating/Hemlock Biomass.png)
+
+![Hemlock LAI](C:/Users/zacha/Desktop/Functional Group Validating/Hemlock LAI.png)
+
+![Hemlock LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Hemlock.png)
+
+### Swampy 
+For this functional group we used Betula Alleghaniensis
+
+![Yellow Birch](C:/Users/zacha/Desktop/Functional Group Validating/Swampy_Biomass.png)
+
+
+![Yellow Birch](C:/Users/zacha/Desktop/Functional Group Validating/Swampy_LAI.png)
+
+We compared this to Maple, Beech and Birch stands 
+
+![Beech LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Maple_Beech_Birch.png)
+
+### Abies 
+
+For this functional group we used Fraser Fir, unfortunately there were very few FIA plots to use as comparison, so we used the max biomass esablished in 
+prior LANDIS-II studies of the species.
+
+![Fraser fir](C:/Users/zacha/Desktop/Functional Group Validating/Abies_Biomass.png)
+
+![Fraser fir](C:/Users/zacha/Desktop/Functional Group Validating/Abies_LAI.png)
+
+Published Fir-Spruce stand LAI 
+He, L., Chen, J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary productivity and forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
+
+![FF LAI](C:/Users/zacha/Desktop/Functional Group Validating/PicsofTrees/Fir_Spruce.png)
