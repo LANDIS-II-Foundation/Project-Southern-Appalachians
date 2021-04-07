@@ -171,7 +171,7 @@ productivity and forest stand age in US forests. Global Biogeochemical
 Cycles, 26(3).
 
 ![White Pine
-LAI](Functional%20Group%20Validating/PicsofTrees/White_Pine.png)
+LAI](Functional%20Group%20Validating/PicsofTrees/White_Pine.PNG)
 
 ### Southern Conifer
 
@@ -188,7 +188,7 @@ net primary productivity and forest stand age in US forests. Global
 Biogeochemical Cycles, 26(3).
 
 ![Lobolloy
-LAI2](Functional%20Group%20Validating/PicsofTrees/Loblloly_Shortleaf.png)
+LAI2](Functional%20Group%20Validating/PicsofTrees/Loblloly_Shortleaf.PNG)
 
 \#\#\#Southern Hardwoods For southern hardwoods we compared Tulip poplar
 (Liriodendron tulipifera).
@@ -205,7 +205,7 @@ chronosequence of mixed-species deciduous forests. Canadian Journal of
 Forest Research, 24(8), 1694-1703.
 
 ![Tupli poplar
-LAI2](Functional%20Group%20Validating/PicsofTrees/Tulip_poplar.jpg)
+LAI2](Functional%20Group%20Validating/PicsofTrees/Tulip_poplar.JPG)
 
 ### Northern Hardwoods
 
@@ -222,7 +222,7 @@ Kattge, J. (2012). Relationships between net primary productivity and
 forest stand age in US forests. Global Biogeochemical Cycles, 26(3).
 
 ![Chestnut Oak
-LAI](Functional%20Group%20Validating/PicsofTrees/Oak_Hickory.png)
+LAI](Functional%20Group%20Validating/PicsofTrees/Oak_Hickory.PNG)
 
 ### Hemlock
 
