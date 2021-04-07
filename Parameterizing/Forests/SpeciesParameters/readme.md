@@ -160,10 +160,10 @@ cohorts (one age 0 and one age 10) both with densities of 1000 g/m2.
 For northern conifers the most prevelent species was Pinus strobus.
 
 ![Northern Conifer
-Biomass](C:/Users/zacha/Desktop/Functional%20Group%20Validating/Northern%20Conifer%20Biomass.png)
+Biomass](Functional%20Group%20Validating/Northern%20Conifer%20Biomass.png)
 
 ![Northern Conifer
-Biomass](C:/Users/zacha/Desktop/Functional%20Group%20Validating/Northern%20Conifer%20LAI.png)
+Biomass](Functional%20Group%20Validating/Northern%20Conifer%20LAI.png)
 
 Compared to white/red/jack pine values from He, L., Chen, J. M., Pan,
 Y., Birdsey, R., & Kattge, J. (2012). Relationships between net primary
@@ -181,7 +181,7 @@ For southern conifers we compared published values from Pinus Taeda
 Biomass](Functional%20Group%20Validating/Southern%20Conifer%20Biomass.png)
 
 ![Pinus Taeda
-LAI](C:/Users/zacha/Desktop/Functional%20Group%20Validating/Southern%20Conifer%20LAI.png)
+LAI](Functional%20Group%20Validating/Southern%20Conifer%20LAI.png)
 Here are values from Loblolly/shortleaf pine stands from He, L., Chen,
 J. M., Pan, Y., Birdsey, R., & Kattge, J. (2012). Relationships between
 net primary productivity and forest stand age in US forests. Global
@@ -205,7 +205,7 @@ chronosequence of mixed-species deciduous forests. Canadian Journal of
 Forest Research, 24(8), 1694-1703.
 
 ![Tupli poplar
-LAI](Functional%20Group%20Validating/PicsofTrees/Tulip_poplar.JPG)
+LAI](Functional%20Group%20Validating/PicsofTrees/Tulip_poplar.jpg)
 
 ### Northern Hardwoods
 
