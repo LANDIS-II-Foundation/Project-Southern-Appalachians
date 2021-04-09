@@ -1,12 +1,11 @@
----
-title: "Fire Parameterization"
-author: "Zjrobbin"
-date: "3/3/2021"
-output: github_document
----
+Fire Parameterization
+================
+Zjrobbin
+3/3/2021
+
 Loading in packages
 
-```{r, results = 'hide', error=FALSE, warning=FALSE, message=FALSE}
+``` r
 library(plyr)
 library(pscl)
 library(sf)
@@ -27,33 +26,54 @@ library(hexbin)
 library(RColorBrewer)
 ```
 
-
-
 # Ignitions
 
 Ignitions were parameterized using the Short ignition database:
 
-Short, K. C. (2017). Spatial wildfire occurrence data for the United States, 1992-2015 [FPA_FOD_20170508].
+Short, K. C. (2017). Spatial wildfire occurrence data for the United
+States, 1992-2015 \[FPA\_FOD\_20170508\].
 
-in combination with the fire weather index in the LANDIS-II climate library (Lucash et al 2017).
+in combination with the fire weather index in the LANDIS-II climate
+library (Lucash et al 2017).
 
-Lucash, M. S., Scheller, R. M., Gustafson, E. J., & Sturtevant, B. R. (2017). Spatial resilience of forested landscapes under climate change and management. Landscape Ecology, 32(5), 953-969.
+Lucash, M. S., Scheller, R. M., Gustafson, E. J., & Sturtevant, B. R.
+(2017). Spatial resilience of forested landscapes under climate change
+and management. Landscape Ecology, 32(5), 953-969.
 
-The historical climate data used to create this is from gridmet: 
+The historical climate data used to create this is from gridmet:
 
-Abatzoglou, J. T. (2013). Development of gridded surface meteorological data for ecological applications and modelling. International Journal of Climatology, 33(1), 121-131.
+Abatzoglou, J. T. (2013). Development of gridded surface meteorological
+data for ecological applications and modelling. International Journal of
+Climatology, 33(1), 121-131.
 
-A zero-inflated model of the likelihood of each ignition type is then fit to the daily fire weather index. 
+A zero-inflated model of the likelihood of each ignition type is then
+fit to the daily fire weather index.
 
-```{r}
+``` r
 fix<-function(x){return(as.numeric(as.character(x)))}
 ## Load in 
 w_dir<-"C:/Users/zacha/Desktop/Sapps_DM_paper/"
 ## Georgia Shapefile
 CNF<-st_read("C:/Users/zacha/Desktop/Sapps_DM_paper/Georgia.shp")
+```
+
+    ## Reading layer `Georgia' from data source `C:\Users\zacha\Desktop\Sapps_DM_paper\Georgia.shp' using driver `ESRI Shapefile'
+    ## Simple feature collection with 1 feature and 14 fields
+    ## geometry type:  POLYGON
+    ## dimension:      XY
+    ## bbox:           xmin: 79536.62 ymin: 3358689 xmax: 520501.5 ymax: 3881045
+    ## projected CRS:  NAD83 / UTM zone 17N
+
+``` r
 ### These are the short ligthning ignitions for the larger SApps landscape
 l_fire_dat <- read.csv(paste(w_dir,"Inputs/FiresInAppsLightning2.csv", sep=""))
 colnames(l_fire_dat)
+```
+
+    ## [1] "X"           "FIRE_YEAR"   "DISCOVER_1"  "STAT_CAU_1"  "CONT_DATE"  
+    ## [6] "FIRE_SIZE"   "LATITUDE"    "LONGITUDE"   "Coordinates"
+
+``` r
 ##UTM11<-Plot_locations[Plot_locations$UTM.Zone==('11S'),]
 
 ## Get the lat and lon
@@ -65,17 +85,26 @@ Spati <- SpatialPointsDataFrame(coords = xy, data = l_fire_dat,
   spTransform(projection(CNF))%>%
   as("sf")
 Int<-st_intersection(Spati,CNF)
+```
+
+    ## Warning: attribute variables are assumed to be spatially constant throughout all
+    ## geometries
+
+``` r
 ### Show the location 
 plot(CNF$geometry,xlim=c(100000,400000),ylim=c(3700000,3900000),
      main="Lightning ignitions 1992-2016")
 plot(Int$geometry,add=T,col="red")
 ```
 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
 ### Lightning
 
-We filtered ignitions that resulted in fires larger than one cell size (6.25 ha).
+We filtered ignitions that resulted in fires larger than one cell size
+(6.25 ha).
 
-```{r}
+``` r
 l_fire_dat <- Int
 ### Just sites that are larger than 6.25 ha 
 l_fire_dat<-l_fire_dat%>%
@@ -87,7 +116,7 @@ colnames(l_fire_days) <- c("YEAR", "J_DAY")
 l_fire_days_sort <- l_fire_days[order(l_fire_days[,1]),] #sorting by year
 ```
 
-```{r}
+``` r
 library(RColorBrewer)
 ### Here we ara plotting the number of fires
 red<-RColorBrewer::brewer.pal(9,'YlOrRd')
@@ -99,7 +128,10 @@ colnames(l_fires_count) <- c("YEAR", "COUNT")
 
 barplot(l_fires_count$COUNT, main ="No of ign/yr Lightning Observed",col=red,names.arg=l_fires_count$YEAR)
 ```
-```{r}
+
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
 ### Repeat with ln 48-100 with human ignitions
 h_fire_dat <- read.csv(paste(w_dir, "Inputs/FiresInAppsHuman2.csv", sep=""))
 xy <-h_fire_dat [,c("LONGITUDE","LATITUDE")]
@@ -108,11 +140,20 @@ Spati <- SpatialPointsDataFrame(coords = xy, data = h_fire_dat ,
   spTransform(projection(CNF))%>%
   as("sf")
 Int<-st_intersection(Spati,CNF)
+```
+
+    ## Warning: attribute variables are assumed to be spatially constant throughout all
+    ## geometries
+
+``` r
 plot(CNF$geometry,xlim=c(100000,400000),ylim=c(3700000,3900000),
      main="Human ignitions 1992-2016")
 plot(Int$geometry,add=T,col="red")
+```
 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
+``` r
 h_fire_dat <-Int
 h_fire_dat<-h_fire_dat%>%
   subset(FIRE_SIZE>15.44)
@@ -130,7 +171,9 @@ colnames(h_fires_count) <- c("YEAR", "COUNT")
 barplot(h_fires_count$COUNT, main ="No of ign/yr Human Accidental Observed",col=red,names.arg=h_fires_count$YEAR)
 ```
 
-```{r}
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+
+``` r
 ign_types <- c("Lightning", "HumanAccidental")
 
 fire_days_list <- list(l_fire_days_sort, h_fire_days_sort) ##organizing all ignition types into a list
@@ -148,11 +191,9 @@ FWI_dat$ID <- paste(FWI_dat$Year, "_", FWI_dat$Timestep, sep="") #creating date 
 FWI_dat$Dates<-as.Date(FWI_dat$Timestep, origin=as.Date(paste0(FWI_dat$Year,"-01-01")))
 fire_days_count <- ddply(l_fire_days_sort, .(l_fire_days_sort$YEAR, l_fire_days_sort$J_DAY), nrow) #
 fire_days_count$Date<-as.Date(fire_days_count$`l_fire_days_sort$J_DAY`,origin=as.Date(paste0(fire_days_count$`l_fire_days_sort$YEAR`,"-01-01")))
-
-
 ```
 
-```{r}
+``` r
 ### This loop goes through and combines the FWI and ignitions data. 
 
 igns_list <- list()
@@ -176,20 +217,65 @@ for (i in 1:length(ign_types[1:2])){#THIS DOESN'T INCLUDE RX BURNS BUT THATS CAU
 
 ### Lightning
 
-```{r}
+``` r
 ### Get the lightning data 
 Lightning<-as.data.frame(igns_list[[1]])
 colnames(Lightning)[3]<-"No_FIRES"
 ### Look at the linear relationship 
 summary(lm(Lightning$No_FIRES~Lightning$FWI))
+```
 
+    ## 
+    ## Call:
+    ## lm(formula = Lightning$No_FIRES ~ Lightning$FWI)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.01875 -0.00641 -0.00438 -0.00181  2.99408 
+    ## 
+    ## Coefficients:
+    ##                 Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   -0.0030925  0.0020394  -1.516    0.129    
+    ## Lightning$FWI  0.0005824  0.0001476   3.945 8.05e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.0755 on 8028 degrees of freedom
+    ## Multiple R-squared:  0.001935,   Adjusted R-squared:  0.00181 
+    ## F-statistic: 15.56 on 1 and 8028 DF,  p-value: 8.051e-05
+
+``` r
 ## Fit the zero inflated model 
 zeroinf_mod <- zeroinfl(as.numeric(No_FIRES)~as.numeric(FWI),data=Lightning, dist="poisson")
 ## See the summary of that model 
 summary(zeroinf_mod)
 ```
 
-```{r}
+    ## 
+    ## Call:
+    ## zeroinfl(formula = as.numeric(No_FIRES) ~ as.numeric(FWI), data = Lightning, 
+    ##     dist = "poisson")
+    ## 
+    ## Pearson residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.12623 -0.06901 -0.04564 -0.02442 37.70623 
+    ## 
+    ## Count model coefficients (poisson with log link):
+    ##                 Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      2.02999    0.86284   2.353   0.0186 *  
+    ## as.numeric(FWI) -0.21642    0.05499  -3.936  8.3e-05 ***
+    ## 
+    ## Zero-inflation model coefficients (binomial with logit link):
+    ##                 Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)     10.24538    1.28792   7.955 1.79e-15 ***
+    ## as.numeric(FWI) -0.40606    0.09149  -4.438 9.06e-06 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
+    ## 
+    ## Number of iterations in BFGS optimization: 14 
+    ## Log-likelihood: -191.7 on 4 Df
+
+``` r
 ### Create a predictive model from the zero inflated model 
 zero<-predict(zeroinf_mod,data.frame(FWI=Lightning$FWI), type = "zero")
 lambda <- predict(zeroinf_mod,data.frame(FWI=Lightning$FWI), type = "count")
@@ -203,10 +289,11 @@ par(mfrow=c(1,2))
 barplot(Sample$x, main ="No of ign/yr Lightning Simulated",col='black', ylim=c(0,10),names.arg=Sample$year)
 
 barplot(l_fires_count$COUNT, main ="No of ign/yr Lightning Observed",col=red,ylim=c(0,10),names.arg=l_fires_count$YEAR)
-
 ```
 
-```{r}
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
 ### This chunk simulates man models to look at the overall trend in FWI and N ignitions
 FireWeathers<-seq(0,44,.1)
 par(mfrow=c(1,2))
@@ -214,6 +301,11 @@ zeros<-predict(zeroinf_mod,data.frame(FWI=FireWeathers), type = "zero")
 plot(FireWeathers,zeros,ylab="Liklihood of a zero")
 lambda <- predict(zeroinf_mod,data.frame(FWI=FireWeathers), type = "count")
 plot(FireWeathers,lambda,ylab="Number of Igntions")
+```
+
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
 par(mfrow=c(1,1))
 FireWeathers<-rep(seq(0,50,.1),100)
 lambda <- predict(zeroinf_mod,data.frame(FWI=FireWeathers), type = "count")
@@ -223,9 +315,11 @@ plot(FireWeathers,Simulation,col=adjustcolor("black",alpha.f = .01),pch=19,ylab=
      main="Fire Weather Index Scale 100 Simulations")
 ```
 
-### Accidental 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
 
-```{r}
+### Accidental
+
+``` r
 ## Get just the accidnetal data 
 Accidental<-as.data.frame(igns_list[[2]])
 colnames(Accidental)[3]<-"No_FIRES"
@@ -237,8 +331,30 @@ Acc_zeroinf_mod <- zeroinfl(No_FIRES~FWI,data=Accidental, dist="poisson")
 summary(Acc_zeroinf_mod)
 ```
 
+    ## 
+    ## Call:
+    ## zeroinfl(formula = No_FIRES ~ FWI, data = Accidental, dist = "poisson")
+    ## 
+    ## Pearson residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -0.1636 -0.1481 -0.1455 -0.1421 20.5314 
+    ## 
+    ## Count model coefficients (poisson with log link):
+    ##             Estimate Std. Error z value Pr(>|z|)   
+    ## (Intercept) -0.94748    0.31055  -3.051  0.00228 **
+    ## FWI          0.01392    0.02044   0.681  0.49577   
+    ## 
+    ## Zero-inflation model coefficients (binomial with logit link):
+    ##               Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)  2.6605450  0.3217303   8.269   <2e-16 ***
+    ## FWI         -0.0002711  0.0214416  -0.013     0.99    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
+    ## 
+    ## Number of iterations in BFGS optimization: 13 
+    ## Log-likelihood: -1041 on 4 Df
 
-```{r}
+``` r
 ### Create a predictive model based on fwi 
 zero<-predict(Acc_zeroinf_mod,data.frame(FWI=Accidental$FWI), type = "zero")
 
@@ -251,11 +367,11 @@ par(mfrow=c(1,2))
 barplot(Sample$x, main ="No of ign/yr Accidental_Simulated",col='black', ylim=c(0,50),names.arg=Sample$year)
 
 barplot(h_fires_count$COUNT, main ="No of ign/yr Human Accidental Observed",col=red,ylim=c(0,50),names.arg=h_fires_count$YEAR)
-
-
 ```
 
-```{r}
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+``` r
 ### Same as ln 210-223 above
 FireWeathers<-seq(0,50,.1)
 par(mfrow=c(1,2))
@@ -263,6 +379,11 @@ zeros<-predict(Acc_zeroinf_mod,data.frame(FWI=FireWeathers), type = "zero")
 plot(FireWeathers,zeros,ylab="Liklihood of a zero",ylim=c(0,1))
 lambda <- predict(Acc_zeroinf_mod,data.frame(FWI=FireWeathers), type = "count")
 plot(FireWeathers,lambda,ylab="Number of Igntions")
+```
+
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
 par(mfrow=c(1,1))
 FireWeathers<-rep(seq(0,50,.1),100)
 lambda <- predict(Acc_zeroinf_mod,data.frame(FWI=FireWeathers), type = "count")
@@ -273,39 +394,55 @@ plot(FireWeathers,Simulation,col=adjustcolor("black",alpha.f = .01),pch=19,ylab=
      main="Fire Weather Index Scale 100 Simulations")
 ```
 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
+
 # Fire Spread
 
-
-```{r}
+``` r
 w_dir <- "C:/Users/zacha/Desktop/Truncated_Scrapple/Inputs/"
 out_dir <-  "C:/Users/zacha/Desktop/Truncated_Scrapple/Outputs/"
 ```
 
-Here we are looking to fit a binomial model as to how probability of spread is related to the FWI, wind, and fuels.
+Here we are looking to fit a binomial model as to how probability of
+spread is related to the FWI, wind, and fuels.
 
-For this we have wind data and Fire weather index data located to climate regions in LANDIS-II
-This is Gridmet data from the University of Idaho http://www.climatologylab.org/gridmet.html
+For this we have wind data and Fire weather index data located to
+climate regions in LANDIS-II This is Gridmet data from the University of
+Idaho <http://www.climatologylab.org/gridmet.html>
 [meta](https://cida.usgs.gov/thredds/dodsC/UofIMETDATA.html)
 
+The ecoregion map is used to locate the windspeed and the fwi data for
+each time step.
 
-The ecoregion map is used to locate the windspeed and the fwi data for each time step. 
-
-```{r}
+``` r
 fwi_dat <- read.csv(paste0(w_dir,"11_Eco_Climate.csv"),stringsAsFactors = FALSE)
 wind_map<- raster::raster(paste(w_dir,"11_Ecoregions.tif",sep=""))
+```
+
+    ## Warning in showSRID(uprojargs, format = "PROJ", multiline = "NO"): Discarded datum Unknown based on GRS80 ellipsoid in CRS definition,
+    ##  but +towgs84= values preserved
+
+``` r
 wsv_dat <- read.csv(paste(w_dir,"Wind_1028.csv",sep=""),stringsAsFactors = FALSE)
 
 colnames(wsv_dat) <- c("date", "eco1", 'eco2', 'eco3', 'eco4','eco5','eco6','eco8','eco9','eco10','eco11')
 
 plot(wind_map)
-
 ```
-We also have a fuel map representing landscape level fuels for the study area 
-as well as an uphill azimuth map and a slope map (used to calculate the direction of spread)
 
-```{r}
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-15-1.png)<!-- --> We
+also have a fuel map representing landscape level fuels for the study
+area as well as an uphill azimuth map and a slope map (used to calculate
+the direction of spread)
 
+``` r
 ExampleRaster<-raster(paste(w_dir,"11_Ecoregions.tif",sep=""))
+```
+
+    ## Warning in showSRID(uprojargs, format = "PROJ", multiline = "NO"): Discarded datum Unknown based on GRS80 ellipsoid in CRS definition,
+    ##  but +towgs84= values preserved
+
+``` r
 projy<-crs(ExampleRaster)
 
 ### This is the landis-II fuel imput for timestep 10
@@ -314,12 +451,15 @@ fccs_raster<-raster(paste(w_dir,"Fuel_129.IMG",sep=""))
 crs(fccs_raster)<-projy
 extent(fccs_raster)<-extent(ExampleRaster)
 plot(fccs_raster)
-
 ```
 
-Given the sites that are turned off on the LANDIS-II map, we interpolated between simulated fuel values to get an even coverage of fuels. 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
-```{r,eval=F}
+Given the sites that are turned off on the LANDIS-II map, we
+interpolated between simulated fuel values to get an even coverage of
+fuels.
+
+``` r
 r=fccs_raster
 r[r==0] <- NA
 
@@ -347,29 +487,50 @@ fuel_map<-r4
 
 plot(fuel_map)
 writeRaster(fuel_map,paste0(w_dir,"Interpolated_FuelMap.tif"))
-
 ```
 
-```{r}
+``` r
 fuel_map<-raster(paste0(w_dir,"Interpolated_FuelMap.tif"))
+```
+
+    ## Warning in showSRID(uprojargs, format = "PROJ", multiline = "NO"): Discarded datum Unknown based on GRS80 ellipsoid in CRS definition,
+    ##  but +towgs84= values preserved
+
+``` r
 uphill_azi_map<- raster(paste(w_dir,"SAPPS_aspect_inverted_atModelRes.tif",sep=""))
+```
+
+    ## Warning in showSRID(uprojargs, format = "PROJ", multiline = "NO"): Discarded datum Unknown based on GRS80 ellipsoid in CRS definition,
+    ##  but +towgs84= values preserved
+
+``` r
 #uphill_azi_map <- projectRaster(slope_azi_map, to = fuel_map, method='bilinear')
 slope_map <-  raster(paste(w_dir,"SAPPS_Slope_ChrisArcmapprocess_modelres.tif",sep=""))
+```
+
+    ## Warning in showSRID(uprojargs, format = "PROJ", multiline = "NO"): Discarded datum Unknown based on GRS80 ellipsoid in CRS definition,
+    ##  but +towgs84= values preserved
+
+``` r
 #
 climate_stack <- stack(wind_map, fuel_map, uphill_azi_map, slope_map)
 plot(climate_stack)
 ```
 
-```{r}
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
-```
-
-
-
-
-```{r}
+``` r
 #Empty objects and column names and stuff used in loops
 newfire<-readOGR(paste(w_dir,"fire_geomac_loc.shp",sep=""))
+```
+
+    ## OGR data source with driver: ESRI Shapefile 
+    ## Source: "C:\Users\zacha\Desktop\Truncated_Scrapple\Inputs\fire_geomac_loc.shp", layer: "fire_geomac_loc"
+    ## with 591 features
+    ## It has 64 fields
+    ## Integer64 fields read as strings:  OBJECTID fireyear
+
+``` r
 ## Putting into sets based on differnces in meta-data (columns not matched)
 newfire1<-newfire[newfire$incidentna!=0,]
 newfire2<-newfire[newfire$incidentna==0,]
@@ -390,19 +551,34 @@ fire_names<-as.character(perimeter_map$incidentna)
 ###Climate regions
 plot(ExampleRaster)
 plot(newfire,add=TRUE)
-
-plot(fuel_map)
-plot(newfire,add=TRUE)
-
 ```
 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
+``` r
+plot(fuel_map)
+plot(newfire,add=TRUE)
+```
 
-### Here is the processing of the Grimet data 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-20-2.png)<!-- -->
 
-```{r}
+### Here is the processing of the Grimet data
+
+``` r
 fwi_dat_slim <- fwi_dat[,c(1,2,3,22)]
 colnames(fwi_dat)
+```
+
+    ##  [1] "Year"                 "Timestep"             "EcoregionName"       
+    ##  [4] "EcoregionIndex"       "ppt"                  "min_airtemp"         
+    ##  [7] "max_airtemp"          "std_ppt"              "std_temp"            
+    ## [10] "winddirection"        "windspeed"            "ndeposition"         
+    ## [13] "co2"                  "relativehumidity"     "min_relativehumidity"
+    ## [16] "max_relativehumidity" "specifichumidty"      "par"                 
+    ## [19] "ozone"                "shortwave"            "temperature"         
+    ## [22] "FWI"                  "X"
+
+``` r
 fwi_date_info <- with(fwi_dat_slim, paste(Year, Timestep))
 fwi_dates <- strptime(fwi_date_info, "%Y %j") #COnverting from julian day to y-m-d
 #unique(fwi_date_dat$EcoregionName)
@@ -412,13 +588,10 @@ fwi_date_dat$Ecoregion<-gsub("eco","",fwi_date_dat$Ecoregion)
 fwi_date_dat$Ecoregion<-as.numeric(as.character(fwi_date_dat$Ecoregion))
 ```
 
+We then visually filtered the fires. Looking for fires that are not just
+the final burn shape.
 
-
-We then visually filtered the fires. 
-Looking for fires that are not just the final burn shape. 
-
-
-```{r,fig.width=15.0,fig.height=15}
+``` r
  #  years <- 1992:2017
  #  library(raster)
  #  climate_day_mat <- NULL
@@ -452,24 +625,21 @@ Looking for fires that are not just the final burn shape.
  #    #selecting the first fire perim from that date, in case there are multiples
  #    }
  #  }
-  
-  
 ```
 
-We filtered the fires down to the final fires, based on having more than one day, and visual progress that appears to be more than mearly the same shape drawn at differnt
-times
+We filtered the fires down to the final fires, based on having more than
+one day, and visual progress that appears to be more than mearly the
+same shape drawn at differnt times
 
-```{r}
+``` r
 SoundInc<-c("BOTELER","Halls Top","SILVER MINE",'Chestnut Knob',"Rough Ridge","DICK'S CREEK",'CLIFFSIDE','Rattlesnake Hollow','MAPLE SPRINGS','Rock Mountain',"OLD ROUGHY",
 "KNOB","Quarry Creek","DOBSON 3","CLEAR CREEK","TELLICO","TIMBER RIDGE","East Miller Cove","FEREBEE MEMORIAL","HORTON","CAMP BRANCH","DOBSON KNOB","Wolf Creek","HAPPY VALLEY RIDGE","WHITE CREEK",
 "Pinnacle Mountain","PARTY ROCK")
 
 Firesinclude<-perimeter_map$incidentna[perimeter_map$incidentna %in% SoundInc]
-
 ```
 
-
-```{r,eval=FALSE}
+``` r
 years <- 1992:2017
 climate_day_mat <- NULL
 
@@ -623,11 +793,7 @@ for (i in 1:length(fire_names_manydays)){
 write.csv(climate_day_mat,"Example.csv")
 ```
 
-
-
-
-
-```{r}
+``` r
 ### Cleaning up the dataframe. 
 climate_day_mat<-read.csv("Spread_3_3.csv")
 climate_day_total<-climate_day_mat[-1]
@@ -657,32 +823,105 @@ climate_day_complete$effective_wsv <- U_b * ((fix(climate_day_complete$WSPD)/U_b
                 sin(fix(climate_day_complete$slope)) * cos(relative_wd) + (sin(fix(climate_day_complete$slope))^2)^0.5)
 
 head(climate_day_complete)
+```
 
+    ##   ID FireName       date wind_region fuel_number uphill_azi    slope   FWI
+    ## 1  1  BOTELER 2016-11-01           1   0.5153333   151.4595 54.83991 22.26
+    ## 2  2  BOTELER 2016-11-01           1   0.5476667   145.3944 56.86004 22.26
+    ## 3  3  BOTELER 2016-11-01           1   0.5980000   137.9744 53.96480 22.26
+    ## 4  4  BOTELER 2016-11-01           1   0.4790000   121.1148 58.76532 22.26
+    ## 5  5  BOTELER 2016-11-01           1   0.6153333   142.9772 34.39577 22.26
+    ## 6  6  BOTELER 2016-11-01           1   0.5306667   181.8610 38.66940 22.26
+    ##       WSPD spread expansion effective_wsv
+    ## 1 3.961008      0  197.1839     15.841470
+    ## 2 3.961008      0  197.1839      2.247329
+    ## 3 3.961008      0  197.1839      7.778363
+    ## 4 3.961008      0  197.1839      3.272490
+    ## 5 3.961008      0  197.1839      4.844688
+    ## 6 3.961008      0  197.1839      4.718093
+
+``` r
 hexbinplot(fix(climate_day_complete$spread)~fix(climate_day_complete$FWI),xlab="FWI",ylab="Spread",xbins=50,aspect=1,type="r")
+```
 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+
+``` r
 hexbinplot(fix(climate_day_complete$spread)~fix(climate_day_complete$effective_wsv),xlab="Wind Speed",ylab="Spread",xbins=50,aspect=1,type="r")
+```
+
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-25-2.png)<!-- -->
+
+``` r
 hexbinplot(fix(climate_day_complete$spread)~fix(climate_day_complete$fuel_number),xlab="Fuel number",ylab="Spread",xbins=50,aspect=1,type="r")
+```
+
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-25-3.png)<!-- -->
+
+``` r
 hexbinplot(fix(climate_day_complete$expansion)~fix(climate_day_complete$FWI),xlab="FWI",ylab="Spread",xbins=50,aspect=1,type="r")
+```
+
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-25-4.png)<!-- -->
+
+``` r
 hexbinplot(fix(climate_day_complete$expansion)~fix(climate_day_complete$effective_wsv),xlab="Wind Speed",ylab="Spread",xbins=50,aspect=1,type="r")
 ```
 
-We tested a glm model with FWI, windspeed and fuel. 
-The model used in the GA project uses only FWI 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-25-5.png)<!-- -->
 
-```{r}
+We tested a glm model with FWI, windspeed and fuel. The model used in
+the GA project uses only FWI
+
+``` r
 spread_vars_short<-climate_day_complete
 table(spread_vars_short$spread)
+```
+
+    ## 
+    ##    0    1 
+    ## 6846 7368
+
+``` r
 ### Fit the logistic model 
 Full_logit <- glm(spread ~fix(FWI), 
                   data = spread_vars_short, family = "binomial")
 ### See the summary of that model 
 summary(Full_logit)
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = spread ~ fix(FWI), family = "binomial", data = spread_vars_short)
+    ## 
+    ## Deviance Residuals: 
+    ##     Min       1Q   Median       3Q      Max  
+    ## -1.6851  -1.1823   0.9176   1.1538   1.4485  
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -0.892329   0.071383  -12.50   <2e-16 ***
+    ## fix(FWI)     0.039216   0.002825   13.88   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 19686  on 14213  degrees of freedom
+    ## Residual deviance: 19486  on 14212  degrees of freedom
+    ## AIC: 19490
+    ## 
+    ## Number of Fisher Scoring iterations: 4
+
+``` r
 AIC(Full_logit)
 ```
 
-Here is the model plotted as a response. 
-```{r}
+    ## [1] 19490.06
 
+Here is the model plotted as a response.
+
+``` r
 ### Here it is plotted as a response 
 FWI<-seq(0,max(spread_vars_short$FWI),.5)
 xB<-exp((-0.892329)+ 0.039216*(FWI))
@@ -699,21 +938,49 @@ points(FWI,binomial2mean)
 points(FWI,binomial2min,col="blue")
 ```
 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
-```{r}
+``` r
 spread_vars_short<-climate_day_complete
 #table(spread_vars_short$spread)
 Full_logit <- glm(spread ~fix(FWI)+fix(fuel_number), 
                   data = spread_vars_short, family = "binomial")
 summary(Full_logit)
-#hist(spread_vars_short$finefuels)
-AIC(Full_logit)
-
-
 ```
 
+    ## 
+    ## Call:
+    ## glm(formula = spread ~ fix(FWI) + fix(fuel_number), family = "binomial", 
+    ##     data = spread_vars_short)
+    ## 
+    ## Deviance Residuals: 
+    ##     Min       1Q   Median       3Q      Max  
+    ## -1.7373  -1.1810   0.9002   1.1367   1.5321  
+    ## 
+    ## Coefficients:
+    ##                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      -1.259443   0.087121 -14.456  < 2e-16 ***
+    ## fix(FWI)          0.036959   0.002849  12.974  < 2e-16 ***
+    ## fix(fuel_number)  0.694115   0.092975   7.466 8.29e-14 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 19686  on 14213  degrees of freedom
+    ## Residual deviance: 19430  on 14211  degrees of freedom
+    ## AIC: 19436
+    ## 
+    ## Number of Fisher Scoring iterations: 4
 
-```{r}
+``` r
+#hist(spread_vars_short$finefuels)
+AIC(Full_logit)
+```
+
+    ## [1] 19436.07
+
+``` r
 FWI<-seq(0,max(spread_vars_short$FWI),.5)
 xB<-exp(( -1.259443 )+ 0.036959*(FWI)+0.694115*max(spread_vars_short$fuel_number))
 binomial2<-xB/(1+xB)
@@ -730,18 +997,15 @@ lines(FWI,binomial2mean,lwd=3.0)
 lines(FWI,binomial2min,col="blue",lwd=3.0)
 legend(0,1.0,legend=c("High Fine Fuels","Median Fine Fuels"," Low Fine Fuels"),
        lty=c(1,1,1),lwd=c(3,3,3),col=c("red","black","blue"))
-
-
-
-
 ```
 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
-### Max spread. 
+### Max spread.
 
-Take the max spread per FWI and WS fit to that. 
-```{r}
+Take the max spread per FWI and WS fit to that.
 
+``` r
 check<-aggregate(x=list(Ws=climate_day_complete$effective_wsv,FWI=as.numeric(climate_day_complete$FWI)),
           by=list(date=climate_day_complete$dat,expansion=as.numeric(climate_day_complete$expansion)),FUN=mean)
 
@@ -751,28 +1015,57 @@ check$RFWI<-round(check$FWI)
 
 
 mean(check$expansion)
+```
+
+    ## [1] 409.1673
+
+``` r
 plot(fix(check$expansion)~fix(check$FWI),xlab="FWI",pch=19,col=adjustcolor("red",alpha.f = .3),ylab="Spread",cex.lab=1.2,cex.axis=1.2)
+```
+
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+
+``` r
 plot(fix(check$expansion)~fix(check$Ws),xlab="Wind Speed",ylab="Spread",pch=19,col=adjustcolor("red",alpha.f = .3),cex.lab=1.2,cex.axis=1.2)
 ```
 
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-30-2.png)<!-- -->
 
-```{r}
+``` r
 Expansionfull<-lm(fix(expansion) ~FWI , data =check)
 #?glm()
 summary(Expansionfull)
 ```
 
+    ## 
+    ## Call:
+    ## lm(formula = fix(expansion) ~ FWI, data = check)
+    ## 
+    ## Residuals:
+    ##    Min     1Q Median     3Q    Max 
+    ## -480.4 -301.7 -146.2  146.6 3248.5 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept)  282.877    206.852   1.368    0.174
+    ## FWI            5.059      8.086   0.626    0.533
+    ## 
+    ## Residual standard error: 496.6 on 119 degrees of freedom
+    ## Multiple R-squared:  0.003278,   Adjusted R-squared:  -0.005098 
+    ## F-statistic: 0.3914 on 1 and 119 DF,  p-value: 0.5328
 
-
-```{r}
+``` r
 FwI<-seq(0,max(spread_vars_short$FWI),.5)
 FWI_Spread<- 282.877+(5.059*FwI)
 plot(FwI,FWI_Spread,xlab="FWI",ylab="Spread per day")
 ```
-None of the variables were predcitive to maximum fire size: We ended using the mean of the fire spread
 
-```{r}
+![](Ignition_Spread_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+None of the variables were predcitive to maximum fire size: We ended
+using the mean of the fire spread
+
+``` r
 mean(check$expansion)
 ```
 
-
+    ## [1] 409.1673
