@@ -50,7 +50,10 @@ A zero-inflated model of the likelihood of each ignition type is then
 fit to the daily fire weather index.
 
 ``` r
+fix<-function(x){return(as.numeric(as.character(x)))}
+## Load in 
 w_dir<-"C:/Users/zacha/Desktop/Sapps_DM_paper/"
+## Georgia Shapefile
 CNF<-st_read("C:/Users/zacha/Desktop/Sapps_DM_paper/Georgia.shp")
 ```
 
@@ -62,6 +65,7 @@ CNF<-st_read("C:/Users/zacha/Desktop/Sapps_DM_paper/Georgia.shp")
     ## projected CRS:  NAD83 / UTM zone 17N
 
 ``` r
+### These are the short ligthning ignitions for the larger SApps landscape
 l_fire_dat <- read.csv(paste(w_dir,"Inputs/FiresInAppsLightning2.csv", sep=""))
 colnames(l_fire_dat)
 ```
@@ -70,9 +74,12 @@ colnames(l_fire_dat)
     ## [6] "FIRE_SIZE"   "LATITUDE"    "LONGITUDE"   "Coordinates"
 
 ``` r
-#UTM11<-Plot_locations[Plot_locations$UTM.Zone==('11S'),]
-xy <-l_fire_dat[,c("LONGITUDE","LATITUDE")]
+##UTM11<-Plot_locations[Plot_locations$UTM.Zone==('11S'),]
 
+## Get the lat and lon
+xy <-l_fire_dat[,c("LONGITUDE","LATITUDE")]
+## Create spatial points then transform it to shape file then performa and intersection with 
+## georgia shapefile
 Spati <- SpatialPointsDataFrame(coords = xy, data = l_fire_dat,
                                proj4string = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))%>%
   spTransform(projection(CNF))%>%
@@ -84,6 +91,7 @@ Int<-st_intersection(Spati,CNF)
     ## geometries
 
 ``` r
+### Show the location 
 plot(CNF$geometry,xlim=c(100000,400000),ylim=c(3700000,3900000),
      main="Lightning ignitions 1992-2016")
 plot(Int$geometry,add=T,col="red")
@@ -98,11 +106,11 @@ We filtered ignitions that resulted in fires larger than one cell size
 
 ``` r
 l_fire_dat <- Int
-#head(l_fire_dat)
+### Just sites that are larger than 6.25 ha 
 l_fire_dat<-l_fire_dat%>%
   subset(FIRE_SIZE>15.44)
-##This moves us from 676 to 155
-
+##This moves us from 676 to 155 ignitions
+## set up as dataframe
 l_fire_days <- as.data.frame(cbind(l_fire_dat$FIRE_YEAR, l_fire_dat$DISCOVER_1)) #Extracting year and julian day
 colnames(l_fire_days) <- c("YEAR", "J_DAY")
 l_fire_days_sort <- l_fire_days[order(l_fire_days[,1]),] #sorting by year
@@ -110,7 +118,7 @@ l_fire_days_sort <- l_fire_days[order(l_fire_days[,1]),] #sorting by year
 
 ``` r
 library(RColorBrewer)
-
+### Here we ara plotting the number of fires
 red<-RColorBrewer::brewer.pal(9,'YlOrRd')
 #plot no of fires/yr
 l_fire_days_sort_count<- cbind(l_fire_days_sort, rep(1, nrow(l_fire_days_sort)))
@@ -124,10 +132,9 @@ barplot(l_fires_count$COUNT, main ="No of ign/yr Lightning Observed",col=red,nam
 ![](Ignition_Spread_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
+### Repeat with ln 48-100 with human ignitions
 h_fire_dat <- read.csv(paste(w_dir, "Inputs/FiresInAppsHuman2.csv", sep=""))
-
 xy <-h_fire_dat [,c("LONGITUDE","LATITUDE")]
-
 Spati <- SpatialPointsDataFrame(coords = xy, data = h_fire_dat ,
                                proj4string = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))%>%
   spTransform(projection(CNF))%>%
@@ -165,7 +172,6 @@ barplot(h_fires_count$COUNT, main ="No of ign/yr Human Accidental Observed",col=
 ```
 
 ![](Ignition_Spread_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
-\#\#\# Lightning
 
 ``` r
 ign_types <- c("Lightning", "HumanAccidental")
@@ -175,24 +181,21 @@ fire_days_list <- list(l_fire_days_sort, h_fire_days_sort) ##organizing all igni
 
 ##Import daily historic FWI data
 FWI_dat <- read.csv(paste0(w_dir,"Inputs/GA_Climate.csv"))
-
 FWI_dat<-with(FWI_dat,aggregate(FWI,by=list(Year=Year,Timestep=Timestep),FUN=mean))
-
+### organizing the climate and ignition data 
 
 #l_fires_count$
 colnames(FWI_dat) <-c("Year","Timestep","FWI")
 #colnames(FWI_dat)[3]<-"FWI"
 FWI_dat$ID <- paste(FWI_dat$Year, "_", FWI_dat$Timestep, sep="") #creating date identifier out of date and julian day
 FWI_dat$Dates<-as.Date(FWI_dat$Timestep, origin=as.Date(paste0(FWI_dat$Year,"-01-01")))
-#l_fire_count$Date<-as.Date(l_fire_count$J_DAY, origin=as.Date(paste0(l_fire_count$YEAR,"-01-01")))
 fire_days_count <- ddply(l_fire_days_sort, .(l_fire_days_sort$YEAR, l_fire_days_sort$J_DAY), nrow) #
 fire_days_count$Date<-as.Date(fire_days_count$`l_fire_days_sort$J_DAY`,origin=as.Date(paste0(fire_days_count$`l_fire_days_sort$YEAR`,"-01-01")))
-
-#plot(FWI_dat$Dates,FWI_dat$FWI,type="l")
-#points(fire_days_count$Date,fire_days_count$V1,col="red")
 ```
 
 ``` r
+### This loop goes through and combines the FWI and ignitions data. 
+
 igns_list <- list()
 
 for (i in 1:length(ign_types[1:2])){#THIS DOESN'T INCLUDE RX BURNS BUT THATS CAUSE WE ARE PROVIDING THOSE TO SCRAPPLE DIRECT
@@ -202,24 +205,23 @@ for (i in 1:length(ign_types[1:2])){#THIS DOESN'T INCLUDE RX BURNS BUT THATS CAU
   ##Merging dataframes by year and julian day
   fire_days_short <- subset(fire_days_count, fire_days_count[,1] > 1993 & fire_days_count[,1] < 2016) ##restricting fire records to climate file years
   FWI_short <- subset(FWI_dat, FWI_dat$Year > 1993 & FWI_dat$Year < 2016) #restricting climate data to fire history records
-  #plot(FWI_short$Dates,FWI_short$FWI,type="l",main =ign_types[i],ylab="Fire Weather Index")
-  #points(fire_days_count$Date,fire_days_count$V1,col=adjustcolor("red",alpha.f=.3),pch=19,cex=2.0)
- #fire_days_short$
+  
   FWI_fire_merge <- join(FWI_short, fire_days_short, by="Dates",type="left") ##Merging based on unique date id
   FWI_fire_number <- FWI_fire_merge[,c(1,3,8)] #pulling out FWI and number of fires
   FWI_fire_number[is.na(FWI_fire_number)] <- 0 #converting NAs to 0, meaning 0 fires
-  par(mfrow=c(1,1))
-  plot(FWI_fire_number[,2], FWI_fire_number[,3], main =ign_types[i], xlab = "dailyFWI", ylab = "noFires",cex=2.0) #plotting FWI against no of fires just to look at pattern
+  #par(mfrow=c(1,1))
+ # plot(FWI_fire_number[,2], FWI_fire_number[,3], main =ign_types[i], xlab = "dailyFWI", ylab = "noFires",cex=2.0) #plotting FWI against no of fires just to look at pattern
   igns_list[[i]] <- FWI_fire_number 
 }
 ```
 
-![](Ignition_Spread_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->![](Ignition_Spread_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
+### Lightning
 
 ``` r
+### Get the lightning data 
 Lightning<-as.data.frame(igns_list[[1]])
 colnames(Lightning)[3]<-"No_FIRES"
-
+### Look at the linear relationship 
 summary(lm(Lightning$No_FIRES~Lightning$FWI))
 ```
 
@@ -243,10 +245,9 @@ summary(lm(Lightning$No_FIRES~Lightning$FWI))
     ## F-statistic: 15.56 on 1 and 8028 DF,  p-value: 8.051e-05
 
 ``` r
-#Lightning<-Lightning[-1936,]
-#Lightning$No_FIRES
-###Lightning
+## Fit the zero inflated model 
 zeroinf_mod <- zeroinfl(as.numeric(No_FIRES)~as.numeric(FWI),data=Lightning, dist="poisson")
+## See the summary of that model 
 summary(zeroinf_mod)
 ```
 
@@ -275,27 +276,25 @@ summary(zeroinf_mod)
     ## Log-likelihood: -191.7 on 4 Df
 
 ``` r
+### Create a predictive model from the zero inflated model 
 zero<-predict(zeroinf_mod,data.frame(FWI=Lightning$FWI), type = "zero")
-#print(zero)
-#n<-data.frame(FWI=Lightning$FWI)
 lambda <- predict(zeroinf_mod,data.frame(FWI=Lightning$FWI), type = "count")
 Simulation<-ifelse(rbinom(8030,size = 1, prob = zero) > 0, 0, rpois(8030, lambda = lambda))
-
+### Aggregate by year to compare
 ReturnDf<-cbind(Simulation,Lightning)
 Sample<-aggregate(ReturnDf$Simulation,by=list(year=ReturnDf$Year),FUN=sum)
+
+## Look at yearly comparison 
 par(mfrow=c(1,2))
 barplot(Sample$x, main ="No of ign/yr Lightning Simulated",col='black', ylim=c(0,10),names.arg=Sample$year)
-#abline(v=15.7)
+
 barplot(l_fires_count$COUNT, main ="No of ign/yr Lightning Observed",col=red,ylim=c(0,10),names.arg=l_fires_count$YEAR)
 ```
 
 ![](Ignition_Spread_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
-#abline(v=15.7)
-```
-
-``` r
+### This chunk simulates man models to look at the overall trend in FWI and N ignitions
 FireWeathers<-seq(0,44,.1)
 par(mfrow=c(1,2))
 zeros<-predict(zeroinf_mod,data.frame(FWI=FireWeathers), type = "zero")
@@ -321,33 +320,14 @@ plot(FireWeathers,Simulation,col=adjustcolor("black",alpha.f = .01),pch=19,ylab=
 ### Accidental
 
 ``` r
+## Get just the accidnetal data 
 Accidental<-as.data.frame(igns_list[[2]])
 colnames(Accidental)[3]<-"No_FIRES"
-summary(lm(Accidental$No_FIRES~Accidental$FWI))
-```
 
-    ## 
-    ## Call:
-    ## lm(formula = Accidental$No_FIRES ~ Accidental$FWI)
-    ## 
-    ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -0.0419 -0.0321 -0.0304 -0.0283  3.9733 
-    ## 
-    ## Coefficients:
-    ##                 Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)    0.0245757  0.0057240   4.293 1.78e-05 ***
-    ## Accidental$FWI 0.0004618  0.0004143   1.115    0.265    
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 0.2119 on 8028 degrees of freedom
-    ## Multiple R-squared:  0.0001547,  Adjusted R-squared:  3.02e-05 
-    ## F-statistic: 1.242 on 1 and 8028 DF,  p-value: 0.265
-
-``` r
-###Lightning
+#summary(lm(Accidental$No_FIRES~Accidental$FWI))
+## Fit a zero inflated model to the data. 
 Acc_zeroinf_mod <- zeroinfl(No_FIRES~FWI,data=Accidental, dist="poisson")
+## See a summary of that model 
 summary(Acc_zeroinf_mod)
 ```
 
@@ -375,14 +355,13 @@ summary(Acc_zeroinf_mod)
     ## Log-likelihood: -1041 on 4 Df
 
 ``` r
-#Tst<-predict(zeroinf_mod,type="zero")
+### Create a predictive model based on fwi 
 zero<-predict(Acc_zeroinf_mod,data.frame(FWI=Accidental$FWI), type = "zero")
-#print(zero)
-#n<-data.frame(FWI=Lightning$FWI)
+
 lambda <- predict(Acc_zeroinf_mod,data.frame(FWI=Accidental$FWI), type = "count")
 Simulation<-ifelse(rbinom(8030,size = 1, prob = zero) > 0, 0, rpois(8030, lambda = lambda))
-
 ReturnDf<-cbind(Simulation,Lightning)
+### Aggregate annually to compare outputs. 
 Sample<-aggregate(ReturnDf$Simulation,by=list(year=ReturnDf$Year),FUN=sum)
 par(mfrow=c(1,2))
 barplot(Sample$x, main ="No of ign/yr Accidental_Simulated",col='black', ylim=c(0,50),names.arg=Sample$year)
@@ -393,6 +372,7 @@ barplot(h_fires_count$COUNT, main ="No of ign/yr Human Accidental Observed",col=
 ![](Ignition_Spread_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
+### Same as ln 210-223 above
 FireWeathers<-seq(0,50,.1)
 par(mfrow=c(1,2))
 zeros<-predict(Acc_zeroinf_mod,data.frame(FWI=FireWeathers), type = "zero")
@@ -608,9 +588,8 @@ fwi_date_dat$Ecoregion<-gsub("eco","",fwi_date_dat$Ecoregion)
 fwi_date_dat$Ecoregion<-as.numeric(as.character(fwi_date_dat$Ecoregion))
 ```
 
-### Visually filtering fires.
-
-Looking for fires, that are not just the final burn shape.
+We then visually filtered the fires. Looking for fires that are not just
+the final burn shape.
 
 ``` r
  #  years <- 1992:2017
@@ -661,6 +640,7 @@ Firesinclude<-perimeter_map$incidentna[perimeter_map$incidentna %in% SoundInc]
 ```
 
 ``` r
+years <- 1992:2017
 climate_day_mat <- NULL
 
 wsv_dat_df<-as.data.frame(wsv_dat)
@@ -671,7 +651,7 @@ fire_names_manydays<- fire_names_manydays[fire_names_manydays %in% SoundInc]
 
 ### For each fire for each day. 
 for (i in 1:length(fire_names_manydays)){
- # print(fire_names_manydays[i])
+  #print(fire_names_manydays[i])
 
   fire_select <- subset(perimeter_map, perimeter_map$incidentna ==fire_names_manydays[i])#selecting an individual fire
   fire_days <- as.character(sort(unique(fire_select$TrueDate)))
@@ -717,7 +697,7 @@ for (i in 1:length(fire_names_manydays)){
     area_expansion <-(area(fire_day_select_1)/4046.86)-(area(fire_day_select)/4046.86)
     ### In this case the spread would be less than one 250m cell in our simulation.
     if(area_expansion < 30.00){
-      #print("next")
+   #   print("next")
       next()
       }
     
@@ -801,7 +781,7 @@ for (i in 1:length(fire_names_manydays)){
     if(nrow(Failedvalues)>0 & nrow(Successcells)>0){
     Dfout<-rbind(Failedvalues,Successcells)}else{Dfout<-Successcells}
     if(nrow(EndFailedvalues)>0){Dfout<-rbind(Dfout,EndFailedvalues) }
-   # print(table(Dfout$spread_success))
+    #print(table(Dfout$spread_success))
     Dfout$Area_expansion<-area_expansion
     climate_day_df <- cbind(fire_names_manydays[j],
                                  as.character(date_char),Dfout) #Putting everything into a big dataframe with all climate variables
@@ -810,44 +790,20 @@ for (i in 1:length(fire_names_manydays)){
   
 }
 ## Save for future analysis
-write.csv(climate_day_mat,"Spread_3_3.csv")
+write.csv(climate_day_mat,"Example.csv")
 ```
 
 ``` r
-climate_day_mat<-read.csv("C:/Users/zacha/Desktop/SCRPPLE_10_26/Spread_3_3.csv")
+### Cleaning up the dataframe. 
+climate_day_mat<-read.csv("Spread_3_3.csv")
 climate_day_total<-climate_day_mat[-1]
-table(climate_day_total$spread_success)
-```
 
-    ## 
-    ##    0    1 
-    ## 6846 7368
-
-``` r
-#climate_day_total<-climate_day_mat[climate_day_mat$Area_expansion>,]
-
-
+### Looking at files that have all the nessecary data 
 climate_day_total<-climate_day_total[climate_day_total$X11_Ecoregions.1!=0,]
-#climate_day_total<-climate_day_total[climate_day_total$area_expansion>=0,]
-
-
 climate_day_complete <- climate_day_total[complete.cases(climate_day_total[2:10]),]
-table(climate_day_complete$spread_success)
-```
-
-    ## 
-    ##    0    1 
-    ## 6846 7368
-
-``` r
-#climate_day_complete<-climate_day_complete[,-1]
 
 ##Attaching a unique ID to each row in case we need it later
 climate_day_complete <- cbind(1:nrow(climate_day_complete), climate_day_complete)
-
-fix<-function(x){
-return(as.numeric(as.character(x)))  
-}
 
 ##Renaming columns
 #climate_day_complete<-climate_day_complete[,-1]
@@ -859,14 +815,32 @@ climate_day_complete$fuel_number[climate_day_complete$fuel_number >1.0]<-1.0
 
 
 
-U_b <- 5 #mystery value of 'combustion bouyancy'. This changes based on fire severity. Check out GItHub and how its coded in SCRAPPLE itself
-
-# relative.wd <-  wind.direction - upslope.azi
+U_b <- 5 # This changes based on fire severity. Combustion bounancy.
+### Caculating windspeed in direction of spread 
 relative_wd <- as.numeric(climate_day_complete$WSPD) - as.numeric(climate_day_complete$uphill_azi)
+### Calculating effective wind speed. 
 climate_day_complete$effective_wsv <- U_b * ((fix(climate_day_complete$WSPD)/U_b) ^ 2 + 2*(fix(climate_day_complete$WSPD)/U_b) *  
                 sin(fix(climate_day_complete$slope)) * cos(relative_wd) + (sin(fix(climate_day_complete$slope))^2)^0.5)
 
+head(climate_day_complete)
+```
 
+    ##   ID FireName       date wind_region fuel_number uphill_azi    slope   FWI
+    ## 1  1  BOTELER 2016-11-01           1   0.5153333   151.4595 54.83991 22.26
+    ## 2  2  BOTELER 2016-11-01           1   0.5476667   145.3944 56.86004 22.26
+    ## 3  3  BOTELER 2016-11-01           1   0.5980000   137.9744 53.96480 22.26
+    ## 4  4  BOTELER 2016-11-01           1   0.4790000   121.1148 58.76532 22.26
+    ## 5  5  BOTELER 2016-11-01           1   0.6153333   142.9772 34.39577 22.26
+    ## 6  6  BOTELER 2016-11-01           1   0.5306667   181.8610 38.66940 22.26
+    ##       WSPD spread expansion effective_wsv
+    ## 1 3.961008      0  197.1839     15.841470
+    ## 2 3.961008      0  197.1839      2.247329
+    ## 3 3.961008      0  197.1839      7.778363
+    ## 4 3.961008      0  197.1839      3.272490
+    ## 5 3.961008      0  197.1839      4.844688
+    ## 6 3.961008      0  197.1839      4.718093
+
+``` r
 hexbinplot(fix(climate_day_complete$spread)~fix(climate_day_complete$FWI),xlab="FWI",ylab="Spread",xbins=50,aspect=1,type="r")
 ```
 
@@ -896,6 +870,9 @@ hexbinplot(fix(climate_day_complete$expansion)~fix(climate_day_complete$effectiv
 
 ![](Ignition_Spread_files/figure-gfm/unnamed-chunk-25-5.png)<!-- -->
 
+We tested a glm model with FWI, windspeed and fuel. The model used in
+the GA project uses only FWI
+
 ``` r
 spread_vars_short<-climate_day_complete
 table(spread_vars_short$spread)
@@ -906,8 +883,10 @@ table(spread_vars_short$spread)
     ## 6846 7368
 
 ``` r
+### Fit the logistic model 
 Full_logit <- glm(spread ~fix(FWI), 
                   data = spread_vars_short, family = "binomial")
+### See the summary of that model 
 summary(Full_logit)
 ```
 
@@ -940,7 +919,10 @@ AIC(Full_logit)
 
     ## [1] 19490.06
 
+Here is the model plotted as a response.
+
 ``` r
+### Here it is plotted as a response 
 FWI<-seq(0,max(spread_vars_short$FWI),.5)
 xB<-exp((-0.892329)+ 0.039216*(FWI))
 binomial2<-xB/(1+xB)

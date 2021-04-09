@@ -3,6 +3,7 @@ title: "Fire Parameterization"
 author: "Zjrobbin"
 date: "3/3/2021"
 output: github_document
+always_allow_html: true
 ---
 Loading in packages
 
