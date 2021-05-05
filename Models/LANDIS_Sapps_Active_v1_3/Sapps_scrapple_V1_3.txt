@@ -79,8 +79,7 @@ SiteMortalityB6  0.0
 CohortMortalityB0  -1.194702 << Intercept
 CohortMortalityB1  -0.926577   << The parameter fit for the relationship between bark thickness and cohort mortality.
 CohortMortalityB2   0.004297<< The parameter fit for the relationship between site mortality and cohort mortality. 
-
-
+LadderFuelMaxAge 40
 LadderFuelSpeciesList << I have no idea what this does anymore 
 SuppressionMaxWindSpeed 100
 >>File withe DBH~ Bark relationships for the above Cohort Mortality Equation. 
