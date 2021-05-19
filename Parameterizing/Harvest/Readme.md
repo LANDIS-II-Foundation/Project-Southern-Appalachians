@@ -1,7 +1,7 @@
 Harvest\_RMD
 ================
 Zjrobbin
-9/9/2020
+5/18/2021
 
 The harvest module was parameterized using hte EVALIDATOR data tool.
 Evalidator use sql to query the most recent FIA census for an area. I
