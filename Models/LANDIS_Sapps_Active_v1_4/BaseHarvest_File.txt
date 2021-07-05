@@ -1,0 +1,67 @@
+LandisData  "Base Harvest"
+
+
+>>----------------
+>> REQUIRED INPUTS
+>>-----------------
+Timestep    		10
+
+ManagementAreas 	./ManagementAreas.tif
+
+Stands     		./StandMap.tif
+
+
+>> -------------------------
+>> HARVESTING PRESCRIPTIONS
+>> -------------------------
+
+>>---- PRESCRIPTION_1 ---------------------------------------
+Prescription TimberBoomClearcuts
+    StandRanking 	MaxCohortAge
+    SiteSelection 	Complete
+    CohortsRemoved 	ClearCut
+
+
+>>---- PRESCRIPTION_2 ---------------------------------------
+Prescription ChestnutBlight
+	StandRanking	Random
+	SiteSelection	Complete
+	CohortsRemoved	SpeciesList
+	
+>>	Species			Selection
+>>  -------			---------
+	CastDent		All
+	
+>>---- PRESCRIPTION_3 ---------------------------------------
+Prescription FarmClearings
+	StandRanking	Random
+	SiteSelection	PatchCutting	85%	10 PercentCut
+	CohortsRemoved	ClearCut
+
+>> ----------------------------------
+>> HARVESTING IMPLEMENTATION 
+>> ---------------------------------
+
+    HarvestImplementations
+>>	Mgmt Area	Prescription		Harvest Area	BeginTime	EndTime
+>> 	---------   	------------   		------------   	---------- 	--------
+
+	4			FarmClearings		80%		0		100
+	1			ChestnutBlight		100%	140		200
+	2			ChestnutBlight		100%	140		200
+	4			ChestnutBlight		100%	140		200
+	1			TimberBoomClearcuts	25%		110		130
+	2			TimberBoomClearcuts	25%		110		130
+	4			TimberBoomClearcuts	25%		110		130
+
+
+	
+>> ------------
+>> OUTPUTS
+>> ----------
+
+PrescriptionMaps    harvest/base-harvest-prescripts-{timestep}.img
+EventLog            harvest/base-harvest-event-log.csv
+SummaryLog	    harvest/base-harvest-summary-log.csv
+
+
