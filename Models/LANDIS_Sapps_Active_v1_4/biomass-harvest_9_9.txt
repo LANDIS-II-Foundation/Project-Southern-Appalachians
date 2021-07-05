@@ -1,0 +1,241 @@
+LandisData  "Biomass Harvest"
+
+
+>>----------------
+>> REQUIRED INPUTS
+>>-----------------
+Timestep		5
+
+ManagementAreas 	./Ownership_Resampled.tif
+>>1-Federal *
+>>2-State
+>>3-Local
+>>4- Family *
+>>5-Corporate*
+>> 6- Other Private
+>>7- Tribal
+>>8- Off
+
+Stands     		    ./Stands3.tif
+
+>> -------------------------
+>> HARVESTING PRESCRIPTIONS
+>> -------------------------
+
+>>---- EXAMPLE PRESCRIPTIONS ---------------------------------------
+>>Prescription MaxAgeClearcut
+>>    StandRanking 	MaxCohortAge
+>>    SiteSelection 	Complete
+>>    CohortsRemoved 	ClearCut
+
+>> Prescription PatchCutting
+>>    StandRanking	MaxCohortAge
+>>    MinimumAge  	60
+>>    SiteSelection 	Complete 
+>>	MinTimeSinceDamage	20
+>>    CohortsRemoved SpeciesList 
+>>	TsugCana	1-450(99%)
+>>	QuerPrin	1-300(99%)
+>> Prescription CommercialThin
+>> Remove 50-60% of residual basal area, targeting species not desirable, remove intolerants intermediate trees are intolerant and will not respond to
+>>release, If a thinning is applied in fully stocked sapling stands, at least
+>>one-third to one-half of the basal area should be removed by thinning
+>>from below. Codominant trees should average at least 25 feet tall.
+>>The markers leave the best trees by removing all the undesirable or
+>> poor quality and nearly all of the intermediate stems. 
+
+>>	StandRanking Random
+	>>Stand Qualifications
+>>	MaximumAge  65
+>>	MinimumTimeSinceLastHarvest   20
+>>	SiteSelection PatchCutting  20% 100 
+>>	CohortsRemoved	SpeciesList
+	>> Species	Selection
+        >> -------      ----------
+>>		AcerRubr	20-65 (90%) 
+>>		LiriTuli	20-65 (90%) 
+>>		PinuVirg	20-65 (90%) 	
+>>		BetuAlle	20-65 (90%) 
+>>		MagnMacr	20-65 (90%) 
+>>		AcerPens	20-65 (90%) 
+>>		AescBuck	20-65 (90%) 
+>>		AmelArbo	20-65 (90%) 
+>>		BetuLent	20-65 (90%) 
+>>		BetuNigr	20-65 (90%) 	
+>>		CornFlor	20-65 (90%) 
+>>		FaguGran	20-65 (90%) 
+>>		FraxAmer	20-65 (90%) 
+>>		FraxPenn	20-65 (90%) 	
+>>		HaleDipt	20-65 (90%) 
+>>		IlexOpac	20-65 (90%) 
+>>		JuglNigr	20-65 (90%) 
+>>		LiquStyr	20-65 (90%) 
+>>		MagnAcum	20-65 (90%) 
+>>		NyssSylv	20-65 (90%) 
+>>		OxydArbo        20-65 (90%) 
+>>		PlanOcid	20-65 (90%) 
+>>		PrunPenn	20-65 (90%) 
+>>		PrunSero	20-65 (90%) 
+>>		RobiPseu	20-65 (90%) 
+>>		SassAlid	20-65 (90%) 
+
+
+
+>>---- ACTUAL PRESCRIPTIONS ---------------------------------------
+Prescription SelectiveOakHarvest
+StandRanking  Economic
+>>	Species       Economic Rank	 MinimumAge
+		PinuStro         10              50
+		PinuTaed         10		 50
+		PinuEnch         10              50
+		QuerAlba         100             60
+		QuerCocc	 100             60
+		QuerFalc	 100             60
+		QuerRubr	 100             60
+		QuerStel	 100             60
+		QuerVelu	 100             60
+    MinimumAge 60 
+	SiteSelection Complete
+	>>Priority PatchSize
+	CohortsRemoved	SpeciesList
+	>> Species	Selection
+        >> -------      ----------
+		PinuStro         40-80 (75%)
+		PinuTaed         20-80 (75%)		 
+		PinuEnch         20-80 (75%)
+		QuerAlba         60-150 (50%)
+		QuerCocc	 60-150 (50%)
+		QuerFalc	 60-150 (50%)
+		QuerRubr	 60-150 (50%)
+		QuerStel	 60-150 (50%)
+		QuerVelu	 60-150 (50%)              
+		AcerSacc         40-150 (50%)		 
+		CaryAlba         40-150 (75%)	 
+		CaryOvat	 40-150 (75%)
+		CaryCodi	 40-150 (75%)
+		CaryGlab         40-150 (75%)		 
+		JuglNigr         30-80 (50%)            
+		AcerRubr	All
+		LiriTuli	All
+		PinuVirg	All
+		BetuAlle	All
+		MagnMacr	All
+		AcerPens	All
+		AescBuck	All
+		AmelArbo	All
+		BetuLent	All
+		BetuNigr	All
+		CornFlor	All
+		FaguGran	All
+		FraxAmer	All
+		FraxPenn	All
+		HaleDipt	All
+		IlexOpac	All
+		LiquStyr	All
+		MagnAcum	All
+		NyssSylv	All
+		OxydArbo        All
+		PlanOcid	All
+		PrunPenn	All
+		PrunSero	All
+		RobiPseu	All
+		SassAlid	All
+
+Prescription PineShelterwood
+StandRanking  Economic
+>>	Species       Economic Rank	 MinimumAge
+		PinuStro         100              50
+		PinuTaed         100		 50
+		PinuEnch         100              50
+		QuerAlba         10             60
+		QuerCocc	 10             60
+		QuerFalc	 10             60
+		QuerRubr	 10             60
+		QuerStel	 10             60
+		QuerVelu	 10             60
+    MinimumAge 50 
+	SiteSelection Complete
+	>>Priority PatchSize
+	CohortsRemoved	SpeciesList
+	>> Species	Selection
+        >> -------      ----------
+		PinuStro         40-80 (95%)
+		PinuTaed         20-80 (95%)		 
+		PinuEnch         20-80 (95%)
+		QuerAlba         All
+		QuerCocc	 All
+		QuerFalc	 All
+		QuerRubr	 All
+		QuerStel	 All
+		QuerVelu	 All
+		AcerSacc         All
+		CaryAlba         All
+		CaryOvat	 All
+		CaryCodi	 All
+		CaryGlab         All
+		JuglNigr         All
+		AcerRubr	All
+		LiriTuli	All
+		PinuVirg	All
+		BetuAlle	All
+		MagnMacr	All
+		AcerPens	All
+		AescBuck	All
+		AmelArbo	All
+		BetuLent	All
+		BetuNigr	All
+		CornFlor	All
+		FaguGran	All
+		FraxAmer	All
+		FraxPenn	All
+		HaleDipt	All
+		IlexOpac	All
+		LiquStyr	All
+		MagnAcum	All
+		NyssSylv	All
+		OxydArbo        All
+		PlanOcid	All
+		PrunPenn	All
+		PrunSero	All
+		RobiPseu	All
+		SassAlid	All
+
+
+
+>> ----------------------------------
+>> HARVESTING IMPLEMENTATION 
+>> ---------------------------------
+
+    HarvestImplementations
+>>	Mgmt Area	Prescription		Harvest Area	BeginTime	EndTime
+>> 	---------   	------------   		------------   	---------- 	--------
+
+>> Federal	
+>> State
+	2		SelectiveOakHarvest  .4% 0
+>> Local    	
+>> Family	
+	4 		SelectiveOakHarvest  .5% 0
+>>Corporate	
+	5		SelectiveOakHarvest 1.42% 0
+>>Other Private
+	6		SelectiveOakHarvest	 .25% 0
+>>Tribal
+	7               SelectiveOakHarvest .2% 0
+>>Outside	
+
+
+	
+	
+>> ------------
+>> OUTPUTS
+>> ----------
+
+PrescriptionMaps    harvest/biomass-harvest-prescripts-{timestep}.img
+BiomassMaps         harvest/biomass-removed-{timestep}.img
+EventLog            harvest/biomass-harvest-event-log.csv
+SummaryLog	    harvest/biomass-harvest-summary-log.csv
+
+
+
+

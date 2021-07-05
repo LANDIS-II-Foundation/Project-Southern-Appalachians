@@ -1,0 +1,96 @@
+LandisData	"NECN Succession"
+
+Timestep  5
+
+SeedingAlgorithm  WardSeedDispersal
+
+InitialCommunities      "./IC_3_26.txt"
+InitialCommunitiesMap   "./MR_InitialCommunity_2_18.tif"
+ClimateConfigFile 	climate-generator-baseline.txt	
+
+SoilDepthMapName				MRDepth_top.tif
+SoilDrainMapName				MRDrain_Done.tif
+SoilBaseFlowMapName				MR_Stormflow.tif
+SoilStormFlowMapName			MR_Stormflow.tif
+SoilFieldCapacityMapName		MRFeildDone.tif
+SoilWiltingPointMapName			MRWiltDone.tif
+SoilPercentSandMapName			MRSand_cut.tif
+SoilPercentClayMapName			MRClay_Done.tif
+InitialSOM1CsurfMapName			MRSOM1surfCmap.tif
+InitialSOM1NsurfMapName			MRSOM1surfN_updated.tif
+InitialSOM1CsoilMapName			MRSOM1soilCmap.tif
+InitialSOM1NsoilMapName			MRSOM1soilN_updated.tif
+InitialSOM2CMapName				MRSOM2Cmap.tif
+InitialSOM2NMapName				MRSOM2Nmap.tif
+InitialSOM3CMapName				MRSOM3Cmap.tif
+InitialSOM3NMapName				MRSOM3Nmap.tif
+InitialDeadWoodSurfaceMapName	Deadwood_wood.tif
+InitialDeadCoarseRootsMapName	Deadwood_root.tif
+
+
+
+
+CalibrateMode 	no
+SmokeModelOutputs no
+WaterDecayFunction Ratio <<Linear or Ratio
+
+
+ProbabilityEstablishAdjust 	1.0
+InitialMineralN				3.5
+InitialFineFuels 			0.1  << a fraction 0-1.0 of dead wood.
+AtmosphericNSlope			0.0016 << Values from ashville
+AtmosphericNIntercept		0.2626 << .1626 from ashville +1.0 lichen correction ratio
+Latitude					36.0
+DenitrificationRate	         0.0610
+DecayRateSurf            9.9
+DecayRateSOM1           9.9
+DecayRateSOM2           .0170
+DecayRateSOM3          0.0000001
+
+
+MaximumLAI
+
+>> Shade	Max LAI
+>> Class	
+>> ----------	--------------------	
+	1	1 
+	2	2.5 
+	3	3.5 
+	4	6
+	5	8
+
+LightEstablishmentTable
+>> Spp Shade	Probability
+>> Class	   by Actual Shade
+>> ----------	--------------------	
+>>		0	1	2	3	4	5
+	1	1.0	0.1	0.0	0.0	0.0	0.0
+	2	1.0	1.0	0.1	0.05 0.0	0.0
+	3	1.0	1.0	1.0	0.1	0.05	0.0
+	4	1.0	1.0	1.0	1.0	0.1	0.05
+	5	0.1	0.5	1.0	1.0	1.0	1.0
+>>This is not an accurate file to use for final model runs. 
+>>Some species are just repeats of sassalid. 
+>>Major species are valid. 
+
+SpeciesParameters
+Species_CSV_File NECN_Spp_Table.csv
+
+FunctionalGroupParameters 
+Functional_CSV_File NECN_Functional_Table.csv
+
+FireReductionParameters
+>>	Severity	WoodLitter	Litter	CohortWood	CohortFoliar	SOM
+>>	Fire		Reductions------------------------------------------------->
+	1		0.0		0.5	0.05 0.85    0.5
+	2		0.0		0.75 0.15  0.95	0.5
+	3		0.0		1.0	 0.35 1.0    0.5
+
+HarvestReductionParameters
+>>	Name		WoodLitter	Litter	SOM		CohortWood	CohortLeaf
+>>			Reduct		Reduct	Reduction	Removal		Removal
+	EconomicHarvest	0.5		0.15	0.2		0.8		0.15
+	CommercialThin	1.0		1.0	1.0		1.0		1.0
+	HWA             0.0     0.0     0.0    0.0    1.0
+
+   

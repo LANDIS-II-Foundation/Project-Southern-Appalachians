@@ -1,0 +1,10 @@
+LandisData  Ecoregions
+
+>>         Map
+>> Active  Code  Name   Description
+>> ------  ----  -----  -----------
+      yes    5   eco4   "North_Montane"
+	  yes    4   eco3   "Low_elevation"
+	  yes    3   eco2   "Mid_El_Montane"
+	  yes    2   eco1   "High_Elevation"  
+	  no     1 	 eco5	"Offmap"

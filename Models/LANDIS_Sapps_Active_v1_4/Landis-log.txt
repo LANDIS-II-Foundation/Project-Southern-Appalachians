@@ -1,0 +1,35 @@
+2021-06-24 08:31:11,874 - LANDIS-II 7.0 (7)
+2021-06-24 08:31:11,887 - 
+2021-06-24 08:31:12,213 - Loading scenario from file "scenario_landscape.txt" ...
+2021-06-24 08:31:12,319 - Initialized random number generator with seed = 4,123,139,458
+2021-06-24 08:31:12,320 - Loading species data from file "species_SApps_updated7_5.txt" ...
+2021-06-24 08:31:12,346 - Loading ecoregions from file "./ecoregions_Sapps_11.txt" ...
+2021-06-24 08:31:12,366 - Initializing landscape from ecoregions map "./EcoregionSingle.tif" ...
+2021-06-24 08:31:12,430 - Cell length = 250 m, cell area = 6.25 ha
+2021-06-24 08:31:12,432 - Map dimensions: 1,050 rows by 1,334 columns = 1,400,700 cells
+2021-06-24 08:31:12,655 - Sites: 1 active (0.0%), 1,400,699 inactive (100.0%)
+2021-06-24 08:31:12,949 - Loading NECN Succession extension ...
+2021-06-24 08:31:13,462 -    Registering Data:  Succession.LeafBiomassCohorts.
+2021-06-24 08:31:13,462 -    Registering Data:  Succession.AgeCohorts.
+2021-06-24 08:31:13,463 -    Registering Data:  Succession.BiomassCohorts.
+2021-06-24 08:31:13,463 -    Registering Data:  Succession.FineFuels.
+2021-06-24 08:31:13,463 -    Registering Data:  Succession.SmolderConsumption.
+2021-06-24 08:31:13,463 -    Registering Data:  Succession.FlamingConsumption.
+2021-06-24 08:31:13,463 -    Registering Data:  Succession.CWD.
+2021-06-24 08:31:13,463 -    Registering Data:  Succession.PET.
+2021-06-24 08:31:13,640 -    Begin parsing NECN SPECIES table.
+2021-06-24 08:31:13,683 - Internal error occurred within the program:
+2021-06-24 08:31:13,683 -   Input string was not in a correct format.Couldn't store <12140.56> in MaximumBiomass Column.  Expected type is Int32.
+2021-06-24 08:31:13,683 -   Input string was not in a correct format.
+2021-06-24 08:31:13,684 - 
+2021-06-24 08:31:13,685 - Stack trace:
+2021-06-24 08:31:13,778 -    at System.Data.DataColumn.set_Item(Int32 record, Object value)
+   at System.Data.DataRow.set_Item(DataColumn column, Object value)
+   at System.Data.DataRow.set_Item(Int32 columnIndex, Object value)
+   at Landis.Extension.Succession.NECN.CSVParser.ParseToDataTable(String path) in C:\Users\zacha\Documents\GitHub\Extension-NECN-Succession\src\utility\CSVParser.cs:line 152
+   at Landis.Extension.Succession.NECN.InputParametersParser.Parse() in C:\Users\zacha\Documents\GitHub\Extension-NECN-Succession\src\utility\InputParameterParser.cs:line 416
+   at Landis.Utilities.TextParser`1.Parse(LineReader reader)
+   at Landis.Data.Load[T](String path, ITextParser`1 parser)
+   at Landis.Extension.Succession.NECN.PlugIn.LoadParameters(String dataFile, ICore mCore) in C:\Users\zacha\Documents\GitHub\Extension-NECN-Succession\src\PlugIn.cs:line 69
+   at Landis.Model.Run(String scenarioPath, IUserInterface ui)
+   at Landis.App.Main(String[] args) in D:\CGAProjects\Rob\LANDIS_FINAL\GitHubRepo\Core-Model-v7\Tool-Console\src\App.cs:line 99
