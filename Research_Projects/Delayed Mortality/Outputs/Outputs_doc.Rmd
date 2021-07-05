@@ -949,15 +949,16 @@ g_legend<-function(a.gplot){
   legend <- tmp$grobs[[leg]]
   return(legend)}
 
-
-Stagger1<-read.csv("D:/Sapps_DM_paper/Stagger1_428.csv")
-#Stagger5<-read.csv("C:/Users/zacha/Desktop/Sapps_DM_paper/Stagger5.csv")
-Stagger10<-read.csv("D:/Sapps_DM_paper/Stagger10_428.csv")
-
-
 Stagger1$Fire[Stagger1$Fire=="Fire"]<-"Burned Sites (Delayed Mortality)"
 Stagger1$Fire[Stagger1$Fire=="Landscape"]<-"Landscape Average"
+Stagger1$Species[Stagger1$Species=="QuerPrin"]<-"QuerMont"
+#$unique(Stagger1$Species)
+#Stagger5$Fire[Stagger5$Fire=="Fire"]<-"Burned Sites (Delayed Mortality)"
+#Stagger5$Fire[Stagger5$Fire=="NoFire"]<-"Unburned Landscape"
 
+Stagger10$Fire[Stagger10$Fire=="Fire"]<-"Burned Sites (Delayed Mortality)"
+Stagger10$Fire[Stagger10$Fire=="NoFire"]<-"Unburned Landscape"
+Stagger10$Species[Stagger10$Species=="QuerPrin"]<-"QuerMont"
 #Stagger5$Fire[Stagger5$Fire=="Fire"]<-"Burned Sites (Delayed Mortality)"
 #Stagger5$Fire[Stagger5$Fire=="NoFire"]<-"Unburned Landscape"
 
