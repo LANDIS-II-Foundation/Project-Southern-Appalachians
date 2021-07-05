@@ -89,6 +89,7 @@ StandRanking  Economic
 		PinuTaed         10		 50
 		PinuEnch         10              50
 		QuerAlba         100             60
+		QuerPrin         100             60
 		QuerCocc	 100             60
 		QuerFalc	 100             60
 		QuerRubr	 100             60
@@ -107,6 +108,7 @@ StandRanking  Economic
 		QuerCocc	 60-150 (50%)
 		QuerFalc	 60-150 (50%)
 		QuerRubr	 60-150 (50%)
+		QuerPrin	 60-150 (50%)
 		QuerStel	 60-150 (50%)
 		QuerVelu	 60-150 (50%)              
 		AcerSacc         40-150 (50%)		 
@@ -149,6 +151,7 @@ StandRanking  Economic
 		PinuEnch         100              50
 		QuerAlba         10             60
 		QuerCocc	 10             60
+		QuerPrin	 10             60
 		QuerFalc	 10             60
 		QuerRubr	 10             60
 		QuerStel	 10             60
@@ -211,17 +214,26 @@ StandRanking  Economic
 >> 	---------   	------------   		------------   	---------- 	--------
 
 >> Federal	
+	1		SelectiveOakHarvest  .001% 0
+	1		PineShelterwood  .001% 0
 >> State
-	2		SelectiveOakHarvest  .4% 0
->> Local    	
+	2		SelectiveOakHarvest  .15% 0
+	2		PineShelterwood  .15% 0
+>> Local 
+	3		SelectiveOakHarvest  .02% 0
+	3		PineShelterwood   .02% 0	
 >> Family	
-	4 		SelectiveOakHarvest  .5% 0
+	4 		SelectiveOakHarvest  2.1% 0
+	4		PineShelterwood     2.1% 0
 >>Corporate	
-	5		SelectiveOakHarvest 1.42% 0
+	5		SelectiveOakHarvest 2.1% 0
+	5		PineShelterwood     2.1% 0
 >>Other Private
-	6		SelectiveOakHarvest	 .25% 0
+	6		SelectiveOakHarvest	 1.3% 0
+	6		PineShelterwood	 1.3% 0	
 >>Tribal
-	7               SelectiveOakHarvest .2% 0
+	7               SelectiveOakHarvest .2% 0	
+	7               PineShelterwood .2% 0
 >>Outside	
 
 
