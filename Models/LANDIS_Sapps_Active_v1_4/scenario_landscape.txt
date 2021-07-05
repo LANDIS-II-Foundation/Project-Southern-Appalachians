@@ -1,7 +1,7 @@
 LandisData  Scenario
 
 
-Duration  100
+Duration  50
 
 Species   species_SApps_updated7_5.txt
 
@@ -28,9 +28,9 @@ CellLength  250 << meters, 100 x 100 m = 1 hectare
 
 >> ----------------------   -------------------
  
->>"Biomass Harvest"	     biomass-harvest_9_9.txt
->> "SCRAPPLE"                  Sapps_scrapple_V1_3.txt
->> "Base BDA"		     base-BDA_SetUp_s1e1.txt
+"Biomass Harvest"	     biomass-harvest_7521.txt
+"SCRAPPLE"                  Sapps_scrapple_V1_3.txt
+"Base BDA"		     base-BDA_SetUp_s1e1.txt
 
 
 DisturbancesRandomOrder  yes  << optional parameter; default = no

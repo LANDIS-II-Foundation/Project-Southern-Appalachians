@@ -30,7 +30,7 @@ InitialDeadCoarseRootsMapName	./NECN_Inputs/Deadwood_rootv_1_2.tif
 
 
 
-CalibrateMode 	yes
+CalibrateMode 	no
 SmokeModelOutputs no
 WaterDecayFunction Ratio <<Linear or Ratio
 
@@ -42,9 +42,9 @@ AtmosphericNSlope			0.0016<< Values from ashville
 AtmosphericNIntercept		0.2626 << .1626 from ashville +1.0 lichen correction ratio
 Latitude					36.0
 DenitrificationRate			0.0610
-DecayRateSurf				0.5 << 7.0 Was 
+DecayRateSurf				0.7 << 7.0 Was 
 DecayRateSOM1				5.4
-DecayRateSOM2				0.037
+DecayRateSOM2				0.07<< was .035
 DecayRateSOM3				0.0000001
 
 StormFlowOverride	0.50431427708827
@@ -73,10 +73,8 @@ LightEstablishmentTable
 	4	0.02749268	0.19276773	0.23992545	0.18649094	0.12543924	0.22788396
 	5	0.001568513	0.051464001	0.149236027	0.188126608	0.170169509	0.439435341
 
-
-
 SpeciesParameters
-Species_CSV_File ./NECN_Inputs/NECN_Spp_Table-1_1.csv
+Species_CSV_File ./NECN_Inputs/NECN_Spp_Table-Biomass.csv
 
 FunctionalGroupParameters 
 Functional_CSV_File ./NECN_Inputs/NECN_Functional_Table.csv
