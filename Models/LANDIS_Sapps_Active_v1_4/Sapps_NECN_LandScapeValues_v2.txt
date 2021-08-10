@@ -74,10 +74,10 @@ LightEstablishmentTable
 	5	0.001568513	0.051464001	0.149236027	0.188126608	0.170169509	0.439435341
 
 SpeciesParameters
-Species_CSV_File ./NECN_Inputs/NECN_Spp_Table-Biomass.csv
+Species_CSV_File ./NECN_Inputs/NECN_Spp_Table-Biomassv_1_2.csv
 
 FunctionalGroupParameters 
-Functional_CSV_File ./NECN_Inputs/NECN_Functional_Table.csv
+Functional_CSV_File ./NECN_Inputs/NECN_Functional_Table_1_1.csv
 FireReductionParameters
 >>	Severity	WoodLitter	Litter	CohortWood	CohortLeaf	SOM
 >>	Fire		Reduct		Reduct	Reduct		Reduct		Reduction
