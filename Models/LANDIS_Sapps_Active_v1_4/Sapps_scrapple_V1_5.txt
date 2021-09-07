@@ -10,7 +10,7 @@ Species_CSV_File	./Scrpple_Inputs/SCRPPLE_Spp_Table.csv
 
 AccidentalIgnitionsMap  ./Scrpple_Inputs/HA_ignitions_v3_1.tif 
 LightningIgnitionsMap   ./Scrpple_Inputs/VHRAC_Lightning.tif
-RxIgnitionsMap         ./Scrpple_Inputs/Ignitions_NFS.tif 
+RxIgnitionsMap         ./Scrpple_Inputs/Rx_50percplan.tif 
 >> DynamicRxIgnitionMaps 
 >> 130           ./zerosuppression.tif
 
@@ -46,7 +46,7 @@ MinimumRxFireWeatherIndex 15.0   << Optional
 MaximumRxTemperature 35.0	<< Optional
 >> MinimumRxRelativeHumidity 22.0	<< Optional
 MaximumRxFireIntensity 1
-NumberRxAnnualFires 112 << This is about 50,100 acres stated in the plans of Pisgah
+NumberRxAnnualFires 94 << This is about 50,100 acres stated in the plans of Pisgah
 
 >> Cherokee, Chattahoochee and nantahala national parks. 
 NumberRxDailyFires 1
