@@ -95,8 +95,7 @@ FireReductionParameters
 HarvestReductionParameters
 >>	Name		WoodLitter	Litter	SOM		CohortWood	CohortLeaf
 >>			Reduct		Reduct	Reduction	Removal		Removal
-	EconomicHarvest	0.5		0.15	0.2		0.8		0.15
-	CommercialThin	1.0		1.0	1.0		1.0		1.0
-	HWA             0.0     0.0     0.0    0.0    1.0
+	SelectiveOakHarvest	0.5		0.15	0.2		0.8		0.15
+	PineShelterwood     0.8		0.8	  0.8		1.0		1.0
 
    
