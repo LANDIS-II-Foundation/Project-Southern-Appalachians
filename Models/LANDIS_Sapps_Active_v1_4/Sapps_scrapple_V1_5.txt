@@ -83,5 +83,5 @@ LadderFuelMaxAge 40
 LadderFuelSpeciesList << I have no idea what this does anymore 
 SuppressionMaxWindSpeed 100
 >>File withe DBH~ Bark relationships for the above Cohort Mortality Equation. 
-Suppression_CSV_File ./Scrpple_Inputs/Suppression_Input V_15.csv  <<< Fwi thresholds here represent 10% and 1% FWI.
+Suppression_CSV_File ./Scrpple_Inputs/Suppression_InputV_15.csv  <<< Fwi thresholds here represent 10% and 1% FWI.
 DeadWoodTable

@@ -16,7 +16,7 @@ SoilFieldCapacityMapName		./NECN_Inputs/FeildCap_83120.tif
 SoilWiltingPointMapName			./NECN_Inputs/WiltPoint83120.tif
 SoilPercentSandMapName			./NECN_Inputs/Sand_42919.tif
 SoilPercentClayMapName			./NECN_Inputs/Clay_42919.tif
-InitialSOM1CsurfMapName			./NECN_Inputs/SOM1surfcmap_v1_1.tif
+InitialSOM1CsurfMapName			./NECN_Inputs/SOM1surfcmap_v1_2.tif
 InitialSOM1NsurfMapName			./NECN_Inputs/SOM1surfNmap_v1_1.tif
 InitialSOM1CsoilMapName			./NECN_Inputs/SOM1soilCmap_50119.tif
 InitialSOM1NsoilMapName			./NECN_Inputs/SOM1soilNmap_v1_1.tif
@@ -42,9 +42,9 @@ AtmosphericNSlope			0.0016<< Values from ashville
 AtmosphericNIntercept		0.2626 << .1626 from ashville +1.0 lichen correction ratio
 Latitude					36.0
 DenitrificationRate			0.0610
-DecayRateSurf				1.00 << 7.0 Was 
+DecayRateSurf				1.10 << 7.0 Was 
 DecayRateSOM1				7.4
-DecayRateSOM2				0.07<< was .035
+DecayRateSOM2				0.055<< was .035
 DecayRateSOM3				0.0000001
 
 StormFlowOverride	0.50431427708827
