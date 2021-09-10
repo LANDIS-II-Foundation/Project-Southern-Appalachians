@@ -1,0 +1,23 @@
+LandisData "Climate Config"				
+		
+ClimateTimeSeries			Daily_SequencedYears
+ClimateFile				LANDIS_Historic11_Gridmet.csv
+ClimateFileFormat			Daily_Temp-C_Precip-mmDay
+
+SpinUpClimateTimeSeries			Daily_SequencedYears
+SpinUpClimateFile			LANDIS_Historic11_Gridmet.csv
+SpinUpClimateFileFormat			Daily_Temp-C_Precip-mmDay
+
+UsingFireClimate			yes
+FineFuelMoistureCode		85
+DuffMoistureCode			6
+DroughtCode				15
+FirstDayFire			31
+LastDayFire				334
+
+
+
+
+
+
+

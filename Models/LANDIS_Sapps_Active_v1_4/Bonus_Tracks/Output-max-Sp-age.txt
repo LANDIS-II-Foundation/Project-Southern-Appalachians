@@ -1,5 +1,0 @@
-LandisData "Output Max Species Age"
-
-Timestep 1
-MapNames out/{species}-{timestep}.img
-Species all
