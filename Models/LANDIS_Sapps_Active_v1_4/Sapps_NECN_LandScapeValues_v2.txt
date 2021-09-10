@@ -42,7 +42,7 @@ AtmosphericNSlope			0.0016<< Values from ashville
 AtmosphericNIntercept		0.2626 << .1626 from ashville +1.0 lichen correction ratio
 Latitude					36.0
 DenitrificationRate			0.0610
-DecayRateSurf				1.10 << 7.0 Was 
+DecayRateSurf				0.90 << 7.0 Was 
 DecayRateSOM1				7.4
 DecayRateSOM2				0.055<< was .035
 DecayRateSOM3				0.0000001

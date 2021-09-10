@@ -9,11 +9,13 @@ SpinUpClimateFile			LANDIS_Historic11_Gridmet.csv
 SpinUpClimateFileFormat			Daily_Temp-C_Precip-mmDay
 
 UsingFireClimate			yes
-FineFuelMoistureCode			100
-DuffMoistureCode			100
-DroughtCode				100
-FirstDayFire				10
-LastDayFire				360
+FineFuelMoistureCode		85
+DuffMoistureCode			6
+DroughtCode				15
+FirstDayFire			31
+LastDayFire				334
+
+
 
 
 

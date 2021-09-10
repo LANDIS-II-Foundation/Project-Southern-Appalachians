@@ -1,14 +1,14 @@
 LandisData  Scenario
 
 
-Duration  100
+Duration  24
 
 Species   species_SApps_updated7_5.txt
 
 
 Ecoregions      ./ecoregions_Sapps_11.txt
 
-EcoregionsMap   ./EcoregionSingle.tif
+EcoregionsMap   ./Ecos11_NCLD.tif
 
 
 CellLength  250 << meters, 100 x 100 m = 1 hectare
@@ -29,7 +29,7 @@ CellLength  250 << meters, 100 x 100 m = 1 hectare
 >> ----------------------   -------------------
  
 >>"Biomass Harvest"	     biomass-harvest_7521.txt
->>"SCRAPPLE"                  Sapps_scrapple_V1_3.txt
+"SCRAPPLE"                  Sapps_scrapple_V1_5.txt
 >>"Base BDA"		     base-BDA_SetUp_s1e1.txt
 
 
@@ -44,7 +44,7 @@ DisturbancesRandomOrder  yes  << optional parameter; default = no
 
 >>   "Output Reclass"	    reclass.output.txt
 	
-"Output Biomass-by-Age"	    output-biomass.txt
+>> "Output Biomass-by-Age"	    output-biomass.txt
 
 
 

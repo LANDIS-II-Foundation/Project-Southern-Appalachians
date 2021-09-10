@@ -11,6 +11,9 @@ Species_CSV_File	./Scrpple_Inputs/SCRPPLE_Spp_Table.csv
 AccidentalIgnitionsMap  ./Scrpple_Inputs/HA_ignitions_v3_1.tif 
 LightningIgnitionsMap   ./Scrpple_Inputs/VHRAC_Lightning.tif
 RxIgnitionsMap         ./Scrpple_Inputs/Rx_50percplan.tif 
+
+
+
 >> DynamicRxIgnitionMaps 
 >> 130           ./zerosuppression.tif
 
