@@ -1,0 +1,807 @@
+---
+title: "R Notebook"
+output: github_document
+---
+
+
+
+```{r}
+library(grDevices)
+library(ggplot2)
+library(sf)
+library(ggplot2)
+library(vioplot)
+library(dplyr)
+library(RColorBrewer)
+Drive<-'F:/Scrpple_Tests_917/Runs10102/'
+ 
+  EventLog1<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh1/scrapple-events-log.csv'))
+  EventLog2<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh2/scrapple-events-log.csv'))
+  EventLog3<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh3/scrapple-events-log.csv'))
+  EventLog4<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh4/scrapple-events-log.csv'))
+  EventLog5<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh5/scrapple-events-log.csv'))
+  EventLog6<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh6/scrapple-events-log.csv'))
+  EventLog7<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh7/scrapple-events-log.csv'))
+  EventLog8<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh8/scrapple-events-log.csv'))
+  EventLog9<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh9/scrapple-events-log.csv'))
+  EventLog10<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh10/scrapple-events-log.csv'))
+
+#EventLog1<-read.csv(
+#  paste0(Drive,'Scrpple_LANDIS_Sapps_NewVeryHigh4/scrapple-events-log.csv'))
+#EventLog2<-read.csv(
+#  paste0(Drive,'Scrpple_LANDIS_Sapps_NewVeryHigh5/scrapple-events-log.csv'))
+#EventLog3<-read.csv(
+#  paste0(Drive,'Scrpple_LANDIS_Sapps_NewVeryHigh6/scrapple-events-log.csv'))
+# EventLog4<-read.csv(
+#   paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh4/scrapple-events-log.csv'))
+# EventLog5<-read.csv(
+#   paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh5/scrapple-events-log.csv'))
+# EventLog6<-read.csv(
+#   paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh6/scrapple-events-log.csv'))
+
+### Resulting Mortality.
+```
+
+
+
+#### Ignition: 
+
+
+```{r,fig.height=10.0,fig.width=7.0}
+l_fire_dat<-read.csv("Z:/Robbins/Sapps/Chapter3/Code/Scrpple_111721/Inputs/Natural_KS21.csv")
+l_fire_dat<-l_fire_dat[c(-1)]
+#l<-l_fire_dat[l_fire_dat$STAT_CAU_1=="Lightning",]
+l<-l_fire_dat%>%
+  subset(FIRE_SIZE>15.44)
+
+h_fire_dat<-read.csv("Z:/Robbins/Sapps/Chapter3/Code/Scrpple_111721/Inputs/Human_KS21.csv")
+h<-h_fire_dat[c(-1)]
+h<-h%>%
+  subset(FIRE_SIZE>15.44)
+
+l_fire_dat<-rbind(l,h)
+l_fire_dat<-l_fire_dat[l_fire_dat$FIRE_YEAR<2017,]
+
+```
+```{r}
+se <- function(x) sqrt(var(x)/length(x))
+Am_1<-sum(as.data.frame(table(EventLog1$SimulationYear[EventLog1$IgnitionType==" Accidental"]))[,2])
+Am_2<-sum(as.data.frame(table(EventLog2$SimulationYear[EventLog2$IgnitionType==" Accidental"]))[,2])
+Am_3<-sum(as.data.frame(table(EventLog3$SimulationYear[EventLog3$IgnitionType==" Accidental"]))[,2])
+Am_4<-sum(as.data.frame(table(EventLog4$SimulationYear[EventLog4$IgnitionType==" Accidental"]))[,2])
+Am_5<-sum(as.data.frame(table(EventLog5$SimulationYear[EventLog5$IgnitionType==" Accidental"]))[,2])
+Am_6<-sum(as.data.frame(table(EventLog6$SimulationYear[EventLog6$IgnitionType==" Accidental"]))[,2])
+Am_7<-sum(as.data.frame(table(EventLog7$SimulationYear[EventLog7$IgnitionType==" Accidental"]))[,2])
+Am_8<-sum(as.data.frame(table(EventLog8$SimulationYear[EventLog8$IgnitionType==" Accidental"]))[,2])
+Am_9<-sum(as.data.frame(table(EventLog9$SimulationYear[EventLog9$IgnitionType==" Accidental"]))[,2])
+Am_10<-sum(as.data.frame(table(EventLog10$SimulationYear[EventLog10$IgnitionType==" Accidental"]))[,2])
+Amm<-mean(c(Am_1,Am_2,Am_3,Am_4,Am_5,Am_6,Am_7,Am_8,Am_9,Am_10))
+Amse<-se(c(Am_1,Am_2,Am_3,Am_4,Am_5,Am_6,Am_7,Am_8,Am_9,Am_10))
+Lm_1<-sum(as.data.frame(table(EventLog1$SimulationYear[EventLog1$IgnitionType==" Lightning"]))[,2])
+Lm_2<-sum(as.data.frame(table(EventLog2$SimulationYear[EventLog2$IgnitionType==" Lightning"]))[,2])
+Lm_3<-sum(as.data.frame(table(EventLog3$SimulationYear[EventLog3$IgnitionType==" Lightning"]))[,2])
+Lm_4<-sum(as.data.frame(table(EventLog4$SimulationYear[EventLog4$IgnitionType==" Lightning"]))[,2])
+Lm_5<-sum(as.data.frame(table(EventLog5$SimulationYear[EventLog5$IgnitionType==" Lightning"]))[,2])
+Lm_6<-sum(as.data.frame(table(EventLog6$SimulationYear[EventLog6$IgnitionType==" Lightning"]))[,2])
+Lm_7<-sum(as.data.frame(table(EventLog7$SimulationYear[EventLog7$IgnitionType==" Lightning"]))[,2])
+Lm_8<-sum(as.data.frame(table(EventLog8$SimulationYear[EventLog8$IgnitionType==" Lightning"]))[,2])
+Lm_9<-sum(as.data.frame(table(EventLog9$SimulationYear[EventLog9$IgnitionType==" Lightning"]))[,2])
+Lm_10<-sum(as.data.frame(table(EventLog9$SimulationYear[EventLog10$IgnitionType==" Lightning"]))[,2])
+Lmm<-mean(c(Lm_1,Lm_2,Lm_3,Lm_4,Lm_5,Lm_6,Lm_7,Lm_8,Lm_9,Lm_10))
+Lmse<-se(c(Lm_1,Lm_2,Lm_3,Lm_4,Lm_5,Lm_6,Lm_7,Lm_8,Lm_9,Lm_10))
+
+
+
+
+
+Hrm<-sum(as.data.frame(table(h$FIRE_YEAR))[,2])
+Hrse<-se(as.data.frame(table(h$FIRE_YEAR))[,2])
+Lrm<-sum(as.data.frame(table(l$FIRE_YEAR))[,2])
+Lrse<-se(as.data.frame(table(l$FIRE_YEAR))[,2])
+
+Plotting<-data.frame(Names=c('LightningModel','LightningData','HumanModel','HumanData'),
+           Means=c(Lmm,Lrm,Amm,Hrm),
+           se=c(Lmse,Lrse,Amse,Hrse)
+           )
+
+
+
+
+
+```
+```{r,fig.width=10.0,fig.height=10.0}
+par(mfrow=c(2,1))
+barCenters <- barplot(Plotting$Means[1:2], names.arg=c("LANDIS-II simulations", "Short, 2021"), col="gray", las=1,ylim=c(0,300),main="Lightning Ignitions (1992-2016)",
+                      cex.names=1.2,cex.axis=1.2)
+segments(barCenters[1], Plotting$Means[1]+Plotting$se[1]*2, barCenters[1], Plotting$Means[1:2]-Plotting$se[1:2]*2, lwd=5)
+
+barCenters <- barplot(Plotting$Means[3:4], names.arg=c("LANDIS-II simulations", "Short, 2021"), col="gray", las=1, ylim=c(0,2000),cex.names=1.2,cex.axis=1.2,
+                      main="Accidental Ignitions (1992-2016)")
+segments(barCenters[1], Plotting$Means[3]+Plotting$se[3]*2, barCenters[1], Plotting$Means[3]-Plotting$se[3]*2, lwd=5)
+
+```
+
+
+```{r}
+Plotting$Means[1:2]
+
+Plotting$Means[1]+Plotting$se[1]*2
+Plotting$Means[1]-Plotting$se[1]*2
+
+
+Plotting$Means[3:4]
+
+Plotting$Means[3]+Plotting$se[3]*2
+Plotting$Means[3]-Plotting$se[3]*2
+
+```
+
+
+
+
+
+```{r,fig.width=5.0,fig.height=5.0}
+ModelRuns<-c(sum(EventLog1$TotalSitesBurned[EventLog1$IgnitionType!=" Rx" & EventLog1$SimulationYear < 24 ])*6.25,
+             sum(EventLog2$TotalSitesBurned[EventLog2$IgnitionType!=" Rx" & EventLog2$SimulationYear < 24])*6.25,
+             sum(EventLog3$TotalSitesBurned[EventLog3$IgnitionType!=" Rx" & EventLog3$SimulationYear < 24])*6.25,
+             sum(EventLog4$TotalSitesBurned[EventLog4$IgnitionType!=" Rx"& EventLog4$SimulationYear < 24 ])*6.25,
+             sum(EventLog5$TotalSitesBurned[EventLog5$IgnitionType!=" Rx"& EventLog5$SimulationYear < 24 ])*6.25,
+             sum(EventLog6$TotalSitesBurned[EventLog6$IgnitionType!=" Rx"& EventLog6$SimulationYear < 24  ])*6.25,
+             sum(EventLog7$TotalSitesBurned[EventLog7$IgnitionType!=" Rx"& EventLog7$SimulationYear < 24  ])*6.25,
+             sum(EventLog8$TotalSitesBurned[EventLog8$IgnitionType!=" Rx"& EventLog8$SimulationYear < 24  ])*6.25,
+             sum(EventLog9$TotalSitesBurned[EventLog9$IgnitionType!=" Rx"& EventLog9$SimulationYear < 24  ])*6.25,
+             sum(EventLog10$TotalSitesBurned[EventLog10$IgnitionType!=" Rx"& EventLog10$SimulationYear < 24  ])*6.25)
+
+mean(ModelRuns)
+se(ModelRuns)
+bars<-c(mean(ModelRuns),sum(l_fire_dat$FIRE_SIZE[l_fire_dat$FIRE_YEAR<2016])/2.54)                    
+error<-c(se(ModelRuns),0)
+foo<-barplot(bars,names.arg=c("LANDIS-II simulations","Short,2021"),main="Total Hectares Burned 1992-2015",ylab="Hectares",ylim=c(0,300000),cex.names=1.2,cex.lab=1.5,cex.axis=1.2)
+arrows(x0=foo,y0=bars+error*2,y1=bars-error*2,angle=90,code=3,length=0.1,lwd=3.0)
+
+```
+
+bars:
+```{r}
+## Results by number
+bars
+bars-error*2
+bars+error*2
+(102238.19-81580.65)/81580.65
+```
+
+
+```{r,fig.width=5.0,fig.height=5.0}
+ModelRuns<-c(sum(EventLog1$TotalSitesBurned[EventLog1$IgnitionType!=" Rx"])*6.25,
+             sum(EventLog2$TotalSitesBurned[EventLog2$IgnitionType!=" Rx" ])*6.25,
+             sum(EventLog3$TotalSitesBurned[EventLog3$IgnitionType!=" Rx" ])*6.25,
+             sum(EventLog4$TotalSitesBurned[EventLog4$IgnitionType!=" Rx"])*6.25,
+             sum(EventLog5$TotalSitesBurned[EventLog5$IgnitionType!=" Rx"])*6.25,
+             sum(EventLog6$TotalSitesBurned[EventLog6$IgnitionType!=" Rx"])*6.25,
+             sum(EventLog7$TotalSitesBurned[EventLog7$IgnitionType!=" Rx"])*6.25,
+             sum(EventLog8$TotalSitesBurned[EventLog8$IgnitionType!=" Rx"])*6.25,
+             sum(EventLog9$TotalSitesBurned[EventLog9$IgnitionType!=" Rx"])*6.25,
+             sum(EventLog10$TotalSitesBurned[EventLog10$IgnitionType!=" Rx"])*6.25)
+
+mean(ModelRuns)
+se(ModelRuns)
+bars<-c(mean(ModelRuns),sum(l_fire_dat$FIRE_SIZE[l_fire_dat$FIRE_YEAR<2017])/2.54)                    
+error<-c(se(ModelRuns),0)
+foo<-barplot(bars,names.arg=c("LANDIS-II simulations","Short, 2021"),main="Total Hectares Burned 1992-2016",ylab="Hectares",ylim=c(0,300000),cex.names=1.2,cex.lab=1.5,cex.axis=1.5)
+arrows(x0=foo,y0=bars+error*2,y1=bars-error*2,angle=90,code=3,length=0.1,lwd=3.0)
+mean(ModelRuns)/25
+```
+```{r}
+## Results by number
+bars
+bars-error*2
+bars+error*2
+(144197.2-147366.5)/147366.5
+
+```
+
+
+```{r,fig.width=10.0,fig.height=7.0}
+All_Events<-rbind(EventLog1,EventLog2,EventLog3,EventLog4,EventLog5,EventLog6,EventLog7,EventLog8,EventLog9,EventLog10)
+#All_Events<-rbind(EventLog1,EventLog2,EventLog3)
+#All_Events<-EventLog1
+#unique(EventLog$IgnitionType)
+All_Events<-All_Events[All_Events$IgnitionType!=" Rx" ,]
+
+
+VioFrame<-data.frame(
+          Model=c(rep("Short, 2021",length(l_fire_dat$FIRE_SIZE)),
+                           #  rep("HigherSup",length(HigherSup$TotalSitesBurned)),
+                           #  rep("LowerSup",length(LowerSup$TotalSitesBurned)),
+                           #  rep("NoSup",length(NoSup$TotalSitesBurned)),
+                            # rep("NoSup_3000",length(NoSup_3000$TotalSitesBurned)),
+                            rep("LANDIS-II (10 replicates)",length(All_Events$TotalSitesBurned))
+#                  rep("HSup/HighSp",length(HigherSup_HigherSpread$TotalSitesBurned))
+                  ),
+           Score=c(l_fire_dat$FIRE_SIZE/2.47105,
+ #                   HigherSup$TotalSitesBurned*6.25,
+  #                  LowerSup$TotalSitesBurned*6.25,
+   #                 NoSup$TotalSitesBurned*6.25,
+    #                NoSup_3000$TotalSitesBurned*6.25,
+                    All_Events$TotalSitesBurned*6.25
+     #               HigherSup_HigherSpread$TotalSitesBurned*6.25
+                    ))
+
+
+p <- ggplot(VioFrame, aes(x=Model, y=as.numeric(Score), fill=Model)) + # fill=name allow to automatically dedicate a color for each group
+     geom_violin()+ 
+     coord_flip() + 
+     geom_boxplot(width=0.1)+
+     scale_fill_brewer(palette="Dark2")+
+     labs(title="Fire Size Distribution, excluding fires < 500 ha",x="Source", y = "Fire Size (HA)")+
+     scale_y_continuous(limits = c(-1, 500))+
+     theme_classic()+
+     theme(text = element_text(size=20),
+        axis.text.x = element_text(angle=45, hjust=1)) 
+     #stat_summary(fun.data=data_summary)
+p
+
+
+
+
+q <- ggplot(VioFrame, aes(x=Model, y=as.numeric(Score), fill=Model)) + # fill=name allow to automatically dedicate a color for each group
+     geom_violin()+ 
+     coord_flip() + 
+     geom_boxplot(width=0.1)+
+     scale_fill_brewer(palette="Dark2")+
+     labs(title="Fire Size Distribution,including fires > 500 ha",x="", y = "Fire Size (HA)")+
+     #scale_y_continuous(limits = c(0, 10000))+
+     theme_classic()+
+     theme(text = element_text(size=20),
+        axis.text.x = element_text(angle=45, hjust=1)) 
+     #stat_summary(fun.data=data_summary)
+q
+
+l_fire_dat$testtesttest<-l_fire_dat$FIRE_SIZE/2.54
+```
+```{r,fig.width=10.0,fig.height=7.0}
+options(scipen=999)
+binned<-VioFrame %>%
+  mutate(class=(cut(VioFrame$Score, breaks = c(0, 50,100, 1000,5000, 10000,500000))))%>%
+  group_by(Model,class)%>%
+  count(class)
+binned%>%
+  group_by(Model)%>%
+  summarise(FiresTotal=sum(n))
+binned$perc<-binned$n/c(16170,16170	,16170,16170,16170,16170,1823,1823,1823,1823,1823,1823)*100
+binned$classname<-c("0-50 ha","50-100 ha","100-1,000 ha","1,000-5,000 ha","5,000-10,000 ha","10,000-50,000 ha",
+                    "0-50 ha","50-100 ha","100-1,000 ha","1,000-5,000 ha","5,000-10,000 ha","10,000-50,000 ha")
+
+binned$classname <- factor(binned$classname, levels = c("0-50 ha","50-100 ha","100-1,000 ha","1,000-5,000 ha","5,000-10,000 ha","10,000-50,000 ha"))
+q <- ggplot(binned,aes(x=Model, y=perc, fill=Model)) + # fill=name allow to automatically dedicate a color for each g
+      facet_wrap(~classname, scales = "free")+
+      geom_bar(stat="identity")+
+      scale_fill_brewer(palette="Dark2")+
+      theme_classic()+
+      ylab("Percent of fires")+
+      theme(text = element_text(size=10),
+        axis.text.x = element_text())
+     
+q
+```
+
+```{r}
+binned<-VioFrame %>%
+  mutate(class=(cut(VioFrame$Score, breaks = c(0,100, 1000,10000,50000))))%>%
+  group_by(Model,class)%>%
+  count(class)
+binned%>%
+  group_by(Model)%>%
+  summarise(FiresTotal=sum(n))
+binned$perc<-binned$n/c(16170,16170	,16170,16170,1823,1823,1823,1823)*100
+
+
+binned$classname <- factor(binned$classname, levels = c("0-50 ha","50-100 ha","100-1,000 ha","1,000-5,000 ha","5,000-10,000 ha","10,000-50,000 ha"))
+```
+
+
+
+
+
+```{r,fig.height=7.0,fig.width=15.0}
+AreaBurned<-aggregate(list(Area_Burned=l_fire_dat$FIRE_SIZE),by=list(Year=l_fire_dat$FIRE_YEAR),FUN=sum)
+AreaBurned$Area_Burned<-AreaBurned$Area_Burned/2.47
+
+
+
+Sim_AB1<-aggregate(list(Area_Burned=EventLog1$TotalSitesBurned),by=list(Year=EventLog1$SimulationYear),FUN=sum)
+Sim_AB1$Area_Burned<-Sim_AB1$Area_Burned*6.25
+Sim_AB2<-aggregate(list(Area_Burned=EventLog2$TotalSitesBurned),by=list(Year=EventLog2$SimulationYear),FUN=sum)
+Sim_AB2$Area_Burned<-Sim_AB2$Area_Burned*6.25
+Sim_AB3<-aggregate(list(Area_Burned=EventLog3$TotalSitesBurned),by=list(Year=EventLog3$SimulationYear),FUN=sum)
+Sim_AB3$Area_Burned<-Sim_AB3$Area_Burned*6.25
+Sim_AB4<-aggregate(list(Area_Burned=EventLog4$TotalSitesBurned),by=list(Year=EventLog4$SimulationYear),FUN=sum)
+Sim_AB4$Area_Burned<-Sim_AB4$Area_Burned*6.25
+Sim_AB5<-aggregate(list(Area_Burned=EventLog5$TotalSitesBurned),by=list(Year=EventLog5$SimulationYear),FUN=sum)
+Sim_AB5$Area_Burned<-Sim_AB5$Area_Burned*6.25
+Sim_AB6<-aggregate(list(Area_Burned=EventLog6$TotalSitesBurned),by=list(Year=EventLog6$SimulationYear),FUN=sum)
+Sim_AB6$Area_Burned<-Sim_AB6$Area_Burned*6.25
+Sim_AB7<-aggregate(list(Area_Burned=EventLog7$TotalSitesBurned),by=list(Year=EventLog7$SimulationYear),FUN=sum)
+Sim_AB7$Area_Burned<-Sim_AB7$Area_Burned*6.25
+Sim_AB8<-aggregate(list(Area_Burned=EventLog8$TotalSitesBurned),by=list(Year=EventLog8$SimulationYear),FUN=sum)
+Sim_AB8$Area_Burned<-Sim_AB8$Area_Burned*6.25
+Sim_AB9<-aggregate(list(Area_Burned=EventLog9$TotalSitesBurned),by=list(Year=EventLog9$SimulationYear),FUN=sum)
+Sim_AB9$Area_Burned<-Sim_AB9$Area_Burned*6.25
+Sim_AB10<-aggregate(list(Area_Burned=EventLog10$TotalSitesBurned),by=list(Year=EventLog10$SimulationYear),FUN=sum)
+Sim_AB10$Area_Burned<-Sim_AB10$Area_Burned*6.25
+
+
+Plotter<-data.frame(Time=rep(1992:2016,11),Hectares=c(AreaBurned$Area_Burned,Sim_AB1$Area_Burned,Sim_AB2$Area_Burned,Sim_AB3$Area_Burned,Sim_AB4$Area_Burned,Sim_AB5$Area_Burned,
+                      Sim_AB6$Area_Burned,Sim_AB7$Area_Burned,Sim_AB8$Area_Burned,Sim_AB9$Area_Burned,Sim_AB10$Area_Burned),
+           Simulation=c(rep("Short, 2021",25),rep("Replicate 1",25),rep("Replicate 2",25),rep("Replicate 3",25),rep("Replicate 4",25),rep("Replicate 5",25),
+                        rep("Replicate 6",25),rep("Replicate 7",25),rep("Replicate 8",25),rep("Replicate 9",25),rep("Replicate 10",25)))
+
+Plotter
+plot(c(1992:2016),Sim_AB1$Area_Burned,cex.axis=1.25,ylim=c(0,100000),cex.lab=1.5,cex.main=1.5,
+     xlab="Year",ylab="Area (Ha)",col=adjustcolor("red",alpha.f = .2),cex=2.0,pch=19) 
+points(c(1992:2016),Sim_AB2$Area_Burned,col=adjustcolor("blue",alpha.f = .2),cex=2.0,pch=19) 
+points(c(1992:2016),Sim_AB3$Area_Burned,col=adjustcolor("green",alpha.f = .2),cex=2.0,pch=19)  
+points(c(1992:2016),Sim_AB4$Area_Burned,col=adjustcolor("orange",alpha.f = .2),cex=2.0,pch=19) 
+points(c(1992:2016),Sim_AB5$Area_Burned,col=adjustcolor("brown",alpha.f = .2),cex=2.0,pch=19)  
+points(c(1992:2016),Sim_AB6$Area_Burned,col=adjustcolor("purple",alpha.f = .2),cex=2.0,pch=19) 
+points(c(1992:2016),Sim_AB7$Area_Burned,col=adjustcolor("orange",alpha.f = .2),cex=2.0,pch=19) 
+points(c(1992:2016),Sim_AB8$Area_Burned,col=adjustcolor("brown",alpha.f = .2),cex=2.0,pch=19)  
+points(c(1992:2016),Sim_AB9$Area_Burned,col=adjustcolor("purple",alpha.f = .2),cex=2.0,pch=19) 
+####This is the sim. 
+points(c(1992:2016),AreaBurned$Area_Burned,col=adjustcolor("black"),cex=2.0,pch=19)
+text(2010,80000, bquote(italic(R)^2 ==0.60),cex =3)
+legend(1994,100000,legend=c("Karen Short DataBase","LANDIS Sim 1","LANDIS Sim 2","LANDIS Sim 3","LANDIS Sim 4","LANDIS Sim 5", "LANDIS Sim 6"),pch=c(19,19),
+       col=c(adjustcolor("black"),adjustcolor("red",alpha.f = .2),adjustcolor("blue",alpha.f = .2),adjustcolor("green",alpha.f = .2),adjustcolor("orange",alpha.f = .2),adjustcolor('brown',alpha.f = .2),adjustcolor("purple",alpha.f = .2)),
+       cex=c(1.3))
+mean(AreaBurned$Area_Burned)*10
+#Sim_AB$Year<-seq(1992,2015)
+```
+
+```{r}
+Plotter<-data.frame(Time=rep(1992:2016,11),Hectares=c(AreaBurned$Area_Burned,Sim_AB1$Area_Burned,Sim_AB2$Area_Burned,Sim_AB3$Area_Burned,Sim_AB4$Area_Burned,Sim_AB5$Area_Burned,
+                      Sim_AB6$Area_Burned,Sim_AB7$Area_Burned,Sim_AB8$Area_Burned,Sim_AB9$Area_Burned,Sim_AB10$Area_Burned),
+           Data=c(rep("Short, 2021",25),rep("LANDIS-II runs",250)))
+
+Plotter
+```
+
+
+```{r,fig.width=15.0,fig.height=8.0}
+colnames(Plotter)
+#Plotter$Hectares
+rsq_label <- paste('R^2 == ',0.46)
+
+ggplot(Plotter, aes(x=Time, y=Hectares, color=Data)) +
+  geom_point(size=5.0)+
+  theme_classic()+
+  ylab("Hectares burned annually")+
+  annotate(geom = 'text', x = 1995, y = 50000, label = rsq_label, hjust = 0, vjust = 1, parse = TRUE,size=12)+
+  theme(axis.text=element_text(size=30,face="bold"),
+        axis.title=element_text(size=30,face="bold"),
+         plot.title = element_text(size = 20, face = "bold"),
+        legend.key.size = unit(2, 'cm'),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=20))+
+  scale_colour_manual(values = c('LANDIS-II runs'=alpha(c("black"), .1), 'Short, 2021'="red"),)
+  
+```
+
+
+```{r,fig.width=7.0,fig.height=7.0}
+
+data.frame()
+Sim_AB1<-aggregate(list(Area_Burned=EventLog1$TotalSitesBurned),by=list(Year=EventLog1$SimulationYear),FUN=sum)
+Sim_AB2<-aggregate(list(Area_Burned=EventLog2$TotalSitesBurned),by=list(Year=EventLog2$SimulationYear),FUN=sum)
+Sim_AB3<-aggregate(list(Area_Burned=EventLog3$TotalSitesBurned),by=list(Year=EventLog3$SimulationYear),FUN=sum)
+Sim_AB4<-aggregate(list(Area_Burned=EventLog4$TotalSitesBurned),by=list(Year=EventLog4$SimulationYear),FUN=sum)
+Sim_AB5<-aggregate(list(Area_Burned=EventLog5$TotalSitesBurned),by=list(Year=EventLog5$SimulationYear),FUN=sum)
+Sim_AB6<-aggregate(list(Area_Burned=EventLog6$TotalSitesBurned),by=list(Year=EventLog6$SimulationYear),FUN=sum)
+Sim_AB7<-aggregate(list(Area_Burned=EventLog7$TotalSitesBurned),by=list(Year=EventLog7$SimulationYear),FUN=sum)
+Sim_AB8<-aggregate(list(Area_Burned=EventLog8$TotalSitesBurned),by=list(Year=EventLog8$SimulationYear),FUN=sum)
+Sim_AB9<-aggregate(list(Area_Burned=EventLog9$TotalSitesBurned),by=list(Year=EventLog9$SimulationYear),FUN=sum)
+Sim_AB10<-aggregate(list(Area_Burned=EventLog10$TotalSitesBurned),by=list(Year=EventLog10$SimulationYear),FUN=sum)
+par(pty="s")
+plot(c(Sim_AB1$Area_Burned*6.25,Sim_AB2$Area_Burned*6.25,Sim_AB3$Area_Burned*6.25,Sim_AB4$Area_Burned*6.25,Sim_AB5$Area_Burned*6.25,Sim_AB6$Area_Burned*6.25,Sim_AB7$Area_Burned*6.25,Sim_AB8$Area_Burned*6.25,Sim_AB9$Area_Burned*6.25,Sim_AB10$Area_Burned*6.25),c(AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned),xlim=c(0,80000),ylim=c(0,80000),xlab="Predicted area burn per year",ylab="Observed area burned per year",pch=16,cex.axis=1.2,cex.lab=1.2, main="Comparison of observed and 10 replicates r2= 0.60")
+lines(seq(0,30000,1000),seq(0,30000,1000),lwd=2.0)
+
+
+lm1<-lm(c(Sim_AB1$Area_Burned*6.25,Sim_AB2$Area_Burned*6.25,Sim_AB3$Area_Burned*6.25,Sim_AB4$Area_Burned*6.25,Sim_AB5$Area_Burned*6.25,Sim_AB6$Area_Burned*6.25,Sim_AB7$Area_Burned*6.25,Sim_AB8$Area_Burned*6.25,Sim_AB9$Area_Burned*6.25,Sim_AB10$Area_Burned*6.25)~c(AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned,AreaBurned$Area_Burned))
+summary(lm1)
+```
+
+
+
+
+
+```{r}
+mean(AreaBurned$Area_Burned)
+sum(AreaBurned$Area_Burned[AreaBurned$Year %in% seq(1992,2002)])
+
+```
+
+
+
+
+```{r}
+perc<-cumsum(All_Events$TotalSitesBurned[order(All_Events$TotalSitesBurned)])/(sum(All_Events$TotalSitesBurned))
+plot(All_Events$TotalSitesBurned[order(All_Events$TotalSitesBurned)]*6.25,perc,ylim=c(0,1))
+#l_fire_dat$FIRE_SIZE
+perc2<-cumsum(l_fire_dat$FIRE_SIZE[order(l_fire_dat$FIRE_SIZE)])/(sum(l_fire_dat$FIRE_SIZE))
+#plot(perc2)
+max(l_fire_dat$FIRE_SIZE[order(l_fire_dat$FIRE_SIZE)]/2.47105)
+plot(All_Events$TotalSitesBurned[order(All_Events$TotalSitesBurned)]*6.25,perc,ylim=c(0,1.4),xlim=c(0,25000),pch=19,col=adjustcolor("red",alpha.f = .1),
+     xlab="Fire Size in Hectares", ylab="Cumulative Total")
+points(l_fire_dat$FIRE_SIZE[order(l_fire_dat$FIRE_SIZE)]/2.47105,perc2,pch=19,col=adjustcolor("black",alpha.f = .1))
+legend(400,1.3,legend=c("Karen Short","LANDIS_II (10 Replicates)"),col=c(adjustcolor("black",alpha.f = .1),adjustcolor("red",alpha.f = .1)),
+       pch=c(19,19))
+```
+
+
+#############Validating suppression 
+
+```{r}
+library(raster)
+library(lubridate)
+library(dplyr)
+library(sf)
+w_dir<-"Z:/Robbins/Sapps/Chapter3/Code/Scrpple_111721/Inputs/"
+
+
+ 
+  EventLog1<-read.csv(
+    paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh1/scrapple-events-log.csv'))
+CNF<-raster("Z:/Robbins/Sapps/Chapter3/Code/Scrpple_111721/Inputs/MR_InitialCommunity_2_18.tif")
+Scr_Drive1<-paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh1/')
+Scr_Drive2<-paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh2/')
+Scr_Drive3<-paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh3/')
+Scr_Drive4<-paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh4/')
+Scr_Drive5<-paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh5/')
+Scr_Drive6<-paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh6/')
+Scr_Drive7<-paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh7/')
+Scr_Drive8<-paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh8/')
+Scr_Drive9<-paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh9/')
+Scr_Drive10<-paste0(Drive,'Scrpple_LANDIS_Sapps_VeryHigh10/')
+
+
+
+Climate<-read.csv(paste0("Z:/Robbins/Sapps/Chapter3/Code/Scrpple_111721/Inputs/Climate_Log_FWI_728.csv"))
+Climate$Date<-as.Date(Climate$Timestep,origin=paste0(Climate$Year,"-01-01"))
+MonthlyFWI<-Climate%>%
+  mutate(month=lubridate::month(Climate$Date))%>%
+  group_by(month,Year)%>%
+  summarise(FWI=mean(FWI))
+
+
+l_fire_dat <- read.csv(paste(w_dir,"Natural_KS21.csv", sep=""))
+h_fire_dat <- read.csv(paste(w_dir, "Human_KS21.csv", sep=""))
+l_fire_dat<-rbind(l_fire_dat,h_fire_dat)
+l_fire_dat$month<-month(as.Date(l_fire_dat$DISCOVERY_DOY,origin=paste0(l_fire_dat$FIRE_YEAR,"-01-01")))
+l_fire_dat$Year<-l_fire_dat$FIRE_YEAR
+
+l_fire_dat<-merge(l_fire_dat,MonthlyFWI,by=c('month','Year'),all.x=T)
+
+plot(l_fire_dat$FWI,l_fire_dat$FIRE_SIZE)
+
+
+l_fire_dat<-l_fire_dat%>%
+  subset(FIRE_SIZE>15.44& FIRE_SIZE <500 & FIRE_YEAR<2017) 
+hist(l_fire_dat$FWI)
+
+xy <-l_fire_dat[,c("LONGITUDE","LATITUDE")]
+
+Spati <- SpatialPointsDataFrame(coords = xy, data = l_fire_dat,
+                                proj4string = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))%>%
+  spTransform(projection(CNF))%>%
+  as("sf")
+plot(Spati$geometry)
+#Int<-st_intersection(Spati,CNF)
+
+
+
+
+l_fire_dat <- Spati
+l_fire_dat<-l_fire_dat[c("FIRE_YEAR","FIRE_SIZE",'FWI','geometry')]
+Suppression12<-raster("Z:/Robbins/Sapps/Chapter3/Code/Scrpple_111721/Inputs/Suppressionv1_2.tif")
+
+SuppressionLUT<-cbind(l_fire_dat,extract(Suppression12,l_fire_dat))
+colnames(SuppressionLUT)<-c("FIRE_YEAR","FIRE_SIZE",'FWI','Suppression_code','geometry')
+SuppressionLUT<-SuppressionLUT%>%mutate(FWI_cat=ifelse(SuppressionLUT$FWI >20,3,if_else(SuppressionLUT$FWI >15,2,1)))
+
+SuppressionR<-SuppressionLUT%>%
+  group_by(FIRE_YEAR, FWI_cat, Suppression_code)%>%
+  summarise(Total_acres=sum(FIRE_SIZE),Fires=n())
+
+SuppressionR$AP_Fire<-SuppressionR$Total_acres/SuppressionR$Fires
+
+Supp_sumr<-SuppressionR%>%
+  group_by(Suppression_code, FWI_cat)%>%
+  summarise(AP_Fire=mean(AP_Fire),AP_Fire_sd=sd(AP_Fire),
+            TotalAcres=sum(Total_acres),MP_Year=mean(Total_acres),TotalFires=sum(Fires))
+
+plot(Suppression12)
+unique(Suppression12)
+
+
+
+### MTBS 
+MTBS_GA<-read_sf('Z:/Robbins/Sapps/Chapter3/Code/Scrpple_111721/Inputs/MTBS_Shapes.shp')
+Wild<-MTBS_GA%>%
+  subset(Fire_Type=="Wildfire")
+crs(Wild)
+DF<-NULL
+for(i in 1:92){
+  Wild_repo<-st_transform(Wild,crs(Suppression12))%>%as("sf")
+  One_extract<-raster::extract(Suppression12,Wild_repo[i,])
+  table_count<-as.data.frame(table(One_extract))
+  table_count$ID<-i
+  table_count$Year<-Wild_repo[i,]$Year
+  table_count$month<-Wild_repo[i,]$StartMonth
+  DF<-rbind(table_count,DF)
+}
+DF$Acres<-DF$Freq*15.44
+colnames(DF)<-c("Suppression_code","Cells","FireID","Year","month","Acres")
+DF<-merge(DF,MonthlyFWI,by=c('month','Year'),all.x=T)
+
+DF<-DF%>%mutate(FWI_cat=ifelse(DF$FWI >20,3,if_else(DF$FWI >15,2,1)))
+
+LargeFires<-DF %>%
+  group_by(Suppression_code,FWI_cat)%>%
+  summarise(TotalAcres=sum(Acres),TotalFires=n())
+
+
+LargeFires$AP_Fire<-LargeFires$TotalAcres/LargeFires$TotalFires
+LargeFires<-na.omit(LargeFires)
+
+Bothsets<-rbind(as.data.frame(Supp_sumr)[c("Suppression_code","FWI_cat","TotalAcres","TotalFires")],as.data.frame(LargeFires)[c("Suppression_code","FWI_cat","TotalAcres","TotalFires")])
+
+Summer<-Bothsets %>%
+  group_by(Suppression_code,FWI_cat)%>%
+  summarise(Acres=sum(TotalAcres),TotalFires=sum(TotalFires))
+
+Summer$APF<-Summer$Acres/Summer$TotalFires
+
+Summer$HPF<-Summer$APF*0.4046
+
+Supp_sumr$AP_Fire/58.3
+LargeFires$AP_Fire<-LargeFires$TotalAcres/LargeFires$TotalFires
+LargeFires$AP_Fire/750
+
+##########################################
+###Loading in Scpple Ouputs###############
+##########################################
+
+
+
+ProcessLANDIS<-function(Scr_Drive){
+  DF<-NULL
+  for(t in 1:25){
+    Event<-raster(paste0(Scr_Drive,"social-climate-fire/event-ID-",t,".img"))
+    #plot(Event)
+    crs(Event)<-crs(Suppression12)
+    extent(Event)<-extent(Suppression12)
+    Pros_1<-as.data.frame(stack(Event,Suppression12))
+    colnames(Pros_1)<-c("EventID","Suppression")
+    Pros_1<-Pros_1 %>%
+      filter(EventID>0)%>%
+      group_by(EventID,Suppression)%>%
+      summarise(Count=n())
+    Pros_1$year<-t
+    DF<-rbind(Pros_1,DF)
+  }
+  DF2<-DF
+
+  colnames(DF)<-c("EventID","Suppression","Hectares","Year")
+  Scrp_Log<-read.csv(paste0(Scr_Drive,"scrapple-events-log.csv"))
+  #sum(Scrp_Log$TotalSitesBurned)*6.25
+  #sum(Scrp_Log$TotalSitesBurned[!Scrp_Log$IgnitionType==" Rx"]*6.25)
+  #sum(DF$Hectares)*6.25
+  
+  FullSet<-merge(DF,Scrp_Log[c("EventID","MeanFWI","IgnitionType")],by="EventID")
+  #sum(FullSet$Hectares)*6.25
+  FullSet<-FullSet[!FullSet$IgnitionType==" Rx",]
+  #sum(FullSet$Hectares)*6.25
+  
+  FullSet$Hectares<-FullSet$Hectares*6.25
+  FullSet$FWIclass<-ifelse(FullSet$MeanFWI>20,3,ifelse(FullSet$MeanFWI>15,2,1))
+  Sumr2<-FullSet%>%
+    group_by(Suppression,FWIclass)%>%
+    summarise(Hectares=sum(Hectares),Fires=n())
+  return(Sumr2)
+}
+Sumr2_r1<-ProcessLANDIS(Scr_Drive1)
+Sumr2_r2<-ProcessLANDIS(Scr_Drive2)
+Sumr2_r3<-ProcessLANDIS(Scr_Drive3)
+Sumr2_r4<-ProcessLANDIS(Scr_Drive4)
+Sumr2_r5<-ProcessLANDIS(Scr_Drive5)
+Sumr2_r6<-ProcessLANDIS(Scr_Drive6)  
+Sumr2_r7<-ProcessLANDIS(Scr_Drive7)
+Sumr2_r8<-ProcessLANDIS(Scr_Drive8)
+Sumr2_r9<-ProcessLANDIS(Scr_Drive9)  
+Sumr2_r10<-ProcessLANDIS(Scr_Drive10)
+  
+    
+  
+```
+```{r}
+Summer$Data_hectares<-Summer$Acres*.404686
+Data<-Summer[,c("Suppression_code","FWI_cat",'Data_hectares')]
+Data<-Data%>%
+  group_by(Suppression_code)%>%
+  dplyr::summarise(Data_hectares=sum(Data_hectares))
+
+Model<-cbind(Sumr2_r1[,c(3)],Sumr2_r2[,c(3)],Sumr2_r3[,c(3)],Sumr2_r4[,c(3)],Sumr2_r5[,c(3)],Sumr2_r6[,c(3)],Sumr2_r7[,c(3)],Sumr2_r8[,c(3)],Sumr2_r9[,c(3)],Sumr2_r10[,c(3)])
+Sup1<-Model[1,]+Model[2,]+Model[3,]
+Sup2<-Model[4,]+Model[5,]+Model[6,]
+Sup3<-Model[7,]+Model[8,]+Model[9,]
+Model2<-rbind(Sup1,Sup2,Sup3)
+Mean<-transform(Model2, mean=apply(Model2,1, mean))[,c(11)]
+SE<-transform(Model2, SE=apply(Model2,1, se))[,c(11)]
+Model<-cbind(data.frame(Suppression_code=c(1,2,3),Mean,SE))
+colnames(Model)<-c("Suppression_code",'Model_hectares_mean','Model_hectares_SE')
+Combined<-merge(Data,Model,by=c("Suppression_code"))
+```
+
+```{r,fig.width=10.0}
+Plotter<-function(SC,main,ylaby){
+  Combos<-Combined[Combined$Suppression_code==SC,]
+  bars<-c(Combos$Data_hectares,Combos$Model_hectares_mean)
+  errs<-c(0,Combos$Model_hectares_SE)
+  foo<-barplot(bars,names.arg=c("Observed","Model"),main=main,cex.names=2.7,cex.lab=1.5,cex.axis=2.2,ylim=c(0,100000),ylab=ylaby,cex.main=3.0)
+  arrows(x0=foo,y0=bars+errs*2,y1=bars-errs*2,angle=90,code=3,length=0.3,lwd=3.0)
+}
+png("Suppression.png",width=1000,height=400)
+par(mfrow=c(1,3))
+Plotter(1,"Suppression Low","Hectares burned")
+Plotter(2,"Suppression Med",NA)
+Plotter(3,"Suppression High",NA)
+dev.off()
+getwd()
+```
+
+```{r}
+
+Model[,2]-(SE*2)
+
+
+```
+
+```{r,fig.width=10.0,fig.length=15.0}
+
+Plotter<-function(FWI,SC,main){
+  Combos<-Combined[Combined$FWI_cat==FWI & Combined$Suppression_code==SC,]
+  bars<-c(Combos$Data_hectares,Combos$Model_hectares_mean)
+  errs<-c(0,Combos$Model_hectares_SE)
+  foo<-barplot(bars,names.arg=c("Data","Model"),main=main,cex.names=1.7,cex.lab=1.5,cex.axis=1.2,ylim=c(0,60000))
+  arrows(x0=foo,y0=bars+errs*2,y1=bars-errs*2,angle=90,code=3,length=0.3,lwd=3.0)
+}
+
+par(mfrow=c(3,3))
+Plotter(1,1,"Suppression Low, FWI < 10")
+Plotter(2,1,"Suppression Low, 25>FWI>10")
+Plotter(3,1,"Suppression Low, FWI>25")
+Plotter(1,2,"Suppression Med, FWI < 10")
+Plotter(2,2,"Suppression Med, 25>FWI>10")
+Plotter(3,2,"Suppression Med, FWI>25")
+Plotter(1,3,"Suppression High, FWI < 10")
+Plotter(2,3,"Suppression High, 25>FWI>10")
+Plotter(3,3,"Suppression High, FWI>25")
+```
+
+
+
+```{r,fig.width=10.0,fig.height=10.0}
+par(mfrow=c(3,3))
+barplot(c(Combined$hectares[Combined$FWI_cat==1&Combined$Suppression_code==1],Combined$Model_hectares[Combined$FWI_cat==1&Combined$Suppression_code==1]),names.arg=c("Data","Model"),ylim=c(0,60000),main="Suppression Low, Fwi Low")
+barplot(c(Combined$hectares[Combined$FWI_cat==2&Combined$Suppression_code==1],Combined$Model_hectares[Combined$FWI_cat==2&Combined$Suppression_code==1]),names.arg=c("Data","Model"),ylim=c(0,60000),main="Suppression Low, Fwi Med")
+barplot(c(Combined$hectares[Combined$FWI_cat==3&Combined$Suppression_code==1],Combined$Model_hectares[Combined$FWI_cat==3&Combined$Suppression_code==1]),names.arg=c("Data","Model"),ylim=c(0,60000),main="Suppression Low, Fwi High")
+barplot(c(Combined$hectares[Combined$FWI_cat==1&Combined$Suppression_code==2],Combined$Model_hectares[Combined$FWI_cat==1&Combined$Suppression_code==2]),names.arg=c("Data","Model"),ylim=c(0,60000),main="Suppression Med, Fwi Low")
+barplot(c(Combined$hectares[Combined$FWI_cat==2&Combined$Suppression_code==2],Combined$Model_hectares[Combined$FWI_cat==2&Combined$Suppression_code==2]),names.arg=c("Data","Model"),ylim=c(0,60000),main="Suppression Med, Fwi Med")
+barplot(c(Combined$hectares[Combined$FWI_cat==3&Combined$Suppression_code==2],Combined$Model_hectares[Combined$FWI_cat==3&Combined$Suppression_code==2]),names.arg=c("Data","Model"),ylim=c(0,60000),main="Suppression Med, Fwi High")
+barplot(c(Combined$hectares[Combined$FWI_cat==1&Combined$Suppression_code==3],Combined$Model_hectares[Combined$FWI_cat==1&Combined$Suppression_code==3]),names.arg=c("Data","Model"),ylim=c(0,60000),main="Suppression Full, Fwi Low")
+barplot(c(Combined$hectares[Combined$FWI_cat==2&Combined$Suppression_code==3],Combined$Model_hectares[Combined$FWI_cat==2&Combined$Suppression_code==3]),names.arg=c("Data","Model"),ylim=c(0,60000),main="Suppression Full, Fwi Med")
+barplot(c(Combined$hectares[Combined$FWI_cat==3&Combined$Suppression_code==3],Combined$Model_hectares[Combined$FWI_cat==3&Combined$Suppression_code==3]),names.arg=c("Data","Model"),ylim=c(0,60000),main="Suppression Full, Fwi High")
+
+
+
+```
+
+
+
+```{r}
+b#Files<-paste0('C:/Users/zacha/Desktop/Scrpple_LANDIS_Sapps_1/social-climate-fire/',
+#                      list.files('C:/Users/zacha/Desktop/Scrpple_LANDIS_Sapps_1/social-climate-fire/',pattern = ("^fire-intensity-")))
+#AllStack<-raster::stack(Files)
+  
+
+
+
+#All_df<-as.data.frame(AllStack,xy=TRUE)
+#List<-unlist(All_df, use.names=FALSE)
+#List<-List[List>0]
+
+#hist(List)
+#max(List)
+### Load in using maps.
+```
+
+```{r}
+hist(EventLog$MeanWD[EventLog$MeanWD>0],breaks=50,main="LANDIS Climate Library WD")
+hist(Remotesensing$RdNBR[Remotesensing$RdNBR>0],main="Param Data",breaks=50)
+```
+
+
+
+
+
+
+
+
+####### Fixing DNBR Scores
+
+```{r}
+
+Remotesensing<-read.csv(
+  paste0('D:/Sapps_DM_paper/All_250_2_8.csv'))
+hist(EventLog$MeanDNBR,xlim=c(0,2000),breaks=100)
+hist(Remotesensing$RdNBR[Remotesensing$RdNB>0],xlim=c(0,2000),breaks=50)
+
+hist(EventLog$MeanDNBR,xlim=c(0,500),breaks=100)
+hist(Remotesensing$RdNBR[Remotesensing$RdNB>0],xlim=c(0,500),breaks=50)
+
+median(EventLog$MeanDNBR)
+mean(EventLog$MeanDNBR)
+median(na.omit(Remotesensing$RdNBR))
+mean(na.omit(Remotesensing$RdNBR))
+```
+
+```{r}
+Eventcum<-cumsum(EventLog$MeanDNBR[order(EventLog$MeanDNBR)])/sum(EventLog$MeanDNBR)
+RS_2<-na.omit(Remotesensing$RdNBR)
+RS_2<-RS_2[RS_2>0]
+plot(round(RS_2[order(RS_2)]),cumsum(round(RS_2[order(RS_2)]))/sum(RS_2),xlim=c(0,1000))
+points(EventLog$MeanDNBR[order(EventLog$MeanDNBR)],Eventcum,col="red")
+
+```
+
+```{r,fig.width=10.0}
+List<-EventLog$MeanDNBR
+VioFrame<-data.frame(Model=c(rep("RemoteSensing",length(RS_2)),rep("ModelRun",length(List)))
+           ,Score=c(RS_2,List))
+
+p <- ggplot(VioFrame, aes(x=factor(Model), y=Score, fill=Model)) + 
+     
+     geom_violin()+ 
+     coord_flip() + 
+     scale_y_continuous(limits = c(0, 2000))+
+     geom_boxplot(width=0.1)+
+     scale_fill_brewer(palette="Dark2")+
+     labs(title="DNBR distribution",x="Source", y = "DNBR")+
+     theme_classic()+
+     theme(text = element_text(size=20),
+        axis.text.x = element_text(angle=45, hjust=1)) 
+     #stat_summary(fun.data=data_summary)
+p
+```
+
+```{r}
+
+mean(EventLog$MeanDNBR)
+mean(RS_2[RS_2>0])
+
+median(EventLog$MeanDNBR)
+median(RS_2[RS_2>0])
+
+```
+
+```
+
