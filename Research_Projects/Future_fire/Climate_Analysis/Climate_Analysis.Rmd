@@ -1,0 +1,720 @@
+---
+title: "Climate Model PET"
+author: "Zachary Robbins"
+date: "2/9/2020"
+output: github_document
+    
+---
+```{r,echo=FALSE}
+knitr::opts_chunk$set(echo=F,warning = F)
+
+```
+
+```{r library}
+Data_dir<-("Z:/Robbins/Sapps/Chapter3/Code/Landscape_Fire_Paper/Climate_Section_Paper/")
+library(dplyr)
+library(lubridate)
+library(RColorBrewer)
+library(scales)
+###Color pallette
+Color3<-brewer.pal(10,"Paired")
+```
+
+#### Defining the PET function 
+
+```{r,Thornwaite,echo=TRUE}
+ThornwaitePET<-function(Tmax,Tmin){
+    ### Calculate the Temperature mean 
+    
+    Tmean<-(Tmax+Tmin)/2
+    ### Set up the data 
+    Temp<-data.frame(Dates=as.Date(TmaxAOI85$Timestep),Temps=Tmean)
+    colnames(Temp)<-c("Dates","Temps")
+    MonthlyMean<-Temp %>% 
+      group_by(month=floor_date(Dates, "month")) %>%
+      dplyr::summarize(amoun=mean(Temps,na.rm = T))
+    
+    #MonthlyMean$amoun[is.na(MonthlyMean$amoun)]
+    ### Heat index i = (t/5)**1.514
+    mm<-as.matrix(MonthlyMean[2])
+    mm[mm<0,]<-0
+    MonthlyMean$amoun<-mm
+    Heatindex<-(mm/5)**1.514
+    #Heatindex[is.na(Heatindex),]<-mean(Heatindex,na.rm=T)
+    Datai<-data.frame(Date=MonthlyMean[1],hi=Heatindex)
+    ### I is equal to the sum of i over each month 
+    Output<-Datai %>%
+      group_by(Year=floor_date(month,"year"))%>%
+      dplyr::summarize(amount=sum(amoun))
+    Output$Year<-year(Output$Year)
+    
+    ### Get the years for monthly means 
+    MonthlyMean$Year<-year(MonthlyMean$month)
+    
+    merged<-merge(MonthlyMean,Output,by="Year")
+    merged[is.na(merged)]
+    ###Isolate back out the variables 
+    i=merged$amoun
+    I=merged$amount
+    ###Alpha
+    alpha=(6.75*10**-7)*(I**3)-(7.71*(10**-5)*(I**2))+(1.792*10**-2)*I+0.49239
+    alpha[is.na(alpha)]
+    ### Final uncorrected equation
+    PETnon_corrected<-16*((10*i)/I)**alpha
+    
+    d<-PETnon_corrected[is.na(PETnon_corrected)]
+    ##mm/month
+    PET_df<-data.frame(date=merged$month,PET=PETnon_corrected)
+    
+    PET_df$Month<-month(PET_df$date)
+    PET_df<-PET_df[PET_df$Month%in% c(5,6,7,8,9,10),]
+    PET_df<-PET_df[-3]
+    colnames(PET_df)<-c("date","PET")
+    ### Agg to year 
+    Yearly<-PET_df %>%
+      group_by(Year=floor_date(date,"year"))%>%
+      dplyr::summarize(amount=sum(PET,na.rm=T))
+    return(Yearly)
+}
+```
+
+We start with the climate files we have processed for each of the rcp 8.5 climate
+models availble from MACA. 
+
+This is minimum temperature, maximum temperature and pecipitation. 
+
+
+```{r pressure, echo=FALSE}
+TmaxAOI85<-read.csv(paste0(Data_dir,"outputs/Processed/AOI_Tmax_85.csv"),stringsAsFactors = F)
+TmaxAOI85<-na.omit(TmaxAOI85)
+TminAOI85<-read.csv(paste0(Data_dir,"outputs/Processed/AOI_Tmin_85.csv"),stringsAsFactors = F)
+TminAOI85<-na.omit(TminAOI85)
+PAOI85<-read.csv(paste0(Data_dir,"outputs/Processed/AOI_PPT_85.csv"),stringsAsFactors = F)
+PAOI85<-na.omit(PAOI85)
+```
+
+#### Candidate Climate models 
+
+Here are those models 
+
+```{r}
+modelnames<-colnames(TmaxAOI85)[c(-1,-2)]
+modelnames2<-colnames(TminAOI85)[c(-1,-2)]
+modelnames<-modelnames2[modelnames2 %in% modelnames]
+print(modelnames)
+```
+
+Temp to daily mean 
+```{r}
+t=1
+AllModels<-NULL
+for(model in modelnames){
+  print(model)
+  Tmax<-(TmaxAOI85[model])
+  Tmin<-TminAOI85[model]
+  Tmean<-(Tmax+Tmin)/2
+  Oneyear<-cbind(TmaxAOI85[,2],Tmean)
+  colnames(Oneyear)<-c("Date","Model")
+  Oneyear<-Oneyear%>%
+    mutate(Year=year(Date))%>%
+    group_by(Year)%>%
+    dplyr::summarise(mean=mean(Model))
+  #print(Oneyear)
+  colnames(Oneyear)<-c("Year",model)
+  if(t==1){
+  AllModels<-Oneyear
+  t<-t+1
+  }else{
+   
+    colnames(AllModels)[1]<-"Year"
+    AllModels<-merge(AllModels,Oneyear,by="Year")
+  }
+}
+
+```
+
+```{r}
+print(lm(AllModels$HadGEM2.ES365_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+print(lm(AllModels$IPSL.CM5A.MR_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+print(lm(AllModels$MRI.CGCM3_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+print(lm(AllModels$CNRM.CM5_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+```
+
+
+#### Calculate PET function from Tmean for each model: (Tmax+Tmin)/2
+
+We then evaluate the Thornwaite model for PET using the T mean. 
+
+Each model is shown as calculated PET for the follow steps. 
+
+```{r}
+
+```
+
+```{r,fig.width=20.0,fig.height=20.0}
+t<-1
+
+for(model in modelnames){
+  #print(model)
+  Tmax<-(TmaxAOI85[model])
+  Tmin<-TminAOI85[model]
+  Oneyear<-ThornwaitePET(Tmax = Tmax,Tmin=Tmin)
+  colnames(Oneyear)<-c("Year",model)
+  if(t==1){
+  AllModels<-Oneyear
+  t<-t+1
+  }else{
+   
+    colnames(AllModels)[1]<-"Year"
+    AllModels<-merge(AllModels,Oneyear,by="Year")
+  }
+}
+
+#AllModels
+par(mfrow=c(2,2),mar=c(5.1, 5.1, 4.1, 2.1))
+plot(as.Date(AllModels$Year),AllModels$bcc.csm1.1.m_rcp85,col=Color3[1],type="l",lwd=2.0,ylim=c(400,1200),cex.axis=2.0,cex.lab=1.8,
+     ylab="PET mm/year",xlab="Year")
+lines(as.Date(AllModels$Year),AllModels$bcc.csm1.1_rcp85,col=Color3[1],lwd=2.0)
+lines(as.Date(AllModels$Year),AllModels$BNU.ESM_rcp85,col=Color3[3],lwd=2.0)
+plot(as.Date(AllModels$Year),AllModels$CanESM2_rcp85,col=Color3[4],lwd=2.0,type="l",ylim=c(400,1200),cex.axis=2.0,cex.lab=1.8,
+     ylab="PET mm/year",xlab="Year")
+lines(as.Date(AllModels$Year),AllModels$CCSM4_rcp85,col=Color3[5],lwd=2.0)
+lines(as.Date(AllModels$Year),AllModels$CNRM.CM5_rcp85,col=Color3[6],lwd=2.0)
+lines(as.Date(AllModels$Year),AllModels$CSIRO.Mk3.6.0_rcp85,col=Color3[7],lwd=2.0)
+plot(as.Date(AllModels$Year),AllModels$GFDL.ESM2G_rcp85,col=Color3[8],lwd=2.0,type="l",ylim=c(400,1200),cex.axis=2.0,cex.lab=1.8,
+     ylab="PET mm/year",xlab="Year")
+lines(as.Date(AllModels$Year),AllModels$GFDL.ESM2M_rcp85,col=Color3[9],lwd=2.0)
+lines(as.Date(AllModels$Year),AllModels$HadGEM2.CC365_rcp85,col=Color3[10],lwd=2.0)
+plot(as.Date(AllModels$Year),AllModels$MIROC5_rcp85,type="n",axes=F,xlab=NA,ylab=NA)
+legend(as.Date(AllModels$Year)[1],750,legend=c(modelnames),col=c(Color3,Color3[1:10]),
+       lty=c(1,1,1,1,1,1,1,1,1,1,4,4,4,4,4,4,4,4,4,4),lwd=c(4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),cex=2.0)
+plot(as.Date(AllModels$Year),AllModels$HadGEM2.ES365_rcp85,col=Color3[1],lty=4,lwd=2.0,type="l",ylim=c(400,1200),cex.axis=2.0,cex.lab=1.8,
+     ylab="PET mm/year",xlab="Year")
+lines(as.Date(AllModels$Year),AllModels$inmcm4_rcp85,col=Color3[2],lty=4,lwd=2.0)
+lines(as.Date(AllModels$Year),AllModels$IPSL.CM5A.LR_rcp85,col=Color3[3],lty=4,lwd=2.0)
+lines(as.Date(AllModels$Year),AllModels$IPSL.CM5A.MR_rcp85,col=Color3[4],lty=4,lwd=2.0)
+plot(as.Date(AllModels$Year),AllModels$IPSL.CM5B.LR_rcp85,col=Color3[5],type="l",lty=4,lwd=2.0,ylim=c(400,1200),cex.axis=2.0,cex.lab=1.8,
+     ylab="PET mm/year",xlab="Year")
+lines(as.Date(AllModels$Year),AllModels$MIROC.ESM.CHEM_rcp85,col=Color3[6],lty=4,lwd=2.0)
+lines(as.Date(AllModels$Year),AllModels$MIROC.ESM_rcp85,col=Color3[7],lty=4,lwd=2.0)
+plot(as.Date(AllModels$Year),AllModels$MRI.CGCM3_rcp85,col=Color3[8],lty=4,lwd=2.0,type="l",ylim=c(400,1200),cex.axis=2.0,cex.lab=1.8,
+     ylab="PET mm/year",xlab="Year")
+lines(as.Date(AllModels$Year),AllModels$NorESM1.M_rcp85,col=Color3[9],lty=4,lwd=2.0)
+lines(as.Date(AllModels$Year),AllModels$MIROC5_rcp85,col=Color3[10],lty=4,lwd=2.0)
+plot(as.Date(AllModels$Year),AllModels$MIROC5_rcp85,type="n",axes=F,xlab=NA,ylab=NA)
+legend(as.Date(AllModels$Year)[1],750,legend=c(modelnames),col=c(Color3,Color3[1:10]),
+       lty=c(1,1,1,1,1,1,1,1,1,1,4,4,4,4,4,4,4,4,4,4),lwd=c(4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),cex=2.0)
+```
+
+
+```{r}
+print(lm(AllModels$HadGEM2.CC365_rcp85 ~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+
+print(lm(AllModels$IPSL.CM5A.MR_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+print(lm(AllModels$MRI.CGCM3_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+print(lm(AllModels$CNRM.CM5_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+```
+
+#### Precipitation 
+
+We also look at precipitation using the same models. 
+
+```{r,fig.width=20.0,fig.height=20.0}
+DFP<-AllModels$Year
+for(model in modelnames){
+  Precip<-PAOI85[model]
+  PETone<-AllModels[model]
+  Precip<-data.frame(Dates=as.Date(PAOI85$Timestep),Precip=Precip) 
+  colnames(Precip)<-c("Dates","Precip")
+  Outputs<-Precip %>% group_by(Year=floor_date(Dates,"month"))%>%
+    dplyr::summarize(amount=sum(Precip,na.rm = T))
+  Outputs$Month<-month(Outputs$Year)
+  Outputs<-Outputs[Outputs$Month %in% c(5,6,7,8,9,10),]
+  Outputs<-Outputs %>% group_by(Year=floor_date(Year,"year"))%>%
+    dplyr::summarize(amount=sum(amount,na.rm = T))
+  #Ratio<-Outputs$amount/PETone
+  colnames(Outputs)[2]<-model
+  DFP<-cbind(DFP,Outputs[model])
+}
+
+
+```
+
+```{r,fig.width=20.0,fig.height=20.0}
+#Plotting this
+par(mfrow=c(2,2),mar=c(5.1, 5.1, 4.1, 2.1))
+plot(AllModels$Year,DFP$bcc.csm1.1.m_rcp85,col=Color3[1],type="l",lwd=2.0,ylim=c(400,1500),cex.axis=2.0,cex.lab=1.8,
+     ylab="PPT mm/year",xlab="Year")
+lines(AllModels$Year,DFP$bcc.csm1.1_rcp85,col=Color3[1],lwd=2.0)
+lines(AllModels$Year,DFP$BNU.ESM_rcp85,col=Color3[3],lwd=2.0)
+plot(AllModels$Year,DFP$CanESM2_rcp85,col=Color3[4],lwd=2.0,type="l",ylim=c(400,1500),cex.axis=2.0,cex.lab=1.8,
+     ylab="PPT mm/year",xlab="Year")
+lines(AllModels$Year,DFP$CCSM4_rcp85,col=Color3[5],lwd=2.0)
+lines(AllModels$Year,DFP$CNRM.CM5_rcp85,col=Color3[6],lwd=2.0)
+lines(AllModels$Year,DFP$CSIRO.Mk3.6.0_rcp85,col=Color3[7],lwd=2.0)
+plot(AllModels$Year,DFP$GFDL.ESM2G_rcp85,col=Color3[8],lwd=2.0,type="l",ylim=c(400,1500),cex.axis=2.0,cex.lab=1.8,
+     ylab="PPT mm/year",xlab="Year")
+lines(AllModels$Year,DFP$GFDL.ESM2M_rcp85,col=Color3[9],lwd=2.0)
+lines(AllModels$Year,DFP$HadGEM2.CC365_rcp85,col=Color3[10],lwd=2.0)
+plot(AllModels$Year,DFP$MIROC5_rcp85,type="n",axes=F,xlab=NA,ylab=NA)
+legend(AllModels$Year[1],1200,legend=c(modelnames),col=c(Color3,Color3[1:10]),
+       lty=c(1,1,1,1,1,1,1,1,1,1,4,4,4,4,4,4,4,4,4,4),lwd=c(4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),cex=2.0)
+plot(AllModels$Year,DFP$HadGEM2.ES365_rcp85,col=Color3[1],lty=4,lwd=2.0,type="l",ylim=c(400,1500),cex.axis=2.0,cex.lab=1.8,
+     ylab="PPT mm/year",xlab="Year")
+lines(AllModels$Year,DFP$inmcm4_rcp85,col=Color3[2],lty=4,lwd=2.0)
+lines(AllModels$Year,DFP$IPSL.CM5A.LR_rcp85,col=Color3[3],lty=4,lwd=2.0)
+lines(AllModels$Year,DFP$IPSL.CM5A.MR_rcp85,col=Color3[4],lty=4,lwd=2.0)
+
+
+plot(AllModels$Year,DFP$IPSL.CM5B.LR_rcp85,col=Color3[5],type="l",lty=4,lwd=2.0,ylim=c(400,1500),cex.axis=2.0,cex.lab=1.8,
+     ylab="PPT mm/year",xlab="Year")
+
+lines(AllModels$Year,DFP$MIROC.ESM.CHEM_rcp85,col=Color3[6],lty=4,lwd=2.0)
+lines(AllModels$Year,DFP$MIROC.ESM_rcp85,col=Color3[7],lty=4,lwd=2.0)
+plot(AllModels$Year,DFP$MRI.CGCM3_rcp85,col=Color3[8],lty=4,lwd=2.0,type="l",ylim=c(400,1500),cex.axis=2.0,cex.lab=1.8,
+     ylab="PPT mm/year",xlab="Year")
+lines(as.Date(AllModels$Year),DFP$NorESM1.M_rcp85,col=Color3[9],lty=4,lwd=2.0)
+lines(as.Date(AllModels$Year),DFP$MIROC5_rcp85,col=Color3[10],lty=4,lwd=2.0)
+plot(as.Date(AllModels$Year),DFP$MIROC5_rcp85,type="n",axes=F,xlab=NA,ylab=NA)
+legend(as.Date(AllModels$Year)[1],1200,legend=c(modelnames),col=c(Color3,Color3[1:10]),
+       lty=c(1,1,1,1,1,1,1,1,1,1,4,4,4,4,4,4,4,4,4,4),lwd=c(4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),cex=2.0)
+```
+
+Looking at the linear change
+
+```{r}
+
+print(lm(DFP$HadGEM2.ES365_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+print(lm(DFP$IPSL.CM5A.MR_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+print(lm(DFP$MRI.CGCM3_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+print(lm(DFP$CNRM.CM5_rcp85~seq(1:length(AllModels$HadGEM2.ES365_rcp85))))
+
+
+```
+
+
+#### Ratio of PPT to PET over time 
+
+To look at the patterns in drought over time we looked at the relationship between
+PET and PPT over time
+
+This is obviously simplified and does not account for PPT stored within
+the system 
+
+Not accounting for Runoff
+Greater than 1 =Storage
+1= PPT=PET
+<1 = Water Deficit
+
+```{r}
+modelnames3<-colnames(PAOI85)[c(-1,-2)]
+modelnames3<-modelnames[modelnames %in% modelnames3]
+
+DF<-AllModels$Year
+
+
+for(model in modelnames3){
+  Precip<-PAOI85[model]
+  PETone<-AllModels[model]
+  Precip<-data.frame(Dates=as.Date(PAOI85$Timestep),Precip=Precip) 
+  colnames(Precip)<-c("Dates","Precip")
+  Outputs<-Precip %>% group_by(Year=floor_date(Dates,"year"))%>%
+    summarize(amount=sum(Precip,na.rm = T))
+  Ratio<-Outputs$amount/PETone
+  DF<-cbind(DF,Ratio[model])
+}
+
+```
+
+
+```{r,fig.width=20.0,fig.height=20.0}
+par(mfrow=c(2,2),mar=c(5.1, 5.1, 4.1, 2.1))
+plot(as.Date(AllModels$Year),DF$bcc.csm1.1.m_rcp85,col=Color3[1],type="l",lwd=2.0,ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT to PET",xlab="Year")
+lines(as.Date(AllModels$Year),DF$bcc.csm1.1_rcp85,col=Color3[1],lwd=2.0)
+lines(as.Date(AllModels$Year),DF$BNU.ESM_rcp85,col=Color3[3],lwd=2.0)
+plot(as.Date(AllModels$Year),DF$CanESM2_rcp85,col=Color3[4],lwd=2.0,type="l",ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT to PET",xlab="Year")
+lines(as.Date(AllModels$Year),DF$CCSM4_rcp85,col=Color3[5],lwd=2.0)
+lines(as.Date(AllModels$Year),DF$CNRM.CM5_rcp85,col=Color3[6],lwd=2.0)
+lines(as.Date(AllModels$Year),DF$CSIRO.Mk3.6.0_rcp85,col=Color3[7],lwd=2.0)
+plot(as.Date(AllModels$Year),DF$GFDL.ESM2G_rcp85,col=Color3[8],lwd=2.0,type="l",ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT to PET",xlab="Year")
+lines(as.Date(AllModels$Year),DF$GFDL.ESM2M_rcp85,col=Color3[9],lwd=2.0)
+lines(as.Date(AllModels$Year),DF$HadGEM2.CC365_rcp85,col=Color3[10],lwd=2.0)
+plot(as.Date(AllModels$Year),DF$MIROC5_rcp85,type="n",axes=F,xlab=NA,ylab=NA)
+legend(as.Date(AllModels$Year)[1],3.8,legend=c(modelnames),col=c(Color3,Color3[1:10]),
+       lty=c(1,1,1,1,1,1,1,1,1,1,4,4,4,4,4,4,4,4,4,4),lwd=c(4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),cex=2.0)
+plot(as.Date(AllModels$Year),DF$HadGEM2.ES365_rcp85,col=Color3[1],lty=4,lwd=2.0,type="l",ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT to PET",xlab="Year")
+lines(as.Date(AllModels$Year),DF$inmcm4_rcp85,col=Color3[2],lty=4,lwd=2.0)
+lines(as.Date(AllModels$Year),DF$IPSL.CM5A.LR_rcp85,col=Color3[3],lty=4,lwd=2.0)
+lines(as.Date(AllModels$Year),DF$IPSL.CM5A.MR_rcp85,col=Color3[4],lty=4,lwd=2.0)
+
+
+plot(as.Date(AllModels$Year),DF$IPSL.CM5B.LR_rcp85,col=Color3[5],type="l",lty=4,lwd=2.0,ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT to PET",xlab="Year")
+
+lines(as.Date(AllModels$Year),DF$MIROC.ESM.CHEM_rcp85,col=Color3[6],lty=4,lwd=2.0)
+lines(as.Date(AllModels$Year),DF$MIROC.ESM_rcp85,col=Color3[7],lty=4,lwd=2.0)
+plot(as.Date(AllModels$Year),DF$MRI.CGCM3_rcp85,col=Color3[8],lty=4,lwd=2.0,type="l",ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT to PET",xlab="Year")
+lines(as.Date(AllModels$Year),DF$NorESM1.M_rcp85,col=Color3[9],lty=4,lwd=2.0)
+lines(as.Date(AllModels$Year),DF$MIROC5_rcp85,col=Color3[10],lty=4,lwd=2.0)
+plot(as.Date(AllModels$Year),DF$MIROC5_rcp85,type="n",axes=F,xlab=NA,ylab=NA)
+legend(as.Date(AllModels$Year)[1],3.8,legend=c(modelnames),col=c(Color3,Color3[1:10]),
+       lty=c(1,1,1,1,1,1,1,1,1,1,4,4,4,4,4,4,4,4,4,4),lwd=c(4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),cex=2.0)
+```
+
+#### Linear models of PET/PPT 
+
+Here we fit a linear regression to this relationship over time. 
+
+```{r,fig.width=20.0,fig.height=20.0}
+par(xpd=F)
+par(mfrow=c(2,2),mar=c(5.1, 5.1, 4.1, 2.1))
+plot(as.Date(AllModels$Year),DF$bcc.csm1.1.m_rcp85,type="n",ylim=c(1,3),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT/PET",xlab="Year")
+abline(lm(DF$bcc.csm1.1.m_rcp85~AllModels$Year),col=Color3[1],lwd=2.0)
+abline(lm(DF$bcc.csm1.1_rcp85~AllModels$Year),col=Color3[2],lwd=2.0)
+abline(lm(DF$BNU.ESM_rcp85~AllModels$Year),col=Color3[3],lwd=2.0)
+abline(lm(DF$CanESM2_rcp85~AllModels$Year),col=Color3[4],lwd=2.0)
+abline(lm(DF$CCSM4_rcp85~AllModels$Year),col=Color3[5],lwd=2.0)
+abline(lm(DF$CNRM.CM5_rcp85~AllModels$Year),col=Color3[6],lwd=2.0)
+abline(lm(DF$CSIRO.Mk3.6.0_rcp85~AllModels$Year),col=Color3[7],lwd=2.0)
+abline(lm(DF$GFDL.ESM2G_rcp85~AllModels$Year),col=Color3[8],lwd=2.0)
+abline(lm(DF$GFDL.ESM2M_rcp85~AllModels$Year),col=Color3[9],lwd=2.0)
+plot(as.Date(AllModels$Year),DF$bcc.csm1.1.m_rcp85,type="n",ylim=c(1,3),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT/PET",xlab="Year")
+abline(lm(DF$HadGEM2.CC365_rcp85~AllModels$Year),col=Color3[10],lwd=2.0)
+abline(lm(DF$HadGEM2.ES365_rcp85~AllModels$Year),col=Color3[1],lty=4,lwd=2.0)
+abline(lm(DF$inmcm4_rcp85~AllModels$Year),col=Color3[2],lty=4,lwd=2.0)
+#abline(lm(DF$X_bcc.csm1.1_r1~AllModels$Year),col=Color3[3],lty=4,lwd=2.0)
+abline(lm(DF$IPSL.CM5A.LR_rcp85~AllModels$Year),col=Color3[3],lty=4,lwd=2.0)
+abline(lm(DF$IPSL.CM5A.MR_rcp85~AllModels$Year),col=Color3[4],lty=4,lwd=2.0)
+abline(lm(DF$IPSL.CM5B.LR_rcp85~AllModels$Year),col=Color3[5],lty=4,lwd=2.0)
+abline(lm(DF$MIROC.ESM.CHEM_rcp85~AllModels$Year),col=Color3[6],lty=4,lwd=2.0)
+abline(lm(DF$MIROC.ESM_rcp85~AllModels$Year),col=Color3[7],lty=4,lwd=2.0)
+abline(lm(DF$MIROC5_rcp85~AllModels$Year),col=Color3[8],lty=4,lwd=2.0)
+abline(lm(DF$MRI.CGCM3_rcp85~AllModels$Year),col=Color3[9],lty=4,lwd=2.0)
+abline(lm(DF$NorESM1.M_rcp85~AllModels$Year),col=Color3[10],lty=4,lwd=2.0)
+
+
+plot(as.Date(AllModels$Year),DF$MIROC5_rcp85,type="n",axes=F,xlab=NA,ylab=NA)
+legend(as.Date(AllModels$Year)[1],3.2,legend=c(modelnames),col=c(Color3,Color3[1:10]),
+       lty=c(1,1,1,1,1,1,1,1,1,1,4,4,4,4,4,4,4,4,4,4),lwd=c(4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),cex=2.0)
+```
+
+
+#### Fixed intercept
+
+here I fixed the intercept to the mean of the slopes, then compared the slopes. Note: This order is the same
+whether you fix the slope or not. 
+
+```{r,fig.width=10.0,fig.height=10.0}
+### Looking at variation in slope 
+#interse
+model<-modelnames[1]
+Slopes<-NULL
+Models<-NULL
+Ints<-NULL
+for(model in modelnames){
+Onemodel<-as.matrix(DF[model])
+Onemodellm<-lm(Onemodel~ AllModels$Year)
+#abline(Onemodellm)
+Int<-Onemodellm$coefficients[1]
+Slope<-Onemodellm$coefficients[2]
+Models<-c(model,Models)
+Slopes<-c(Slope,Slopes)
+Ints<-c(Int,Ints)
+}
+mean(Ints)
+
+
+Slopes<-NULL
+Models<-NULL
+for(model in modelnames){
+Onemodel<-as.matrix(DF[model])
+Onemodellm<-lm(Onemodel~0+AllModels$Year+offset(rep(3.165642,94)) )
+Slope<-Onemodellm$coefficients[1]
+Models<-c(model,Models)
+Slopes<-c(Slope,Slopes)
+}
+combined<-as.data.frame(cbind(Models,Slopes))
+colnames(combined)<-c("Models","Slopes")
+combined$Slopes<-as.numeric(as.character(Slopes))
+par(las=2) # make label text perpendicular to axis
+par(mar=c(5,15,4,2))
+barplot(combined$Slopes[order(combined$Slopes)],horiz=T,cex.names=1.2,names.arg =combined$Models[order(combined$Slopes)])
+
+```
+
+#### Here is the decadal means for the PPT/PET rato
+
+```{r}
+
+t<-1
+###How to group by decade
+for(model in modelnames3){
+  #model=modelnames3[1]
+  Ratio=DF[model]
+  Yearly<-data.frame(Dates=DF$DF,Ratio=Ratio)
+  colnames(Yearly)<-c("Dates","Ratio")
+ # print(Yearly)
+  Dec_Means<-Yearly %>% group_by(Year=floor_date(Dates,years(10)))%>%
+    summarize(amount=mean(Ratio))
+    #summarize(Variation=stats::var(Precip))
+  colnames(Dec_Means)<-c("Year",model)
+  if(t==1){
+    DF2<-Dec_Means
+    t<-t+1
+  }else{
+    colnames(DF2)[1]<-"Year"
+    DF2<-merge(DF2,Dec_Means,by="Year")
+  #DF2<-cbind(DF,Ratio[model])
+  }
+}
+```
+
+```{r,fig.width=20.0,fig.height=20.0}
+par(mfrow=c(2,2),mar=c(5.1, 5.1, 4.1, 2.1))
+plot(as.Date(DF2$Year),DF2$bcc.csm1.1.m_rcp85,col=Color3[1],type="l",lwd=2.0,ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT/PET",xlab="Year")
+lines(as.Date(DF2$Year),DF2$bcc.csm1.1_rcp85,col=Color3[1],lwd=2.0)
+lines(as.Date(DF2$Year),DF2$BNU.ESM_rcp85,col=Color3[3],lwd=2.0)
+plot(as.Date(DF2$Year),DF2$CanESM2_rcp85,col=Color3[4],lwd=2.0,type="l",ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT/PET",xlab="Year")
+lines(as.Date(DF2$Year),DF2$CCSM4_rcp85,col=Color3[5],lwd=2.0)
+lines(as.Date(DF2$Year),DF2$CNRM.CM5_rcp85,col=Color3[6],lwd=2.0)
+lines(as.Date(DF2$Year),DF2$CSIRO.Mk3.6.0_rcp85,col=Color3[7],lwd=2.0)
+plot(as.Date(DF2$Year),DF2$GFDL.ESM2G_rcp85,col=Color3[8],lwd=2.0,type="l",ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT/PET",xlab="Year")
+lines(as.Date(DF2$Year),DF2$GFDL.ESM2M_rcp85,col=Color3[9],lwd=2.0)
+lines(as.Date(DF2$Year),DF2$HadGEM2.CC365_rcp85,col=Color3[10],lwd=2.0)
+plot(as.Date(DF2$Year),DF2$MIROC5_rcp85,type="n",axes=F,xlab=NA,ylab=NA)
+legend(as.Date(DF2$Year)[1],2.4,legend=c(modelnames),col=c(Color3,Color3[1:10]),
+       lty=c(1,1,1,1,1,1,1,1,1,1,4,4,4,4,4,4,4,4,4,4),lwd=c(4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),cex=2.0)
+
+
+plot(as.Date(DF2$Year),DF2$HadGEM2.ES365_rcp85,col=Color3[1],lty=4,lwd=2.0,type="l",ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="PET mm/year",xlab="Year")
+lines(as.Date(DF2$Year),DF2$inmcm4_rcp85,col=Color3[2],lty=4,lwd=2.0)
+lines(as.Date(DF2$Year),DF2$IPSL.CM5A.LR_rcp85,col=Color3[3],lty=4,lwd=2.0)
+lines(as.Date(DF2$Year),DF2$IPSL.CM5A.MR_rcp85,col=Color3[4],lty=4,lwd=2.0)
+
+
+plot(as.Date(DF2$Year),DF2$IPSL.CM5B.LR_rcp85,col=Color3[5],type="l",lty=4,lwd=2.0,ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT/PET",xlab="Year")
+
+lines(as.Date(DF2$Year),DF2$MIROC.ESM.CHEM_rcp85,col=Color3[6],lty=4,lwd=2.0)
+lines(as.Date(DF2$Year),DF2$MIROC.ESM_rcp85,col=Color3[7],lty=4,lwd=2.0)
+plot(as.Date(DF2$Year),DF2$MRI.CGCM3_rcp85,col=Color3[8],lty=4,lwd=2.0,type="l",ylim=c(1,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Ratio of PPT/PET",xlab="Year")
+lines(as.Date(DF2$Year),DF2$NorESM1.M_rcp85,col=Color3[9],lty=4,lwd=2.0)
+lines(as.Date(DF2$Year),DF2$MIROC5_rcp85,col=Color3[10],lty=4,lwd=2.0)
+plot(as.Date(DF2$Year),DF2$MIROC5_rcp85,type="n",axes=F,xlab=NA,ylab=NA)
+legend(as.Date(DF2$Year)[1],3.4,legend=c(modelnames),col=c(Color3,Color3[1:10]),
+       lty=c(1,1,1,1,1,1,1,1,1,1,4,4,4,4,4,4,4,4,4,4),lwd=c(4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),cex=2.0)
+```
+
+```{r}
+### Need to find each in relation to decadal mean 
+
+year<-year(as.Date(DF$DF))
+Decade<- year-year %% 10
+#colnames(DF)floor_date(DF["DF"],years(10))
+DF$Decade<-Decade
+year2<-year(as.Date(DF2$Year))
+Decade2<-year2-year2 %%10
+DF2$Decade<-Decade2
+
+
+
+Decadal_DF<-DF2$Year
+Variation_DF<-DF$DF
+Var2_DF<-DF$DF
+for(model in modelnames3){
+  Means<-DF2[c("Decade",model)]
+  Values<-DF[c("Decade",model)]
+  MV_merged<-merge(Values,Means,by="Decade")
+  Variation<-MV_merged[2]-MV_merged[3]
+  Var2<-Variation**2
+  MV_merged<-cbind(MV_merged,Variation,Var2)
+  colnames(MV_merged)
+  DecadalVariance<-aggregate(MV_merged[5],by=list(D=MV_merged$Decade),FUN=sum)
+  Decadal_DF<-cbind(Decadal_DF,DecadalVariance[2])
+  Variation_DF<-cbind(Variation,Variation_DF)
+  Var2_DF<-cbind(Var2_DF,Var2)
+}
+
+```
+
+### Mean Intradecadal Variance
+
+So this takes the mean for each decade and calculates the square variance,
+from that mean. Then that is meaned for each model 
+
+```{r,fig.width=10.0,fig.height=10.0}
+
+MeanDecadalVaraincesq<-colMeans(Decadal_DF[2:21])
+par(las=2) # make label text perpendicular to axis
+par(mar=c(5,15,4,2))
+barplot(MeanDecadalVaraincesq[order(MeanDecadalVaraincesq,decreasing = T)],horiz=T,cex.names=1.2)
+```
+
+### Decadal Fixed slope models 
+
+
+
+```{r,fig.width=10.0,fig.height=10.0}
+Models<-NULL
+Slopes<-NULL
+Ints<-NULL
+for(model in modelnames){
+  Onemodel<-as.matrix(DF2[model])
+  Onemodellm<-lm(Onemodel~ DF2$Year)
+  #abline(Onemodellm)
+  Int<-Onemodellm$coefficients[1]
+  Slope<-Onemodellm$coefficients[2]
+  Models<-c(model,Models)
+  Slopes<-c(Slope,Slopes)
+  Ints<-c(Int,Ints)
+}
+mean(Ints)
+
+
+Slopes<-NULL
+Models<-NULL
+for(model in modelnames){
+  Onemodel<-as.matrix(DF2[model])
+  Onemodellm<-lm(Onemodel~0+DF2$Year+offset(rep(3.165642,10)) )
+  Slope<-Onemodellm$coefficients[1]
+  Models<-c(model,Models)
+  Slopes<-c(Slope,Slopes)
+}
+
+par(las=2) # make label text perpendicular to axis
+par(mar=c(5,15,4,2))
+barplot(combined$Slopes[order(combined$Slopes)],horiz=T,cex.names=1.2,names.arg =combined$Models[order(combined$Slopes)])
+```
+
+### Candidate Models 
+We selected four models from this, finding models that have Steep/Low Slope,
+and High Variance and Low Variance. 
+
+HAD_GEMES365 is steep slope/ high variance
+
+MRI_CGCM3 is low slope/low variance
+
+CNRM_CM5 is Low slope/high variance 
+
+IPSL CM5A_MR Steep slope/ Low variance
+
+
+
+```{r,fig.width=20.0,fig.height=20.0}
+
+#show_col(hue_pal()(6))
+#png("PET_PPTRatio.png",width=1500,height=1500)
+par(mfrow=c(2,2),mar=c(7,8,5,2))
+colorblind=c("#F8766D","#7CAE00","#00BA38","#00BFC4")
+
+plot(as.Date(AllModels$Year),DF$MRI.CGCM3_rcp85,col=colorblind[4],lwd=10.0,type="l",ylim=c(.8,3.9),cex.axis=3.0,cex.lab=3.0,
+     ylab="PPT/PET Ratio",xlab="Year",main="a) Low drought / low variance" ,cex.main=4.0,mgp=c(4,1.8,0))
+plot(as.Date(AllModels$Year),DF$CNRM.CM5_rcp85,col=Color3[5],type="l",lwd=10.0,ylim=c(.8,3.9),cex.axis=3.0,cex.lab=3.0,
+     ylab=NA,xlab="Year", main=" b) Low drought / high variance",cex.main=4.0,mgp=c(4,1.8,0))
+plot(as.Date(AllModels$Year),DF$IPSL.CM5A.MR_rcp85,col=colorblind[3],lwd=10.0,type="l",ylim=c(.8,3.9),cex.axis=3.0,cex.lab=3.0,
+     ylab="PPT/PET Ratio",xlab="Year", main="c) High drought / low variance",cex.main=4.0,mgp=c(4,1.8,0))
+
+plot(as.Date(AllModels$Year),DF$HadGEM2.ES365_rcp85,col=colorblind[2],lwd=10.0,type="l",ylim=c(.8,3.9),cex.axis=3.0,cex.lab=3.0,
+     ylab=NA,xlab="Year", main="d) High drought / high variance",cex.main=4.0,mgp=c(4,1.8,0))
+
+
+#dev.off()
+
+
+```
+
+
+
+
+HAD_GEMES365 is Steep Slope/ High Variance
+
+MRI_CGCM3 is low slope/Low Variance
+
+CNRM_CM5 is Low slope/High Variance
+
+IPSL CM5A_MR Steep slope/ Low variance
+
+
+```{r,fig.width=20.0,fig.height=20.0}
+
+#png("PET_PPT_Alone.png",width=1500,height=1500)
+par(mfrow=c(2,2),mar=c(7,5,5,2))
+#colorblind=c("#0072B2", "#009E73", "#D55E00",
+#              "#CC79A7", "#F0E442", "#56B4E9")
+
+plot(as.Date(AllModels$Year),DFP$MRI.CGCM3_rcp85,col=colorblind[4],ylim=c(300,1600),ylab=NA,lwd=5.0,type="l",cex.axis=2.7,cex.lab=2.5,
+     xlab="Year",main="a) Low drought / low variance",cex.main=2.7)
+lines(as.Date(AllModels$Year),AllModels$MRI.CGCM3_rcp85,col=colorblind[4],lwd=5.0,lty=4)
+
+
+plot(as.Date(AllModels$Year),DFP$CNRM.CM5_rcp85,col=Color3[5],ylim=c(300,1600),ylab=NA,type="l",lwd=5.0,cex.axis=2.7,cex.lab=2.5,
+     xlab="Year", main="b) Low drought / high variance",cex.main=2.7)
+lines(as.Date(AllModels$Year),AllModels$CNRM.CM5_rcp85,col=Color3[5],lwd=5.0,lty=4)
+legend(as.Date(AllModels$Year)[1],1600,legend=c("Percipitation","PET"),lty=c(1,4),col=c("black","black"),cex=2.0,lwd=c(4.0,4.0))
+
+#dev.off()
+
+plot(as.Date(AllModels$Year),DFP$IPSL.CM5A.MR_rcp85,col=colorblind[3],lwd=5.0,ylim=c(300,1600),type="l",cex.axis=2.7,cex.lab=2.5,
+     ylab="PPT or PET mm/yr",xlab="Year", main="c) High drought / low variance",cex.main=2.7)
+lines(as.Date(AllModels$Year),AllModels$IPSL.CM5A.MR_rcp85,col=colorblind[3],lwd=5.0,lty=4)
+
+
+
+plot(as.Date(AllModels$Year),DFP$HadGEM2.ES365_rcp85,col=colorblind[2],ylim=c(300,1600),lwd=5.0,type="l",cex.axis=2.7,cex.lab=2.5,
+     ylab="PPT or PET mm/yr",xlab="Year", main="d) High drought / high variance",cex.main=2.7)
+lines(as.Date(AllModels$Year),AllModels$HadGEM2.ES365_rcp85,col=colorblind[2],lwd=5.0,lty=4)
+#dev.off()
+```
+### Variance of candidate models
+
+```{r,fig.width=20.0,fig.height=20.0}
+par(mar=c(5,5,4,2))
+
+
+plot(as.Date(Decadal_DF$Decadal_DF),Decadal_DF$CNRM.CM5_rcp85.x,lty=4,type="l",col=Color3[2],ylim=c(0,3.5),cex.axis=2.0,cex.lab=1.8,
+     ylab="Var^2",xlab="Year", main="Variance 2 per decade",cex.main=2.0)
+lines(as.Date(Decadal_DF$Decadal_DF),Decadal_DF$HadGEM2.ES365_rcp85.x,lty=4,col=Color3[6],lwd=2.0)
+lines(as.Date(Decadal_DF$Decadal_DF),Decadal_DF$IPSL.CM5A.MR_rcp85.x,col=Color3[5],lwd=2.0)
+lines(as.Date(Decadal_DF$Decadal_DF),Decadal_DF$MRI.CGCM3_rcp85.x,col=Color3[1],lwd=2.0)
+##lines(as.Date(Decadal_DF$Decadal_DF),Decadal_DF$bcc.csm1.1_rcp85.x,col=Color3[3],lwd=2.0)
+##lines(as.Date(Decadal_DF$Decadal_DF),Decadal_DF$MIROC.ESM.CHEM_rcp85.x,col=Color3[4],lwd=2.0)
+legend(as.Date(DF2$Year)[1],5.0,legend=c(modelnames),col=c(Color3,Color3[1:6]),
+       lty=c(1,1,1,1,1,1,1,1,1,1,4,4,4,4,4,4),cex=.2)
+
+```
+
+### Slopes of candidate models
+
+HAD_GEMES365 is Steep Slope/ High Variance
+
+MRI_CGCM3 is Low slope/Low Variance
+
+CNRM_CM5 is Low slope/High Variance
+
+IPSL CM5A_MR Steep slope/ Low variance
+
+```{r,fig.width=10.0,10.0}
+par(xpd=F)
+par(mar=c(5.1, 5.1, 4.1, 2.1))
+plot(as.Date(AllModels$Year),DF$bcc.csm1.1.m_rcp85,type="n",ylim=c(1,3),cex.axis=2.0,cex.lab=1.8,
+     ylab="PET mm/year",xlab="Year")
+
+abline(lm(DF$CNRM.CM5_rcp85~AllModels$Year),lty=4,col=Color3[2],lwd=2.0)
+abline(lm(DF$HadGEM2.ES365_rcp85~AllModels$Year),col=Color3[6],lty=4,lwd=2.0)
+abline(lm(DF$IPSL.CM5A.MR_rcp85~AllModels$Year),col=Color3[5],lwd=2.0)
+abline(lm(DF$MRI.CGCM3_rcp85~AllModels$Year),col=Color3[1],lwd=2.0)
+
+```
+

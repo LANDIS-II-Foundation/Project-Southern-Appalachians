@@ -1,0 +1,125 @@
+---
+title: "Regeneration Notebook"
+output: github_document
+---
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+Dir<-'F:/Chapter3/'
+
+Regen_model<-function(Dir,Model){
+  Regen1<-read.csv(paste0(Dir,"R_1/",Model,"/NECN-prob-establish-log.csv"))
+  Regen2<-read.csv(paste0(Dir,"R_2/",Model,"/NECN-prob-establish-log.csv"))
+  Regen3<-read.csv(paste0(Dir,"R_3/",Model,"/NECN-prob-establish-log.csv"))
+  Regen4<-read.csv(paste0(Dir,"R_4/",Model,"/NECN-prob-establish-log.csv"))
+  Regen5<-read.csv(paste0(Dir,"R_5/",Model,"/NECN-prob-establish-log.csv"))
+  Regen6<-read.csv(paste0(Dir,"R_6/",Model,"/NECN-prob-establish-log.csv"))
+  Regen7<-read.csv(paste0(Dir,"R_7/",Model,"/NECN-prob-establish-log.csv"))
+
+  return(rbind(Regen1,Regen2,Regen3,Regen4,Regen5,Regen6,Regen7)%>%
+    group_by(Time,SpeciesName)%>%
+    dplyr::summarise(AvgTempMult=mean(AvgTempMult),AvgMinJanTempMult=mean(AvgMinJanTempMult),
+                   AvgSoilMoistureMult=mean(AvgSoilMoistureMult),AvgProbEst=mean(AvgProbEst)))
+
+}
+```
+
+```{r,fig.width=10.0}
+Model<-'CNRM-CM5'
+
+CNRM<-Regen_model(Dir,'CNRM-CM5')
+colnames(CNRM)
+```
+```{r,fig.width=10.0,fig.height=7.0}
+ggplot(data = CNRM, aes(x=Time,y=AvgProbEst)) +
+  geom_line(color = "steelblue",size = 1) +
+  geom_point(color="steelblue") + 
+  facet_wrap(~ SpeciesName)+
+  labs(title = "CRNM-CM5 Rcp8.5",
+       subtitle = "Mean Regeneration across ecoregions",
+       y = "Avg prob. regeneration", x = "")+
+  theme_minimal()
+
+```
+
+
+```{r,fig.width=10.0}
+Model<-'HadGEM'
+
+HadGEM<-Regen_model(Dir,'HadGEM')
+colnames(HadGEM)
+```
+```{r,fig.width=10.0,fig.height=7.0}
+ggplot(data = HadGEM, aes(x=Time,y=AvgProbEst)) +
+  geom_line(color = "steelblue",size = 1) +
+  geom_point(color="steelblue") + 
+  facet_wrap(~ SpeciesName)+
+  labs(title = "HadGEM-ES365 Rcp8.5",
+       subtitle = "Mean Regeneration across ecoregions",
+       y = "Avg prob. regeneration", x = "")+
+  theme_minimal()
+
+```
+
+```{r,fig.width=10.0}
+Model<-'Historic_Random'
+
+Historic_Random<-Regen_model(Dir,'Historic_Random')
+colnames(Historic_Random)
+```
+```{r,fig.width=10.0,fig.height=7.0}
+png('HR.png',width=700,height=500)
+ggplot(data = Historic_Random, aes(x=Time,y=AvgProbEst)) +
+  geom_line(color = "steelblue",size = 1) +
+  geom_point(color="steelblue") + 
+  facet_wrap(~ SpeciesName)+
+  labs(title = "Historic_Random Rcp8.5",
+       subtitle = "Mean Regeneration across ecoregions",
+       y = "Avg prob. regeneration", x = "")+
+  theme_minimal()
+dev.off()
+
+```
+```{r,fig.width=10.0}
+Model<-'IPSL-CM5A-MR'
+
+IPSL<-Regen_model(Dir,'IPSL-CM5A-MR')
+colnames(Historic_Random)
+```
+```{r,fig.width=10.0,fig.height=7.0}
+ggplot(data = IPSL, aes(x=Time,y=AvgProbEst)) +
+  geom_line(color = "steelblue",size = 1) +
+  geom_point(color="steelblue") + 
+  facet_wrap(~ SpeciesName)+
+  labs(title = "IPSL-CM5A-MR Rcp8.5",
+       subtitle = "Mean Regeneration across ecoregions",
+       y = "Avg prob. regeneration", x = "")+
+  theme_minimal()
+
+```
+
+
+
+
+
+```{r,fig.width=10.0}
+Model<-'MRI-CGCM3'
+
+MRI<-Regen_model(Dir,'MRI-CGCM3')
+colnames(Historic_Random)
+```
+```{r,fig.width=10.0,fig.height=7.0}
+ggplot(data = MRI, aes(x=Time,y=AvgProbEst)) +
+  geom_line(color = "steelblue",size = 1) +
+  geom_point(color="steelblue") + 
+  facet_wrap(~ SpeciesName)+
+  labs(title = "MRI-CGCM3 Rcp8.5",
+       subtitle = "Mean Regeneration across ecoregions",
+       y = "Avg prob. regeneration", x = "")+
+  theme_minimal()
+
+```
+
+

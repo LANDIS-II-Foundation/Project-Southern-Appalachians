@@ -1,0 +1,8 @@
+FunctionalGroupName,FunctionalGroupIndex,TemperatureCurve1,TemperatureCurve2,TemperatureCurve3,TemperatureCurve4,FractionANPPtoLeaf,LeafBiomassToLAI,KLAI,MaximumLAI,MoistureCurve2,MoistureCurve3,WoodDecayRate,MonthlyWoodMortality,LongevityMortalityShape,FoliageDropMonth,CoarseRootFraction,FineRootFraction,MinLAI,GrowthLAI
+Abies,1,20,40,2.005,6,0.3,-0.8,6000,5.5,1,0.3,0.1,0.001,5.5,9,0.1,0.1,0.2,0.47
+SConifer,2,23,40,2.005,6,0.48,-0.9,6000,5.5,1,0.9,0.01,0.001,5.5,7,0.2,0.1,0.2,0.47
+Nconifer,3,22,40,2.005,6,0.48,-0.9,6000,5.5,1,0.5,0.1,0.002,5.5,7,0.2,0.2,0.2,0.47
+NHW,4,25,40,1.5,2.5,0.48,-0.9,6000,6.5,1,0.6,0.1,0.0015,7.5,9,0.1,0.1,0.2,0.47
+SHW,5,27,45,1,2.5,0.4,-0.9,6000,6.5,0.9,0.9,0.1,0.002,7.5,9,0.1,0.1,0.2,0.47
+Swampy,6,20,32,3.6,5,0.3,-0.9,6000,7.5,0.9,0.4,0.1,0.0001,5.5,9,0.1,0.1,0.2,0.47
+Hemlock ,7,22,40,2.005,6,0.48,-0.9,6000,8,1,0.9,0.1,0.0002,10.5,7,0.2,0.2,0.2,0.47

@@ -1,0 +1,15 @@
+Readme Rx
+
+To use the Rx maps Kate Jones created:https://github.com/LANDIS-II-Foundation/Project-Southern-Appalachians-2018/tree/master/Parameterizing/Fire/Rx_data_processing.md
+you need to adjust the number of annual fires to match the map you are using. Each map is weighted differently so that the State, local other, prescribed burning
+can stay consistent with empirical estimates as the amount on national forests scales up and down. 
+
+
+To simulate Rx where national forests meet 100% burn goals 
+Rx_100percplan.tif with 150 annual Rx burns and an average size 30 cells
+
+To simulate Rx where national forests meet 50% burn goals 
+Rx_50percplan.tif with 94 annual Rx burns and an average size 30 cells
+
+To simulate Rx where national forests meet 10% burn goals 
+Rx_10percplan.tif with 49 annual Rx burns and an average size 30 cells

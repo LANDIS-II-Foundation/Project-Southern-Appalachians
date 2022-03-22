@@ -1,0 +1,22 @@
+LandisData "Climate Config"				
+		
+ClimateTimeSeries			Daily_SequencedYears
+ClimateFile				IPSL-CM5A-MRrcp85_LANDIS_2016.csv
+ClimateFileFormat			Daily_Temp-C_Precip-mmDay
+
+SpinUpClimateTimeSeries			Daily_SequencedYears
+SpinUpClimateFile			IPSL-CM5A-MRrcp85_LANDIS_2016.csv
+SpinUpClimateFileFormat			Daily_Temp-C_Precip-mmDay
+
+UsingFireClimate			yes
+FineFuelMoistureCode		85
+DuffMoistureCode			6
+DroughtCode				15
+FirstDayFire			31
+LastDayFire				334
+
+
+
+
+
+
