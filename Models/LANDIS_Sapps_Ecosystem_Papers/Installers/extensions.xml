@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ExtensionDataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Extensions>
+    <Extension Name="Output Biomass-by-Age" Version="3.0">
+      <Type>output</Type>
+      <Assembly>Landis.Extension.Output.BiomassByAge-v3</Assembly>
+      <Class>Landis.Extension.Output.BiomassByAge.PlugIn</Class>
+      <Description>Output biomass by ageclass by species</Description>
+    </Extension>
+    <Extension Name="Age-only Succession" Version="5.1">
+      <Type>succession</Type>
+      <Assembly>Landis.Extension.Succession.AgeOnly-v5</Assembly>
+      <Class>Landis.Extension.Succession.AgeOnly.PlugIn</Class>
+      <Description>Succession with age cohorts</Description>
+    </Extension>
+    <Extension Name="Biomass Succession" Version="5.1">
+      <Type>succession</Type>
+      <Assembly>Landis.Extension.Succession.Biomass-v5</Assembly>
+      <Class>Landis.Extension.Succession.Biomass.PlugIn</Class>
+      <Description>Succession with biomass cohorts</Description>
+    </Extension>
+    <Extension Name="Output Max Species Age" Version="3.0">
+      <Type>output</Type>
+      <Assembly>Landis.Extension.Output.MaxSpeciesAge-v3</Assembly>
+      <Class>Landis.Extension.Output.MaxSpeciesAge.PlugIn</Class>
+      <Description>Maximum age output maps</Description>
+    </Extension>
+    <Extension Name="Base BDA" Version="4.0.1 (official release)">
+      <Type>disturbance:BDA</Type>
+      <Assembly>Landis.Extension.BaseBDA-v4</Assembly>
+      <Class>Landis.Extension.BaseBDA.PlugIn</Class>
+      <Description>Biological disturbance agents</Description>
+    </Extension>
+    <Extension Name="Output Biomass" Version="3.0">
+      <Type>output</Type>
+      <Assembly>Landis.Extension.Output.Biomass-v3</Assembly>
+      <Class>Landis.Extension.Output.Biomass.PlugIn</Class>
+      <Description>Output biomass maps</Description>
+    </Extension>
+    <Extension Name="Biomass Harvest" Version="4.4">
+      <Type>disturbance:harvest</Type>
+      <Assembly>Landis.Extension.BiomassHarvest-v4</Assembly>
+      <Class>Landis.Extension.BiomassHarvest.PlugIn</Class>
+      <Description>Harvesting for biomass cohorts</Description>
+    </Extension>
+    <Extension Name="Base Harvest" Version="5.1">
+      <Type>disturbance:harvest</Type>
+      <Assembly>Landis.Extension.BaseHarvest-v5</Assembly>
+      <Class>Landis.Extension.BaseHarvest.PlugIn</Class>
+      <Description>Generic Harvesting for all cohorts</Description>
+    </Extension>
+    <Extension Name="NECN Succession" Version="6.8">
+      <Type>succession</Type>
+      <Assembly>Landis.Extension.Succession.NECN-v6</Assembly>
+      <Class>Landis.Extension.Succession.NECN.PlugIn</Class>
+      <Description>Succession with complete Carbon and Nitrogen cycling</Description>
+    </Extension>
+    <Extension Name="SCRAPPLE" Version="3.2">
+      <Type>disturbance:fire</Type>
+      <Assembly>Landis.Extension.Scrapple-v3</Assembly>
+      <Class>Landis.Extension.Scrapple.PlugIn</Class>
+      <Description>Social and climate fire disturbance</Description>
+    </Extension>
+  </Extensions>
+</ExtensionDataset>
