@@ -5,7 +5,9 @@ Southern Appalachians LANDIS-II Project
 
 Contact information:
 Dr. Zachary Robbins:  zjrobbins@lanl.gov
+
 Dr. Louise Loudermilk: elloudermilk.cfds@gmail.com
+
 Dr. Robert Scheller: rschell@ncsu.edu
 
 References:
