@@ -1,6 +1,15 @@
 Southern Appalachians LANDIS-II Project
 ================
 
+### Further information for AFE Conference 2022
+
+Contact information:
+Dr. Zachary Robbins:  zjrobbins@lanl.gov
+Dr. Louise Loudermilk: elloudermilk.cfds@gmail.com
+Dr. Robert Scheller: rschell@ncsu.edu
+
+References:
+Robbins, Z.J., E.L. Loudermilk, M.J. Reilly, J.J. O'Brien, K. Jones, C.T. Gerstle, R.M. Scheller. 2022. Delayed fire mortality has long-term ecological effects across the Southern Appalachian landscape. Ecosphere 13: e4153.
 
 
 ### Overveiw of research:
