@@ -1,4 +1,4 @@
-Southern Appalachians LANDIS-II Project
+Southern Appalachians Project
 ================
 
 ### Further information for AFE Conference 2022
