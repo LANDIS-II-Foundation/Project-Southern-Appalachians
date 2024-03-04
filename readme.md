@@ -1,7 +1,6 @@
 Southern Appalachians Project
 ================
 
-### Further information for AFE Conference 2022
 
 Contact information:
 
@@ -12,6 +11,8 @@ Dr. Louise Loudermilk: elloudermilk.cfds@gmail.com
 Dr. Robert Scheller: rschell@ncsu.edu
 
 References:
+
+Robbins, Z. J., Loudermilk, E. L., Mozelewski, T. G., Jones, K., & Scheller, R. M. (2024). Fire regimes of the Southern Appalachians may radically shift under climate change. Fire Ecology, 20(1), 1-17.
 
 Robbins, Z.J., E.L. Loudermilk, M.J. Reilly, J.J. O'Brien, K. Jones, C.T. Gerstle, R.M. Scheller. 2022. Delayed fire mortality has long-term ecological effects across the Southern Appalachian landscape. Ecosphere 13: e4153.
 
